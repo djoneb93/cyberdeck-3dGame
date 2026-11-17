@@ -80,17 +80,16 @@ function updateAudio(dt){
   const L=AUD.L,p=player.position,inside=!!(z&&String(z).startsWith('in_')),out=inside?0:1;
   AUD.N.muffle.frequency.setTargetAtTime(inside?480:18000,now(),.25);
   // sons globaux : pluie douce seulement quand il pleut, vent, tonnerre à chaque éclair
-  const w=WEATHERS[weatherIdx],rain=w.sand?0:Math.max(0,wx.rain-.02);
-  setG(L.rain,rain*.06,1);setG(L.rainLow,rain*.05,1);setG(L.wind,w.sand?.2:((w.storm?.06:0)+(S.roof==='roof'?.07:0)),1);
-  if(typeof flash==='number'){if(flash>.9&&lastFlash<.5)thunder();lastFlash=flash}
-  setG(L.city,inside?.015:.035); // un fond de ville très bas, partout
-  // brouhaha : dans le Néon Noir, dans le Bazar souterrain, et sous la verrière du Bazar Néon ; les voix montent et descendent comme des phrases
-  const M=PL.market,inMk=!z&&Math.abs(p.x-M.x)<M.hw+1&&Math.abs(p.z-M.z)<M.hd+1,bab=z==='in_bar'?.07:z==='in_market'?.08:z==='in_metro'?.03:inMk?.055:0;
-  murmur(D,bab*1.6); // des voix qui parlent entre elles, par-dessus un fond calme
+  // sons de la ville (pluie, vent, orage, rumeur) : on ne les entend pas dans une pièce fermée, ni dans le métro, ni dans sa planque
+  const sheltered=inside||inPlanque(),w=WEATHERS[weatherIdx],rain=sheltered||w.sand?0:Math.max(0,wx.rain-.02);
+  setG(L.rain,rain*.06,1);setG(L.rainLow,rain*.05,1);setG(L.wind,sheltered?0:(w.sand?.2:((w.storm?.06:0)+(S.roof==='roof'?.07:0))),1);
+  if(typeof flash==='number'){if(flash>.9&&lastFlash<.5&&!sheltered)thunder();lastFlash=flash}
+  setG(L.city,sheltered?0:.035);
+  // conversations : au Bazar Néon (dehors et au sous-sol) et au Néon Noir seulement ; on entend les gens à moins de 3 m parler entre eux
+  const M=PL.market,inMk=!z&&Math.abs(p.x-M.x)<M.hw+1&&Math.abs(p.z-M.z)<M.hd+1;if(z==='in_bar'||z==='in_market'||inMk)chatter(D,z);
   // ambiances de lieux : les machines de la laverie, les bornes de l'arcade
   const wash=z==='in_laundry';setG(L.wash,wash?.05*(.6+.4*Math.sin(tAcc*2.6)):0,.15);setG(L.washMotor,wash?.025:0,.5);
   if(z==='in_arcade')arcadeBleeps(D);
-  L.babble.forEach((b,i)=>{b.g.gain.setTargetAtTime(bab*.45*(i?.35:1)*(.5+.5*Math.random()),now(),.08);b.fl.frequency.setTargetAtTime((i?2100:900)*(.85+.3*Math.random()),now(),.1)});
   portSounds(D,!z&&p.x<20&&p.z>UZ(.12)&&p.z<UZ(.66));
   // sons de proximité, 3 m au plus : le passant le plus proche, la mer, le TGV, une voiture, une voiture volante, le club
   let wd=1e9,wq=null;walkers.forEach(o=>{const q=o.m.position,d=Math.hypot(q.x-p.x,q.z-p.z);if(d<wd){wd=d;wq=q}});setG(L.crowd,out*near(wd)*.07,.3);if(wq)panTo(L.crowd,wq.x,wq.z);
@@ -181,3 +180,14 @@ function arcadeBleeps(D){arcT-=D;coinT-=D;const c=AUD.ctx,t=now();
     g.gain.setValueAtTime(.018,t);g.gain.exponentialRampToValueAtTime(.0005,t+.07);o.connect(g);g.connect(AUD.N.room);o.start(t);o.stop(t+.08)}
   if(coinT<=0){coinT=5+Math.random()*7;[88,95].forEach((n,i)=>{const o=c.createOscillator(),g=c.createGain(),tt=t+i*.08;o.type='square';o.frequency.value=mtof(n);
     g.gain.setValueAtTime(.025,tt);g.gain.exponentialRampToValueAtTime(.0005,tt+.18);o.connect(g);g.connect(AUD.N.room);o.start(tt);o.stop(tt+.2)})}}
+
+// ---- conversations entre passants : le même petit son de voix que les dialogues, par phrases, pour chaque personne à moins de 3 m ----
+const CHAT={},CHAT_V=['vasko','doc','okoro','mira','lou','you','nar'];
+function voiceBlip(who,vol){if(!AUD.ctx)return;const c=AUD.ctx,t=now(),o=c.createOscillator(),g=c.createGain(),f=(VOICE[who]||420)*(.9+Math.random()*.2);o.type='triangle';
+  o.frequency.setValueAtTime(f,t);o.frequency.exponentialRampToValueAtTime(f*.85,t+.06);g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(vol,t+.008);g.gain.exponentialRampToValueAtTime(.0005,t+.07);
+  o.connect(g);g.connect(AUD.N.room);o.start(t);o.stop(t+.08)}
+function chatter(D,z){const p=player.position;let ms;
+  if(z==='in_bar'||z==='in_market'){const R=ROOMS[z.slice(3)];ms=R?R.chars.map(c=>c.m):[]}
+  else{const M=PL.market;ms=[...statics,...walkers.map(w=>w.m),...npcs.map(n=>n.mesh)].filter(m=>Math.abs(m.position.x-M.x)<M.hw+2&&Math.abs(m.position.z-M.z)<M.hd+2)}
+  ms.forEach(m=>{const d=Math.hypot(m.position.x-p.x,m.position.z-p.z);if(d>HEAR)return;const st=CHAT[m.uuid]||(CHAT[m.uuid]={n:Math.random()*2.5,v:CHAT_V[Math.floor(Math.random()*CHAT_V.length)]});
+    st.n-=D;if(st.n>0)return;const n=3+Math.floor(Math.random()*6),vol=.035*near(d);for(let i=0;i<n;i++)setTimeout(()=>voiceBlip(st.v,vol),i*(75+Math.random()*55));st.n=1.6+Math.random()*4})}
