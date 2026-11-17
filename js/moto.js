@@ -7,8 +7,19 @@ const MOTO_PARK={x:44.7,z:68.45,ry:0},MOTO_SPEED=1.5;
 let moto=null,riding=false;
 
 function motoModel(){
-  const g=new THREE.Group(),body=new THREE.MeshPhongMaterial({color:0xff8a3d,shininess:80,specular:0x664433}),dark=new THREE.MeshPhongMaterial({color:0x1a1c22,shininess:30}),
+  const g=new THREE.Group();scene.add(g);
+  // livrée peinte sur les flancs : orange, bande noire, numéro, « NEO-BXL » en cyan
+  const lc=document.createElement('canvas');lc.width=256;lc.height=96;const L=lc.getContext('2d');
+  const lg=L.createLinearGradient(0,0,0,96);lg.addColorStop(0,'#ffa25a');lg.addColorStop(1,'#d8641e');L.fillStyle=lg;L.fillRect(0,0,256,96);
+  L.fillStyle='#15171c';L.beginPath();L.moveTo(0,58);L.lineTo(256,40);L.lineTo(256,54);L.lineTo(0,72);L.fill();
+  L.fillStyle='#39e6ff';L.fillRect(0,73,256,3);L.font='bold 30px Silkscreen, monospace';L.fillStyle='#f4f4ee';L.fillText('0',150,38);L.font='bold 12px Silkscreen, monospace';L.fillStyle='#15171c';L.fillText('NEO-BXL',40,30);
+  const lt=new THREE.CanvasTexture(lc);lt.repeat.set(1/1.84,1/.6);lt.offset.set(1/1.84*1.02,-.4/.6);
+  const body=new THREE.MeshPhongMaterial({map:lt,shininess:90,specular:0x664433}),dark=new THREE.MeshPhongMaterial({color:0x1a1c22,shininess:30}),
     chrome=new THREE.MeshPhongMaterial({color:0xb8c0c8,shininess:120,specular:0xffffff});
+  // bulle de pare-brise teintée et rétroviseurs
+  const ws=new THREE.Mesh(new THREE.PlaneGeometry(.34,.3),new THREE.MeshPhongMaterial({color:0x39e6ff,transparent:true,opacity:.35,side:THREE.DoubleSide,shininess:120,specular:0xffffff}));
+  ws.position.set(.6,1.13,0);ws.rotation.set(0,Math.PI/2,0);ws.rotateX(-.55);g.add(ws);
+  [-1,1].forEach(z=>{box(.02,.14,.02,'#2a2e36',.58,1.1,z*.27,g);box(.03,.06,.1,'#9ab4c8',.58,1.18,z*.29,g)});
   // carénage vu de profil (extrudé sur la largeur) : arrière effilé, selle, réservoir galbé, tête de fourche
   const s=new THREE.Shape();[[-.98,.6],[-.62,.76],[-.14,.78],[.04,.94],[.42,.99],[.64,.84],[.56,.6],[.2,.44],[-.36,.46],[-.86,.52]].forEach(([x,y],i)=>i?s.lineTo(x,y):s.moveTo(x,y));s.closePath();
   const sh=new THREE.Mesh(new THREE.ExtrudeGeometry(s,{depth:.3,bevelEnabled:true,bevelThickness:.04,bevelSize:.04,bevelSegments:3,curveSegments:8}),body);sh.position.z=-.15;g.add(sh);
@@ -33,14 +44,19 @@ function buildMoto(){
   // la place de stationnement : marquage au sol, et un « P » peint
   const P=MOTO_PARK;[[0,.62,2.6,.05],[0,-.62,2.6,.05],[1.3,0,.05,1.29],[-1.3,0,.05,1.29]].forEach(([dx,dz,w,d])=>box(w,.01,d,'#e8e8e4',P.x+dx,.014,P.z+dz));
   OBJECTS.push({id:'o_moto',get x(){return moto.position.x},get z(){return moto.position.z},r:1.5,get label(){return riding?'Descendre de la moto':'Monter sur la moto'},act:()=>riding?dismount():mount()});
-  $('btnMoto').onclick=recallMoto;
+  $('btnMoto').onclick=recallMoto;$('btnUnstuck').onclick=unstuck;
 }
 function parkMoto(){const P=MOTO_PARK;moto.position.set(P.x,0,P.z);moto.rotation.set(0,P.ry,0)}
 function mount(){if(seated)standUp();riding=true;target=null;pendingTalk=null;const ud=player.userData;
   player.position.set(moto.position.x,0,moto.position.z);ud.ry=moto.rotation.y+Math.PI/2;ud.sit=true;toast('En selle · E pour descendre','')}
 function dismount(quiet){if(!riding)return;riding=false;const ud=player.userData;ud.sit=false;
   const a=moto.rotation.y,sx=Math.sin(a),sz=Math.cos(a); // on descend sur le côté gauche de la moto
-  const p=freeNear(moto.position.x+sx*1.1,moto.position.z+sz*1.1);player.position.x=p[0];player.position.z=p[1];if(!quiet)toast('Moto garée.','')}
+  // à gauche si c'est libre, sinon à droite, sinon la place libre la plus proche
+  let p=[[1,1.1],[-1,1.1],[1,1.6],[-1,1.6]].map(([s,k])=>[moto.position.x+sx*s*k,moto.position.z+sz*s*k]).find(([x,z])=>!blocked(x,z));if(!p)p=unstuckSpot();
+  player.position.x=p[0];player.position.z=p[1];if(!quiet)toast('Moto garée.','')}
+// « Débloquer » : la place libre la plus proche, à 2 m au plus
+function unstuckSpot(){const P=player.position;for(let r=.3;r<=2;r+=.2)for(let k=0;k<16;k++){const a=k/16*Math.PI*2,x=P.x+Math.cos(a)*r,z=P.z+Math.sin(a)*r;if(!blocked(x,z))return [x,z]}return [P.x,P.z]}
+function unstuck(){if(riding||climb)return;const p=unstuckSpot();player.position.x=p[0];player.position.z=p[1];target=null;toast('Débloqué.','')}
 function leaveMoto(){if(riding)dismount(true)} // entrer quelque part, prendre le taxi ou le train : la moto reste garée là
 function recallMoto(){if(riding)return;parkMoto();toast('Ta moto t’attend devant la planque.','')}
 // la moto garée est un obstacle (on en fait le tour)

@@ -21,7 +21,7 @@ body{background:var(--bg);color:var(--fg);font:14px/1.5 var(--f-b);overflow:hidd
 #repVal{font:12px var(--f-m);color:var(--dim);font-variant-numeric:tabular-nums}
 .bar{height:6px;background:#111822;border:1px solid var(--line)}
 .bar i{display:block;height:100%;background:var(--amber);width:0;transition:width .5s}
-#btnContacts,#btnMoto{justify-self:start}
+#btnContacts,#btnMoto,#btnUnstuck{justify-self:start}
 #meteo{padding:7px 10px;display:flex;gap:10px;align-items:center}
 #meteo .mi{font:600 20px/1 var(--f-m);color:var(--cyan);width:22px;text-align:center}
 #meteo b{display:block;font:700 13px/1.1 var(--f-d);letter-spacing:.06em;color:var(--fg)}
