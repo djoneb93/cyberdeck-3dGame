@@ -23,18 +23,20 @@ function audioInit(){
   N.rev=c.createConvolver();N.rev.buffer=impulse(c,2.6);const rg=c.createGain();rg.gain.value=.45;N.rev.connect(rg);rg.connect(N.mus);
   applyVolumes();
   AUD.white=noiseBuf(c,3,false);AUD.brown=noiseBuf(c,4,true);
+  // chaque source passe par un panoramique : on l'entend à gauche ou à droite selon sa place autour de la caméra
+  const pan=g=>{const p=c.createStereoPanner?c.createStereoPanner():null;if(p){g.connect(p);p.connect(N.amb)}else g.connect(N.amb);return p};
   const layer=(buf,type,f,q)=>{const s=c.createBufferSource();s.buffer=buf;s.loop=true;const fl=c.createBiquadFilter();fl.type=type;fl.frequency.value=f;fl.Q.value=q;
-    const g=c.createGain();g.gain.value=0;s.connect(fl);fl.connect(g);g.connect(N.amb);s.start(0,Math.random()*2);return {g,fl}};
-  const drone=(type,f,ft,ff)=>{const fl=c.createBiquadFilter();fl.type=ft;fl.frequency.value=ff;const g=c.createGain();g.gain.value=0;fl.connect(g);g.connect(N.amb);
-    const os=[1,1.008].map(k=>{const o=c.createOscillator();o.type=type;o.frequency.value=f*k;o.connect(fl);o.start();return o});return {g,fl,os}};
+    const g=c.createGain();g.gain.value=0;s.connect(fl);fl.connect(g);const pn=pan(g);s.start(0,Math.random()*2);return {g,fl,pn}};
+  const drone=(type,f,ft,ff)=>{const fl=c.createBiquadFilter();fl.type=ft;fl.frequency.value=ff;const g=c.createGain();g.gain.value=0;fl.connect(g);const pn=pan(g);
+    const os=[1,1.008].map(k=>{const o=c.createOscillator();o.type=type;o.frequency.value=f*k;o.connect(fl);o.start();return o});return {g,fl,os,pn}};
   const L=AUD.L;
-  L.rain=layer(AUD.white,'highpass',1400,.6);L.rainLow=layer(AUD.brown,'lowpass',700,.6);L.wind=layer(AUD.brown,'bandpass',320,.8);
+  L.rain=layer(AUD.white,'bandpass',2600,.45);L.rainLow=layer(AUD.brown,'lowpass',600,.5); /* pluie douce : un bruissement, pas une averse */L.wind=layer(AUD.brown,'bandpass',320,.8);
   L.crowd=layer(AUD.brown,'bandpass',650,1.4);L.city=layer(AUD.brown,'lowpass',160,.7);L.sea=layer(AUD.brown,'lowpass',520,.7);
   L.train=layer(AUD.brown,'lowpass',240,.9);L.cars=layer(AUD.white,'bandpass',800,1.6);
   L.fly=drone('sawtooth',92,'lowpass',380);L.moto=drone('sawtooth',55,'lowpass',650);L.club=drone('sine',46,'lowpass',160);
   startMusic();
 }
-function applyVolumes(){const N=AUD.N;if(!AUD.ctx)return;N.master.gain.value=AUD.vol.master;N.mus.gain.value=AUD.vol.music*.9;N.amb.gain.value=AUD.vol.amb}
+function applyVolumes(){const N=AUD.N;if(!AUD.ctx)return;N.master.gain.value=AUD.vol.master;N.mus.gain.value=AUD.vol.music;N.amb.gain.value=ambienceOn()?AUD.vol.amb:0}
 // le son ne peut démarrer qu'après un geste de l'utilisateur (règle des navigateurs)
 ['pointerdown','keydown'].forEach(ev=>addEventListener(ev,()=>{audioInit();if(AUD.ctx&&AUD.ctx.state==='suspended')AUD.ctx.resume()},{passive:true}));
 
@@ -43,31 +45,39 @@ function thunder(){const c=AUD.ctx,t=now()+.4+Math.random()*1.4,s=c.createBuffer
   const g=c.createGain();g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(.9,t+.08);g.gain.exponentialRampToValueAtTime(.001,t+4.5);s.connect(fl);fl.connect(g);g.connect(AUD.N.amb);s.start(t,Math.random());s.stop(t+5)}
 
 // ---- mise à jour, dix fois par seconde ----
+// Dans le menu, en pause ou pendant le réveil : seulement la musique. L'ambiance démarre une fois réveillé, dans la ville.
+// Chaque source est placée à gauche ou à droite selon sa direction par rapport à la caméra, et s'éteint avec la distance :
+// on distingue la mer, le train, une voiture qui passe, la foule, sans que tout se mélange.
 let audT=0,lastFlash=0,lastTrainZ=null;
+function ambienceOn(){const hid=id=>{const e=document.getElementById(id);return !e||e.hidden};return started&&S.flags.woke&&!cine&&hid('intro')&&hid('pause')&&hid('quit')}
+function panTo(layer,x,z){if(!layer.pn)return;const p=player.position,dx=x-p.x,dz=z-p.z,l=Math.hypot(dx,dz)||1,r=(dx*Math.cos(yaw)-dz*Math.sin(yaw))/l;layer.pn.pan.setTargetAtTime(Math.max(-.85,Math.min(.85,r)),now(),.2)}
 function updateAudio(dt){
   if(!AUD.ctx)return;audT+=dt;if(audT<.1)return;const D=audT;audT=0;
+  const on=ambienceOn();AUD.N.amb.gain.setTargetAtTime(on?AUD.vol.amb:0,now(),.8);AUD.N.mus.gain.setTargetAtTime(AUD.vol.music*(on?.75:1),now(),.8); // la musique se fait plus discrète en jeu
+  if(!on)return;
   const L=AUD.L,p=player.position,z=zoneOf(),inside=!!(z&&String(z).startsWith('in_')),out=inside?0:1;
   AUD.N.muffle.frequency.setTargetAtTime(inside?480:18000,now(),.25);
-  const w=WEATHERS[weatherIdx],rain=w.sand?0:wx.rain;
-  setG(L.rain,rain*.2);setG(L.rainLow,rain*.22);setG(L.wind,w.sand?.4:(.04+(w.storm?.14:0)+(S.roof?.12:0)));
+  // météo : une pluie douce (seulement quand il pleut), le vent, le tonnerre à chaque éclair
+  const w=WEATHERS[weatherIdx],rain=w.sand?0:Math.max(0,wx.rain-.02);
+  setG(L.rain,rain*.06,1);setG(L.rainLow,rain*.05,1);setG(L.wind,w.sand?.22:((w.storm?.07:0)+(S.roof==='roof'?.08:0)),1);
   if(typeof flash==='number'){if(flash>.9&&lastFlash<.5)thunder();lastFlash=flash}
-  // la foule : selon le nombre de passants autour de soi
-  const crowd=walkers.filter(o=>Math.hypot(o.m.position.x-p.x,o.m.position.z-p.z)<12).length;setG(L.crowd,out*Math.min(.14,.03+crowd*.018));
-  setG(L.city,inside?.04:.12);
-  // le ressac : plus fort près du quai, avec des vagues lentes
-  const sea=Math.max(0,1-Math.max(0,p.x-9)/14);setG(L.sea,out*sea*.3*(.7+.3*Math.sin(tAcc*.5)),.6);L.sea.fl.frequency.setTargetAtTime(380+260*Math.max(0,Math.sin(tAcc*.5)),now(),.5);
-  // le TGV : grondement selon sa distance et sa vitesse
-  if(train){const tz=train.position.z,v=lastTrainZ==null?0:Math.abs(tz-lastTrainZ)/D;lastTrainZ=tz;const dz=Math.max(0,Math.abs(p.z-(tz-20))-20),d=Math.hypot(GX-p.x,dz);
-    setG(L.train,out*Math.max(0,1-d/45)*Math.min(.45,.03+v*.04));L.train.fl.frequency.setTargetAtTime(160+v*8,now(),.3)}
-  // voitures au sol et voitures volantes
-  let cd=1e9;aveCars.forEach(c=>{const q=c.g.position;cd=Math.min(cd,Math.hypot(q.x-p.x,q.z-p.z))});setG(L.cars,out*Math.max(0,.09*(1-cd/12)),.2);
-  let fd=1e9,fy=null;flyers.forEach(f=>{const d=f.g.position.distanceTo(p);if(d<fd){fd=d;fy=f}});setG(L.fly,out*Math.max(0,.07*(1-fd/28)),.3);
-  if(fy)L.fly.os.forEach((o,i)=>o.frequency.setTargetAtTime((80+fd*.8)*(i?1.008:1),now(),.3));
+  // la foule : un murmure au centre, selon le nombre de passants autour de soi ; la ville, un fond très bas
+  const crowd=walkers.filter(o=>Math.hypot(o.m.position.x-p.x,o.m.position.z-p.z)<10).length;setG(L.crowd,out*Math.min(.08,crowd*.013));
+  setG(L.city,inside?.02:.05);
+  // le ressac : du côté du quai, plus fort quand on s'en approche, avec des vagues lentes
+  const sea=Math.max(0,1-Math.max(0,p.x-9)/14);setG(L.sea,out*sea*.26*(.65+.35*Math.sin(tAcc*.5)),.6);L.sea.fl.frequency.setTargetAtTime(380+260*Math.max(0,Math.sin(tAcc*.5)),now(),.5);panTo(L.sea,8,p.z);
+  // le TGV : grondement selon sa distance et sa vitesse, du côté de la voie
+  if(train){const tz=train.position.z,v=lastTrainZ==null?0:Math.abs(tz-lastTrainZ)/D;lastTrainZ=tz;const cz=Math.max(tz-40,Math.min(tz,p.z)),d=Math.hypot(GX-p.x,cz-p.z);
+    setG(L.train,out*Math.max(0,1-d/40)*Math.min(.35,.02+v*.035));L.train.fl.frequency.setTargetAtTime(150+v*8,now(),.3);panTo(L.train,GX,cz)}
+  // voitures au sol et voitures volantes : la plus proche, à sa place
+  let cd=1e9,cq=null;aveCars.forEach(c=>{const q=c.g.position,d=Math.hypot(q.x-p.x,q.z-p.z);if(d<cd){cd=d;cq=q}});setG(L.cars,out*Math.max(0,.07*(1-cd/11)),.2);if(cq)panTo(L.cars,cq.x,cq.z);
+  let fd=1e9,fy=null;flyers.forEach(f=>{const d=f.g.position.distanceTo(p);if(d<fd){fd=d;fy=f}});setG(L.fly,out*Math.max(0,.05*(1-fd/26)),.3);
+  if(fy){L.fly.os.forEach((o,i)=>o.frequency.setTargetAtTime((80+fd*.8)*(i?1.008:1),now(),.3));panTo(L.fly,fy.g.position.x,fy.g.position.z)}
   // la moto : régime selon qu'on roule ou non
-  const mv=typeof riding!=='undefined'&&riding;setG(L.moto,mv?(player.userData.moving?.09:.035):0,.15);L.moto.os.forEach((o,i)=>o.frequency.setTargetAtTime((mv&&player.userData.moving?98:52)*(i?1.008:1),now(),.25));
+  const mv=typeof riding!=='undefined'&&riding;setG(L.moto,mv?(player.userData.moving?.08:.03):0,.15);L.moto.os.forEach((o,i)=>o.frequency.setTargetAtTime((mv&&player.userData.moving?98:52)*(i?1.008:1),now(),.25));
   // la basse du club Ondes, la nuit, quand on passe devant
   const dc=Math.hypot(PL.club.x-p.x,PL.club.z-p.z),open=typeof clubOpen==='function'&&clubOpen();
-  setG(L.club,(z==='in_club'?.35:out*Math.max(0,.22*(1-dc/22)))*(open?1:0)*(.6+.4*Math.max(0,Math.sin(tAcc*Math.PI*2*128/60))),.05);
+  setG(L.club,(z==='in_club'?.3:out*Math.max(0,.18*(1-dc/22)))*(open?1:0)*(.6+.4*Math.max(0,Math.sin(tAcc*Math.PI*2*128/60))),.05);panTo(L.club,PL.club.x,PL.club.z);
 }
 
 // ---- musique : synthwave sombre en la mineur (la m · fa · do · sol), 88 battements par minute ----
