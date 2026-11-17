@@ -170,7 +170,9 @@ function buildWorld(){
   PIERS.forEach(pz=>{box(7.2,.12,1.9,'#4a3526',5.6,.06,pz+1);for(let x=2.5;x<9.5;x+=2.2){box(.2,.7,.2,'#2a1e14',x,.2,pz+.1);box(.2,.7,.2,'#2a1e14',x,.2,pz+1.9)}box(.25,.25,.25,'#ffb547',2.3,.6,pz+1,null,true)});
   const [cx,cz]=CRANE;box(.45,12,.45,'#f6b35c',cx,6,cz);box(10,.38,.38,'#f6b35c',cx-4.2,12,cz);box(.06,4.5,.06,'#8a7040',cx-7.5,9.6,cz);box(1.2,.6,1.2,'#3a3f4c',cx-7.5,7.2,cz);box(.3,.3,.3,'#ff3b4e',cx,12.4,cz,null,true);
   const cc=['#d0353f','#2a6f7a','#ffb547','#3a4a8a','#7a2e22'];
-  for(let i=0;i<3;i++)for(let k=0;k<2;k++)for(let l=0;l<(i===1?3:2);l++)box(1.9,1.2,2.8,cc[(i*2+k+l)%5],CONT[0]+1+i*1.4*1.0+k*.0,.6+l*1.22,CONT[1]+1.5+k*3.1);
+  for(let i=0;i<3;i++)for(let k=0;k<2;k++)for(let l=0;l<(i===1?3:2);l++){ // conteneurs côte à côte, sans se chevaucher (plus de scintillement), avec leurs nervures
+    const cx=CONT[0]+.68+i*1.32,cz=CONT[1]+1.5+k*3.1,cy=.6+l*1.22;box(1.22,1.18,2.8,cc[(i*2+k+l)%5],cx,cy,cz);
+    for(let r=-1;r<=1;r+=2)box(1.26,1.1,.06,'#15181e',cx,cy,cz+r*.7)}
   const boat=(x,z,len,c,big)=>{const g=new THREE.Group();g.position.set(x,0,z);scene.add(g);
     box(len,.8,big?2.6:1.5,c,0,.15,0,g);box(len*.92,.12,(big?2.6:1.5)*.9,'#2a2e36',0,.6,0,g);box(len*.3,big?1.2:.8,(big?2:1.1),'#d8d8d8',-len*.25,1.1,0,g);
     box(len*.28,.25,(big?2:1.1)+.02,'#6fdcff',-len*.25,1.25,0,g,true);box(.12,.12,.12,'#ff3b4e',len/2-.1,.75,0,g,true);box(.12,.12,.12,'#5dff9a',-len/2+.1,.75,0,g,true);

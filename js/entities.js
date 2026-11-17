@@ -7,8 +7,8 @@ const NPC_DEF=[
   {id:'mira',x:6.5+HX,z:7.3+HZ,ry:Math.PI},
   {id:'vasko',x:GX+GHW+1.3,z:(GZ0+GZ1)/2,ry:-Math.PI/2},
   {id:'doc',x:STALLS[7][0],z:STALLS[7][1]+1.5,ry:0},
-  {id:'okoro',...FP('laundry',.85,0),ry:0},
-  {id:'lou',...FP('club',.85,0),ry:-Math.PI/2}];
+  {id:'okoro',...FP('laundry',.85,2.4),ry:0},
+  {id:'lou',...FP('club',.85,-2.4),ry:-Math.PI/2}];
 const OBJECTS=[
   {id:'o_terminal',x:9.5,z:3.7,r:1.3,label:'Examiner le terminal'},
   {id:'o_bed',x:4,z:4.3,r:1.4,label:'Examiner le lit'},
@@ -31,15 +31,15 @@ const OBJECTS=[
     return first?'Un chat gris roulé en boule au pied du lit. Il ouvre un œil, te reconnaît visiblement, et se met à ronronner. Lui n’a rien oublié.'
       :'Le chat ronronne. '+(S.met.mira?'Mira l’appelle Frite. Tu ne sais pas qui a choisi ce nom.':'Il n’a pas de collier. Juste une habitude : toi.')}},
   {id:'o_moto',x:10,z:10.5,r:1.6,label:'Examiner la moto'},
-  {id:'o_bar',...FP('bar',1.3,0),r:1.2,label:'Regarder · Le Néon Noir',dyn:()=>AMB.bar},
+  {id:'o_bar',...FP('bar',1.3,2.3),r:1.2,label:'Regarder · Le Néon Noir',dyn:()=>AMB.bar},
   {id:'o_roofs',...FP('roofs',1.3,1.8),r:1.3,label:'Regarder · Toits de Zone Zéro',dyn:()=>AMB.roofs+' Tout en haut, l’hologramme de Lou « Néon » tourne lentement : ce soir, elle joue au club Ondes.'},
   {id:'o_market',...FP('market',1.2,3),r:1.3,label:'Regarder · Bazar Néon',dyn:()=>AMB.market},
   {id:'o_laundry',...FP('laundry',1.3,-2.4),r:1.2,label:'Regarder · Laverie 24/7',dyn:()=>AMB.laundry},
   {id:'o_lab',...FP('lab',1.3,-2),r:1.3,label:'Regarder · Parking-labo',dyn:()=>AMB.lab+(S.flags.chapter2?' Une plaque sur la porte : « Dr E. Vex ». C’est ici que commencera le chapitre 3.':' La porte est verrouillée.')},
   {id:'o_club',...FP('club',1.3,2.4),r:1.2,label:'Regarder · Club Ondes',dyn:()=>AMB.club},
   {id:'o_arcade',...FP('arcade',1.3,-1.8),r:1.2,label:'Regarder · Arcade Pixel',dyn:()=>AMB.arcade},
-  {id:'o_port',...FP('port',1.3,0),r:1.4,label:'Regarder · Port fluvial',dyn:()=>AMB.port},
-  {id:'o_bunker',...FP('bunker',1.3,-1.8),r:1.2,label:'Regarder · Bunker Zéro',dyn:()=>AMB.bunker+' Pour l’instant, la porte blindée reste fermée pour toi.'},
+  {id:'o_port',...FP('port',1.3,-2.4),r:1.4,label:'Regarder · Port fluvial',dyn:()=>AMB.port},
+  {id:'o_bunker',...FP('bunker',1.3,-1.8),r:1.2,label:'Regarder · Bunker Zéro',dyn:()=>AMB.bunker},
   {id:'o_stairs_up',x:GX-1.62,z:GZ1+.6,r:1.2,label:'Monter sur le quai',act:()=>climbStairs(true)},
   {id:'o_stairs_down',x:GX-1.62,z:QUAI_END-.3,r:1,zone:'quai',label:'Descendre l’escalier',act:()=>climbStairs(false)},
   {id:'o_tgv',x:GX-1.2,z:(GZ0+QUAI_END)/2,r:1.3,zone:'quai',label:'Regarder le TGV',dyn:()=>Math.abs(train.position.z-(GZ1-.6))<.5?'Le TGV est à quai. Portes fermées : réservé aux voyageurs munis d’un billet. Le tableau des départs annonce plusieurs destinations. Un jour, peut-être.':'La voie est vide. Le prochain TGV arrive du haut de la ville, par le viaduc.'},

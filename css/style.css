@@ -26,6 +26,8 @@ body{background:var(--bg);color:var(--fg);font:14px/1.5 var(--f-b);overflow:hidd
 #meteo .mi{font:600 20px/1 var(--f-m);color:var(--cyan);width:22px;text-align:center}
 #meteo b{display:block;font:700 13px/1.1 var(--f-d);letter-spacing:.06em;color:var(--fg)}
 #meteo i{font:11px var(--f-m);color:var(--dim);font-style:normal}
+#meteo .clock{font:11px var(--f-m);color:var(--dim);margin-left:auto;padding-left:8px;border-left:1px solid rgba(255,255,255,.12);white-space:nowrap}
+#meteo .clock b{display:inline;font:700 13px var(--f-m)}
 button{font:600 11.5px var(--f-m);letter-spacing:.08em;background:var(--panel);color:var(--cyan);border:1px solid var(--cyan);padding:7px 12px;cursor:pointer;text-transform:uppercase}
 button:hover{background:#0d2a33}
 button:focus-visible{outline:2px solid var(--cyan);outline-offset:2px}
