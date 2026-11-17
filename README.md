@@ -49,9 +49,9 @@ et partagent la même portée globale.
 - `js/life.js` : la ville vivante (enseignes verticales, liserés néon, projecteurs, drones, vapeur, fenêtres).
 - `js/taxi.js` : le taxi volant et sa visite commentée de la ville.
 - `js/weather.js` : la météo, qui change toutes les 3 heures (touche M : aperçu).
-- `js/daynight.js` : le cycle jour / nuit (une journée dure 24 minutes, touche N pour avancer).
+- `js/daynight.js` : le cycle jour / nuit, avec un ciel de jour (nuages, soleil) et un ciel de nuit (étoiles, lune) ; une journée dure 24 minutes, touche N pour avancer.
 - `js/doors.js` : portes des lieux importants (portes vitrées coulissantes, vue intérieure animée).
-- `js/interiors.js` : les intérieurs du Néon Noir, de l’Arcade, du club Ondes, de la laverie, du Bunker (réservé aux « visages connus ») et de l’entrepôt du port.
+- `js/interiors.js` : les intérieurs (on y entre et on en sort en marchant dans la porte) : l’étage de la planque (par l’escalier en colimaçon), le Bazar couvert, le Néon Noir, l’Arcade, le club Ondes, la laverie, le Bunker (réservé aux « visages connus ») et l’entrepôt du port.
 - `js/story.js` : dialogues du jeu et moteur des histoires des contacts (Ink).
 - `js/entities.js` : personnages, objets à examiner, passants, voitures, marqueurs.
 - `js/game.js` : déplacement, interactions, HUD, boucle de jeu, démarrage.

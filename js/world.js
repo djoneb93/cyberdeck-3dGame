@@ -157,7 +157,8 @@ function buildWorld(){
     }
     if(id==='bar'){portal(id,1.8,2.4);faceSign(id,P.n,P.c,3.75,0,.1);
       adScreen(x+1.2,2.6,z+p.hd+.1,0,3.2,1.8)} // panneau publicitaire, sur la façade sud
-    if(id==='laundry'){faceBox(id,w-1,1.8,1.2,0,'#0d3a46',true);for(let i=0;i<4;i++){faceBox(id,.9,.9,.9,-2.1+i*1.4,'#cfd8de',false,.1);faceBox(id,.5,.5,.95,-2.1+i*1.4,'#6fe8ff',true,.2)}faceSign(id,P.n,P.c,h-.7,0,.09)}
+    if(id==='laundry'){portal(id,1.8,2.4); // vraie porte vitrée au milieu, une vitrine de chaque côté avec sa machine
+      [-1,1].forEach(s=>{const lw=w/2-1.4,lc=s*(1.33+lw/2);faceBox(id,lw,1.8,1.2,lc,'#0d3a46',true);faceBox(id,.85,.9,.9,lc,'#cfd8de',false,.1);faceBox(id,.5,.5,.95,lc,'#6fe8ff',true,.2)});faceSign(id,P.n,P.c,h-.7,0,.09)}
     if(id==='lab')faceSign(id,P.n,P.c,3.05,-1.2,.08,false);
     if(id==='arcade'){portal(id,1.8,2.4);[-1,1].forEach(s=>{faceBox(id,.9,.7,1.5,s*2.05,pick(['#ff4fa3','#39e6ff','#ffb547']),true,.06)});faceSign(id,P.n,P.c,3.75,0,.1)}
     if(id==='bunker'){faceBox(id,2.6,2,1,0,'#2a2a2a',false);for(let i=0;i<6;i++)faceBox(id,.4,2,1,-1+i*.4,i%2?'#ffb547':'#15171c',false,.08);

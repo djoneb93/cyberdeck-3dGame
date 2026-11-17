@@ -5,7 +5,7 @@
 const portals=[];
 const DOOR_THEMES={
   bar:{c:'#ff4fa3',draw:drawBarInside},roofs:{c:'#6ff3f0',draw:drawLobbyInside},
-  arcade:{c:'#5ce1e6',draw:drawArcadeInside},port:{c:'#8fb7ff',draw:drawDockInside}
+  arcade:{c:'#5ce1e6',draw:drawArcadeInside},port:{c:'#8fb7ff',draw:drawDockInside},laundry:{c:'#7cf29a',draw:drawLaundryInside}
 };
 function portal(id,ow,oh){
   const T=DOOR_THEMES[id],p=PL[id],[x,z]=front(id,0,0),D=.8;ow=ow||1.8;oh=oh||2.4;
@@ -85,5 +85,14 @@ function drawDockInside(g,W,H,t){ // entrepôt : caisses, lampes suspendues, cha
   for(let i=0;i<3;i++){const x=r.bx0+8+i*16;g.fillStyle='rgba(255,226,170,.16)';g.beginPath();g.moveTo(x,r.by0);g.lineTo(x-9,r.by1);g.lineTo(x+9,r.by1);g.fill();g.fillStyle='#ffe2aa';g.fillRect(x-2,r.by0,4,2)}
   [[4,H-30,22,24,'#7a2e22'],[8,H-48,16,18,'#2a6f7a'],[W-28,H-26,24,22,'#ffb547'],[W-22,H-42,16,16,'#3a4a8a']].forEach(([x,y,w,h,c])=>{g.fillStyle=c;g.fillRect(x,y,w,h);g.strokeStyle='rgba(0,0,0,.4)';g.strokeRect(x+.5,y+.5,w-1,h-1)});
   const fx=r.bx0+((t*12)%(r.bx1-r.bx0+30))-15;g.fillStyle='#d8a020';g.fillRect(fx,r.by1-9,12,7);g.fillStyle='#222';g.fillRect(fx+9,r.by1-16,2,9);g.fillStyle='#fff2c0';g.fillRect(fx+12,r.by1-7,2,2);
+  glass(g,W,H);
+}
+function drawLaundryInside(g,W,H,t){ // rangée de hublots qui tournent, carrelage, néon qui grésille
+  const r=room(g,W,H,'#16302e','#7a868a','#0c1816');
+  for(let j=1;j<6;j++){const y=r.by1+(H-r.by1)*j/6;g.fillStyle='rgba(30,40,44,.5)';g.fillRect(0,y,W,1)}
+  for(let i=0;i<4;i++){const x=r.bx0+5+i*11;g.fillStyle='#6a767c';g.fillRect(x-4,r.by1-12,9,11);g.fillStyle='#6fe8ff';g.beginPath();g.arc(x,r.by1-6,3,0,7);g.fill();
+    g.strokeStyle='#0a2a30';g.beginPath();g.moveTo(x+Math.cos(t*4+i)*3,r.by1-6+Math.sin(t*4+i)*3);g.lineTo(x-Math.cos(t*4+i)*3,r.by1-6-Math.sin(t*4+i)*3);g.stroke()}
+  if(!(Math.sin(t*23)>.9)){g.fillStyle='#e8fff4';g.fillRect(r.bx0+4,r.by0+3,r.bx1-r.bx0-8,2)}
+  guy(g,W/2+10,H-14,12,'#0a1414');
   glass(g,W,H);
 }

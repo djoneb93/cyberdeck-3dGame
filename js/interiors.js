@@ -5,7 +5,7 @@
 
 const IY=-60;                    // les pièces sont sous la ville, et hors de la carte : rien ne les voit depuis la rue
 const ROOMS={};let inLights=null,inCur=null;
-const IN_NAMES={bar:'Le Néon Noir',arcade:'Arcade Pixel',club:'Club Ondes',laundry:'Laverie 24/7',bunker:'Bunker Zéro',port:'Entrepôt des Docks'};
+const IN_NAMES={home:'L’étage de la planque',market:'Bazar couvert',bar:'Le Néon Noir',arcade:'Arcade Pixel',club:'Club Ondes',laundry:'Laverie 24/7',bunker:'Bunker Zéro',port:'Entrepôt des Docks'};
 
 // ---------- outils ----------
 const rpick=a=>a[Math.floor(Math.random()*a.length)]; // hasard qui ne touche pas à la graine de la ville
@@ -42,13 +42,21 @@ function makeRoom(id,o,cx,cz){
   const so=R.south=new THREE.Group();so.position.z=d/2-.06;g.add(so);
   const dp=new THREE.Mesh(new THREE.PlaneGeometry(1.7,2.5),mat('#05070b'));dp.position.y=1.25;dp.rotation.y=Math.PI;so.add(dp);
   box(.08,2.6,.1,o.trim,-.89,1.3,-.02,so,true);box(.08,2.6,.1,o.trim,.89,1.3,-.02,so,true);box(1.86,.08,.1,o.trim,0,2.6,-.02,so,true);
-  const st=signTexture('SORTIE','#7dffb0'),sp=new THREE.Mesh(new THREE.PlaneGeometry(st.w*.035,st.h*.035),new THREE.MeshBasicMaterial({map:st.tex,fog:false}));sp.position.set(0,2.95,-.04);sp.rotation.y=Math.PI;so.add(sp);
+  const st=signTexture(o.door||'SORTIE','#7dffb0'),sp=new THREE.Mesh(new THREE.PlaneGeometry(st.w*.035,st.h*.035),new THREE.MeshBasicMaterial({map:st.tex,fog:false}));sp.position.set(0,2.95,-.04);sp.rotation.y=Math.PI;so.add(sp);
   R.B(1.4,.02,.7,o.trim,0,.01,d/2-.5,true); // tapis lumineux devant la porte
-  OBJECTS.push({id:'in_'+id+'_exit',x:cx,z:cz+d/2-.75,r:1.25,zone:'in_'+id,label:'Sortir · retour dans la rue',act:()=>exitRoom(id)});
   ZONES['in_'+id]={x:cx,z:cz,hw:w/2-.45,hd:d/2-.45,y:IY,blocks,room:id};
-  ROOMS[id]=R;o.build(R);
-  // la porte de la rue
-  const f=FP(id,.95,0);OBJECTS.push({id:'en_'+id,x:f.x,z:f.z,r:1.25,label:'Entrer · '+IN_NAMES[id],act:()=>enterRoom(id)});
+  ROOMS[id]=R;o.build(R);if(o.outside)o.outside();
+  // la porte de la rue : on entre en marchant dedans, sans touche à presser
+  const f=o.entry||FP(id,.3,0);ENTRANCES.push({id,x:f.x,z:f.z,r:f.r||.85});
+}
+const ENTRANCES=[];let doorArmed=true,doorCool=0;
+function checkDoors(dt){
+  doorCool-=dt;if(!started||dlgOpen||overlayOpen||climb||taxiRide||cine||doorCool>0)return;
+  const p=player.position,z=zoneOf(),Z=z&&ZONES[z];
+  if(!z){const e=ENTRANCES.find(e=>Math.hypot(p.x-e.x,p.z-e.z)<e.r);if(!e){doorArmed=true;return}
+    if(doorArmed){doorArmed=false;doorCool=1;enterRoom(e.id)}return}
+  if(!Z.room)return;const R=ROOMS[Z.room];
+  if(p.z>R.cz+R.d/2-.8&&Math.abs(p.x-R.cx)<.9){doorCool=1.2;exitRoom(Z.room)}
 }
 
 // ---------- entrer, sortir ----------
@@ -56,7 +64,7 @@ function enterRoom(id){const R=ROOMS[id];
   if(id==='bunker'&&S.rep<10){openDlg({n1:{s:'nar',t:'La porte blindée ne bouge pas. Une caméra pivote vers toi, te détaille, puis se détourne. Ici, on n’ouvre qu’aux visages connus de la Zone Zéro (réputation « Visage connu »).'}});return}
   fadeThen(()=>{S.roof='in_'+id;player.position.set(R.cx,IY,R.cz+R.d/2-2.2);player.userData.ry=Math.PI;player.userData.jy=0;player.userData.jv=0;
   target=null;pendingTalk=null;yaw=yawT=0;distT=Math.min(distT,6.5);pitchT=Math.max(pitchT,.45);focus.set(player.position.x,IY+1.5,player.position.z);save();toast(IN_NAMES[id],'')})}
-function exitRoom(id){fadeThen(()=>{S.roof=false;const p=FP(id,1.7,0);player.position.set(p.x,0,p.z);player.userData.ry=FACE_RY[PL[id].face];
+function exitRoom(id){const o=IN_DEF[id];fadeThen(()=>{S.roof=false;const p=o.exit||FP(id,1.7,0);player.position.set(p.x,0,p.z);player.userData.ry=o.exit?o.exit.ry:FACE_RY[PL[id].face];doorArmed=false;
   target=null;pendingTalk=null;focus.set(p.x,1.5,p.z);save()})}
 
 // ---------- les pièces ----------
@@ -213,19 +221,105 @@ const IN_DEF={
     }}
 };
 
+// ---------- l'étage de la planque : ton appartement d'avant 2086, resté sous les draps ----------
+IN_DEF.home={w:10,d:8,h:3,trim:'#7cf29a',light:[0xffc890,0x6fa8ff],fog:0x0e0c14,door:'ESCALIER',
+  entry:{x:5.5+HX,z:5.3+HZ,r:.55},exit:{x:6.6+HX,z:6.1+HZ,ry:0},
+  floor:canvasMat(64,64,(g,W,H)=>{for(let i=0;i<8;i++){g.fillStyle=i%2?'#3a281c':'#43301f';g.fillRect(0,i*8,W,8);g.fillStyle='rgba(0,0,0,.4)';g.fillRect(0,i*8,W,1);g.fillRect((i*29)%W,i*8,1,8)}},4,3),
+  wall:canvasMat(64,64,(g,W,H)=>{g.fillStyle='#2b2333';g.fillRect(0,0,W,H);for(let x=0;x<W;x+=16){g.fillStyle='#33293d';g.fillRect(x,0,8,H)}g.fillStyle='#4a3e48';for(let i=0;i<5;i++)g.fillRect(Math.random()*W,Math.random()*H,6,10)},5,2),
+  outside(){ // escalier en colimaçon dans la planque, contre le lit
+    const x=5.5+HX,z=4.5+HZ;solid[I(5+HX,4+HZ)]=1;box(.12,3.2,.12,'#8899aa',x,1.6,z);
+    for(let i=0;i<9;i++){const a=i*.75,s=box(.6,.06,.22,'#5a6070',x+Math.cos(a)*.3,.2+i*.34,z+Math.sin(a)*.3);s.rotation.y=-a}
+    box(.05,.05,.05,'#7cf29a',x,3.2,z,null,true);box(.9,.02,.7,'#7cf29a',x,.01,z+.8,null,true)},
+  build(R){const w=R.w,d=R.d;
+    // grande fenêtre sur la ville : le ciel suit l'heure
+    R.screen(0,1.75,-d/2+.06,0,4,1.7,(g,W,H,t)=>{const k=typeof dnLevel==='number'?dnLevel:0;const sky=g.createLinearGradient(0,0,0,H);
+      sky.addColorStop(0,k>.5?'#5a8ac0':'#05060f');sky.addColorStop(1,k>.5?'#d8c8b0':'#2a1440');g.fillStyle=sky;g.fillRect(0,0,W,H);
+      for(let i=0;i<14;i++){const bx=i*W/14,bh=H*(.3+((i*37)%11)/16);g.fillStyle=k>.5?'#3a4458':'#0a0c16';g.fillRect(bx,H-bh,W/14-1,bh);
+        if(k<.5)for(let y=H-bh+3;y<H-2;y+=4)for(let xx=bx+2;xx<bx+W/14-2;xx+=4)if((xx*7+y*3+i)%5===0){g.fillStyle=['#ffcf7a','#6fe8ff','#ff6fb3'][(xx+y)%3];g.fillRect(xx,y,2,2)}}
+      g.fillStyle='rgba(180,210,255,.35)';for(let i=0;i<12;i++){const rx=(i*41+t*20)%W,ry=(i*23+t*60)%H;g.fillRect(rx,ry,1,4)}},128);
+    R.B(4.2,.12,.12,'#1a1620',0,.85,-d/2+.08);R.B(4.2,.12,.12,'#1a1620',0,2.65,-d/2+.08);R.B(.12,1.9,.12,'#1a1620',0,1.75,-d/2+.08);
+    R.S(4,.5,.5,'#3a2a20',0,.25,-d/2+.3);[-1.4,0,1.4].forEach(x=>{R.B(.3,.3,.3,'#6b4a36',x,.65,-d/2+.3);R.B(.4,.4,.4,'#2f7a3e',x,1,-d/2+.3)});
+    // le mur de photos, à l'ouest
+    R.screen(-w/2+.06,1.6,-.4,Math.PI/2,2.6,1.4,(g,W,H,t)=>{g.fillStyle='#4a3a2a';g.fillRect(0,0,W,H);const n=S.frags?S.frags.length:0;
+      for(let i=0;i<8;i++){const x=6+(i%4)*24,y=6+Math.floor(i/4)*26;g.fillStyle='#e8e2d6';g.fillRect(x,y,18,20);g.fillStyle=i<2+n*2?['#6a8ab0','#b08a6a','#8a6ab0','#6ab08a'][i%4]:'#9a9a9a';g.fillRect(x+2,y+2,14,13);
+        if(i>=2+n*2){g.fillStyle='#2a2a2a';g.fillRect(x+4,y+6,10,3)}}
+      g.strokeStyle='#d0353f';g.beginPath();g.moveTo(12,14);g.lineTo(60,40);g.lineTo(84,14);g.stroke()},96);
+    // meubles sous des draps, cartons
+    R.S(2.2,.8,1,'#8a867c',-2.3,.4,1.4);R.B(2.2,.4,.3,'#827e74',-2.3,1,1.85);R.S(1,.9,1,'#8e8a80',2,.45,2.3);
+    [[-4,2.4,.6],[-3.4,2.6,.5],[-4,2.4,1.1]].forEach(([x,z,y])=>R.B(.6,.5,.6,'#7a5a3a',x,y-.3,z));R.block(-3.7,2.5,.6,.5);
+    // établi et moto en pièces, à l'est
+    R.S(.8,.9,2.6,'#3a3026',w/2-.45,.45,-1);R.B(.06,1.2,2.4,'#2a2420',w/2-.04,1.8,-1);
+    for(let i=0;i<6;i++)R.B(.04,.3,.06,pick(['#8899aa','#d0353f','#ffb547']),w/2-.08,1.6+(i%2)*.4,-2+i*.4);
+    const hel=new THREE.Mesh(new THREE.SphereGeometry(.22,12,8),new THREE.MeshPhongMaterial({color:0x1a1a22,shininess:80}));hel.position.set(w/2-.5,1.12,-1.6);R.g.add(hel);R.B(.3,.05,.04,'#39e6ff',w/2-.5,1.12,-1.39,true);
+    R.B(.2,.5,.2,'#3a3f4c',w/2-.5,1.15,-.2);R.B(.25,.1,.25,'#ffc890',w/2-.5,1.45,-.2,true);
+    // la veste de runner, sur un mannequin
+    R.S(.4,.06,.4,'#2a2a30',w/2-1.3,.03,1.9);R.B(.06,1.3,.06,'#2a2a30',w/2-1.3,.7,1.9);R.B(.62,.7,.32,'#ff8a3d',w/2-1.3,1.35,1.9);R.B(.64,.06,.34,'#39e6ff',w/2-1.3,1.25,1.9,true);R.B(.18,.5,.2,'#ff8a3d',w/2-1.7,1.3,1.9);R.B(.18,.5,.2,'#ff8a3d',w/2-.9,1.3,1.9);
+    // tourne-disque
+    R.S(.7,.6,.5,'#3a2a20',-w/2+.8,.3,-2.6);const disc=new THREE.Mesh(new THREE.CylinderGeometry(.2,.2,.02,16),mat('#111'));disc.position.set(-w/2+.8,.62,-2.6);R.g.add(disc);R.B(.06,.03,.06,'#d0353f',-w/2+.8,.64,-2.6,true);
+    R.anims.push({k:0,f:t=>{disc.rotation.y=t*3}});
+    R.obj(0,-d/2+1.1,1.3,'Regarder par la fenêtre',()=>typeof dnLevel==='number'&&dnLevel>.5?'Le jour pâle sur la Zone Zéro. D’ici, tu vois la tour des Toits et l’antenne. Tu as dû regarder cette vue des centaines de fois. Elle te semble neuve.':'Les néons de la Zone Zéro, la pluie sur la vitre. Quelque part là-dedans, quelqu’un sait ce que tu as fait pendant trois ans.');
+    R.obj(-w/2+1,-.4,1.3,'Le mur de photos',()=>{const n=S.frags?S.frags.length:0;return n>=3?'Les visages sont revenus. Vasko, le Doc, Okoro… et toi, souriant, devant une tour noire marquée d’un K. Tu ne souriais pas souvent, après.':n?'Quelques photos ont retrouvé un sens depuis que tu récupères tes souvenirs. Les autres restent des inconnus qui te regardent.':'Des photos que tu ne reconnais pas, reliées par un fil rouge. Certaines ont été grattées au couteau. Par toi ?'});
+    R.obj(w/2-1.3,1.2,1.1,'La veste de runner',()=>'Une veste orange et cyan, renforcée aux coudes. Elle porte l’écusson du Bunker Zéro. Elle est à ta taille.');
+    R.obj(w/2-1,-1,1.2,'L’établi',()=>'Des pièces de moto, un casque à visière cyan, des outils bien rangés. Tu sais exactement où se trouve chaque clé. Tes mains se souviennent, même si ta tête a oublié.');
+    R.obj(-w/2+1.2,-2.6,1.1,'Le tourne-disque',lines(['Un vinyle de 2079 tourne encore. Tu ne te souviens pas de l’avoir lancé.','La pochette dit « Bruxelles sous la pluie ». Tu fredonnes la mélodie avant qu’elle commence.']));
+    R.obj(-2,.7,1.3,'Soulever un drap',()=>'Sous le drap, un canapé couvert de poussière. Personne n’est monté ici depuis trois ans. Personne, sauf peut-être Mira : il y a une tasse propre sur l’accoudoir.');
+  }};
+
+// ---------- le Bazar couvert : sous la verrière du marché, un escalier descend vers les étals de nuit ----------
+IN_DEF.market={w:14,d:10,h:3.6,trim:'#f6b35c',light:[0xffb547,0xff4fa3],fog:0x140c06,
+  floor:canvasMat(32,32,(g,W,H)=>{g.fillStyle='#3a2a1e';g.fillRect(0,0,W,H);g.fillStyle='#4a3626';g.fillRect(1,1,14,14);g.fillRect(17,17,14,14);g.fillStyle='#2e2218';g.fillRect(17,1,14,14);g.fillRect(1,17,14,14)},10,7),
+  wall:canvasMat(64,32,(g,W,H)=>{g.fillStyle='#24140e';g.fillRect(0,0,W,H);for(let y=0;y<H;y+=4)for(let x=(y/4)%2*4;x<W;x+=8){g.fillStyle=rpick(['#3a2016','#432419','#341c12']);g.fillRect(x,y,7,3)}},6,3),
+  outside(){ // la trémie de l'escalier, sous la verrière, avec son arche et son enseigne
+    const [x,z]=front('market',-.4,1.8),ry=FACE_RY[PL.market.face];box(1.5,.03,1.5,'#05060a',x,.02,z);
+    [[.75,0],[-.75,0],[0,.75],[0,-.75]].forEach(([a,b])=>box(a?.06:1.5,.06,b?.06:1.5,'#f6b35c',x+a,.05,z+b,null,true));
+    const [p1x,p1z]=front('market',-.4,2.6),[p2x,p2z]=front('market',-.4,1);box(.12,2.4,.12,'#2a3140',p1x,1.2,p1z);box(.12,2.4,.12,'#2a3140',p2x,1.2,p2z);
+    const lt=box(.12,.12,1.7,'#f6b35c',x,2.4,z,null,true);lt.rotation.y=ry+Math.PI/2;
+    const [sx,sz]=front('market',-.33,1.8);sign('BAZAR COUVERT','#f6b35c',sx,2.75,sz,ry,true,false,.03)},
+  entry:(()=>{const [x,z]=front('market',-.4,1.8);return {x,z,r:.6}})(),exit:(()=>{const [x,z]=front('market',.8,1.8);return {x,z,ry:FACE_RY[PL.market.face]}})(),
+  build(R){const w=R.w,d=R.d;
+    const stall=(x,c,name,goods)=>{const z=-d/2+1.2;R.S(2.3,.9,.8,'#2a2420',x,.45,z);R.B(2.35,.06,.85,'#4a3a2a',x,.92,z);
+      R.B(2.7,.08,1.5,shade(c,.45),x,2.5,z-.2);R.B(2.7,.06,.06,c,x,2.46,z+.55,true);[-1.25,1.25].forEach(dx=>R.B(.07,2.5,.07,'#2a3140',x+dx,1.25,z+.5));
+      for(let i=0;i<5;i++)R.B(.24,.2,.24,rpick(goods),x-.9+i*.45,1.05,z+.05);R.B(.25,.3,.25,c,x,2.15,z+.45,true);
+      R.sign(name,c,x,2.75,z+.56,0,.028);R.who(x+.3,z-.75,0)};
+    stall(-4.7,'#5ce1e6','IMPLANTS',['#8899aa','#39e6ff','#c0c8d0']);stall(-1.55,'#ffb547','ÉPICES',['#d0353f','#ffb547','#7a5a3a','#e8d070']);
+    stall(1.6,'#7dffb0','PUCES MÉMOIRE',['#7dffb0','#2a6f7a','#c9b7ff']);stall(4.75,'#ff4fa3','RÉPARATIONS',['#5a6070','#ff4fa3','#3a3f4c']);
+    // le comptoir à nouilles, à l'est, avec sa vapeur
+    R.S(.8,1,3.4,'#3a2018',w/2-1.6,.5,1.2);R.B(.85,.06,3.45,'#5a3020',w/2-1.6,1.02,1.2);R.B(.05,.05,3.4,'#ff4fa3',w/2-2.02,.98,1.2,true);
+    R.who(w/2-.7,1.2,-Math.PI/2,{...randomSpec(),coat:'#e8e8e4'});[0,1.1,2.2].forEach(dz=>R.S(.36,.06,.36,'#ffb547',w/2-2.4,.7,.1+dz,true));
+    R.B(.5,.4,.5,'#8899aa',w/2-.7,1.2,.2);R.sign('RAMEN 24H','#ff4fa3',w/2-.06,2.4,1.2,-Math.PI/2,.04);
+    const steam=[];for(let i=0;i<5;i++){const m=new THREE.Mesh(new THREE.PlaneGeometry(.5,.5),new THREE.MeshBasicMaterial({map:glowTex,color:0xffffff,transparent:true,opacity:.2,depthWrite:false}));m.position.set(w/2-.7,1.5,.2);R.g.add(m);steam.push({m,o:i/5})}
+    R.anims.push({k:0,f:t=>steam.forEach(s=>{const u=(t*.4+s.o)%1;s.m.position.y=1.4+u*1.6;s.m.material.opacity=.25*(1-u);s.m.scale.setScalar(.6+u);s.m.lookAt(camera.position)})});
+    // la cabine de l'Oracle, à l'ouest
+    R.S(1.2,2.3,1.2,'#1e1430',-w/2+.9,1.15,1.6);R.B(1.25,.06,1.25,'#b98cff',-w/2+.9,2.33,1.6,true);
+    R.screen(-w/2+1.51,1.4,1.6,Math.PI/2,.8,.8,(g,W,H,t)=>{g.fillStyle='#0a0614';g.fillRect(0,0,W,H);const bl=Math.sin(t*1.3)>.97?.1:1;
+      g.fillStyle='#b98cff';g.beginPath();g.ellipse(W/2,H/2,W*.38,H*.22*bl,0,0,7);g.fill();g.fillStyle='#0a0614';g.beginPath();g.arc(W/2+Math.sin(t*.8)*8,H/2,H*.13*bl,0,7);g.fill()},48);
+    R.sign('ORACLE','#b98cff',-w/2+1.52,2.05,1.6,Math.PI/2,.035);
+    // guirlandes de lanternes, sacs d'épices au centre
+    for(let r=0;r<3;r++)for(let i=0;i<12;i++)R.B(.14,.18,.14,['#ffb547','#ff4fa3','#7dffb0','#5ce1e6'][(i+r)%4],-5.5+i,3.2-Math.abs(Math.sin(i*.5))*.2,-1.6+r*1.6,true);
+    [[-1,.9,'#d0353f'],[-.4,1.3,'#ffb547'],[-1.2,1.6,'#e8d070'],[.2,.8,'#7a5a3a']].forEach(([x,z,c])=>{const s=new THREE.Mesh(new THREE.CylinderGeometry(.24,.28,.55,10),mat(c));s.position.set(x,.27,z);R.g.add(s)});R.block(-.5,1.2,.95,.65);
+    R.who(-3,.4,Math.PI*.2,null,'sway');R.who(2.4,-1.6,Math.PI,null,'sway');R.who(3.6,2.2,-2.2,null,'sway');R.who(-4.6,2.6,.6,{...randomSpec(),coat:'#5a4a3a'});
+    R.obj(-4.7,-2.6,1.3,'Étal des implants',lines(['« Œil de nuit, garanti six mois. Main de précision, à peine utilisée. Ne demande pas d’où ça vient. »','« Toi, tu as déjà une cicatrice derrière l’oreille. Le Doc t’a vu ? Il fait du meilleur travail que moi. »']));
+    R.obj(-1.55,-2.6,1.3,'Étal des épices',()=>'Cumin de synthèse, piment de serre, safran véritable à prix d’or. L’odeur te ramène quelque part : une cuisine, une voix qui rit. Puis plus rien.');
+    R.obj(1.6,-2.6,1.3,'Étal des puces mémoire',lines(['« Souvenirs d’occasion ! Un été à la mer, trois crédits. Un premier amour, dix. » Tu reposes la puce, mal à l’aise.','« On ne demande pas à qui ils étaient. Les gens vendent ce qu’ils peuvent. Certains vendent ce qu’on leur a pris. »']));
+    R.obj(4.75,-2.6,1.3,'Étal des réparations',()=>'« Je répare tout ce qui a une batterie. Les montres, les drones, les bras. Ton terminal fait des siennes ? Amène-le. »');
+    R.obj(w/2-2.4,1.2,1.4,'Manger des nouilles',lines(['Un bol fumant de nouilles au bouillon noir. Le cuisinier ne dit rien, mais il te ressert sans que tu demandes.','« Comme d’habitude ? » demande le cuisinier. Tu ne savais pas que tu avais une habitude.']));
+    R.obj(-w/2+2,1.6,1.3,'Consulter l’Oracle',lines(['L’Oracle cligne : « Ce que tu cherches porte un nom de fer. »','L’Oracle murmure : « Le train descend du haut de la ville. Toi aussi, un jour, tu y es monté. »','L’Oracle se tait longtemps, puis : « Trois ans. Trois fragments. Une seule porte. »','L’Oracle : « Le chat de ta planque en sait plus que toi. »']));
+  }};
+
 function buildInteriors(){
   inLights=[new THREE.PointLight(0xffffff,0,15,1.4),new THREE.PointLight(0xffffff,0,13,1.4)];inLights.forEach(l=>scene.add(l));
   const wallOf={bunker:()=>photoMat('concrete',3,1,.5),port:()=>photoMat('corrugated',4,1.4,.45)};
   let k=0;for(const id in IN_DEF){const o=IN_DEF[id];if(!o.wall)o.wall=(wallOf[id]&&wallOf[id]())||mat('#2a2e34');makeRoom(id,o,W+60+k*22,H/2);k++}
 }
 function updateInteriors(dt){
+  checkDoors(dt);
   const z=zoneOf(),Z=z&&ZONES[z],R=Z&&Z.room?ROOMS[Z.room]:null;
   if(R!==inCur){inCur=R;inLights.forEach((l,i)=>{if(!R){l.intensity=0;return}l.color.setHex(R.o.light[i]);l.intensity=i?1.1:1.6;l.position.set(R.cx+(i?R.w/4:-R.w/5),IY+R.h-.5,R.cz+(i?R.d/5:-R.d/5))})}
   if(!R)return;
   if(distT>8)distT=8; // la caméra reste près de la pièce
   R.south.visible=camera.position.z<R.cz+R.d/2-.1;
   // dans une pièce : pas de pluie, pas de brouillard de la rue
-  if(rain)rain.mesh.visible=false;scene.fog.color.setHex(R.o.fog);scene.background.setHex(R.o.fog);scene.fog.density=.012;hemi.intensity=.6;
+  if(rain)rain.mesh.visible=false;scene.fog.color.setHex(R.o.fog);scene.background.setHex(R.o.fog);scene.fog.density=.03;hemi.intensity=.6;
   R.anims.forEach(a=>{a.k+=dt;if(a.k>.08){a.k=0;a.f(tAcc)}});
   R.chars.forEach(c=>{if(!c.anim)return;c.ph+=dt;const m=c.m;
     if(c.anim==='dance'){m.position.y=IY+Math.abs(Math.sin(c.ph*4))*.18;m.userData.ry+=dt*1.2*(c.ph%2>1?1:-1);m.userData.moving=Math.sin(c.ph*2)>0}
