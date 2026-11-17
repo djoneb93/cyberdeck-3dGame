@@ -82,7 +82,11 @@ function buildStreets(){
   AVE.forEach((a,ai)=>{for(let t=.15+ai*.02;t<.95;t+=.25){[['z',UX(a),UZ(t)],['x',UX(t),UZ(a)]].forEach(([ax,p,q])=>{if(nearCross(ax==='z'?p:q,ax==='z'?q:p,4))return;const pts=[],y0=7+srnd()*2;
     for(let i=0;i<=12;i++){const s=i/12,o=-3.4+6.8*s,y=y0-Math.sin(s*Math.PI)*1.1;pts.push(ax==='z'?new THREE.Vector3(p+o,y,q):new THREE.Vector3(q,y,p+o))}
     scene.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts),cm));
-    [3,6,9].forEach(i=>{const v=pts[i];sd(pick(['#ff4fa3','#ffb547','#39e6ff','#ff3b4e']),true,v.x,v.y-.25,v.z,.22,.3,.22)})})}});
+    // chaque bout du câble est accroché : à la façade s'il y a un immeuble, sinon à un mât planté au bord du trottoir
+    [0,12].forEach(i=>{const v=pts[i];if(isSolid(v.x,v.z))sd('#2a3140',false,v.x,v.y,v.z,.16,.16,.16);
+      else{sd('#2a3140',false,v.x,v.y/2,v.z,.09,v.y,.09);sd('#3a4252',false,v.x,v.y+.05,v.z,.16,.1,.16);FURN.push([v.x,v.z,.14])}});
+    // les lampions pendent au câble par un petit cordon
+    [3,6,9].forEach(i=>{const v=pts[i];sd('#0c0e12',false,v.x,v.y-.05,v.z,.02,.1,.02);sd(pick(['#ff4fa3','#ffb547','#39e6ff','#ff3b4e']),true,v.x,v.y-.24,v.z,.22,.3,.22)})})}});
   // tags sur les murs bas des immeubles en brique et en béton (façade est, au-dessus des vitrines)
   const TAGS=['MOTH','LÉTHÉ = MENSONGE','ZONE ZÉRO','NEURA ♥','BXL 2089','KUROGANE DEHORS','OÙ SONT-ILS ?'];
   TOWERS.forEach((b,k)=>{if(!b.box||b.comm||!['brick','concrete','resi'].includes(b.style)||k%2)return;const x=UX(b.u),z=UZ(b.v),w=2*b.s*MS;

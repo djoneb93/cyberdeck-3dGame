@@ -30,7 +30,6 @@ const OBJECTS=[
   {id:'o_cat',x:4,z:5.6,r:1.3,label:'Caresser le chat',dyn:()=>{const first=!S.flags.cat;S.flags.cat=true;save();
     return first?'Un chat gris roulé en boule au pied du lit. Il ouvre un œil, te reconnaît visiblement, et se met à ronronner. Lui n’a rien oublié.'
       :'Le chat ronronne. '+(S.met.mira?'Mira l’appelle Frite. Tu ne sais pas qui a choisi ce nom.':'Il n’a pas de collier. Juste une habitude : toi.')}},
-  {id:'o_moto',x:10,z:10.5,r:1.6,label:'Examiner la moto'},
   {id:'o_bar',...FP('bar',1.3,2.3),r:1.2,label:'Regarder · Le Néon Noir',dyn:()=>AMB.bar},
   {id:'o_roofs',...FP('roofs',1.3,1.8),r:1.3,label:'Regarder · Toits de Zone Zéro',dyn:()=>AMB.roofs+' Tout en haut, l’hologramme de Lou « Néon » tourne lentement : ce soir, elle joue au club Ondes.'},
   {id:'o_market',...FP('market',1.2,3),r:1.3,label:'Regarder · Bazar Néon',dyn:()=>AMB.market},
@@ -48,7 +47,7 @@ const OBJECTS=[
   {id:'o_view',x:ROOF.x+ROOF.hw-.9,z:ROOF.z+ROOF.hd-.9,r:1.3,roof:true,label:'Regarder la ville',dyn:()=>AMB.roofs},
   {id:'o_holoroof',x:ROOF.x-.1,z:ROOF.z+2.3,r:1,roof:true,label:'Regarder l’hologramme',dyn:()=>'De près, l’hologramme de Lou n’est qu’un nuage de lumière qui grésille. Vingt mètres de « Néon » pour annoncer son set au club Ondes.'},
   {id:'o_gare',x:GX+GHW+1.3,z:GZ0+.6,r:1.3,label:'Regarder · Gare Zéro',dyn:()=>'La gare Zéro. Une rame arrive de loin par le viaduc, s’arrête sous les arches, puis repart. Les quais vides ont été repris par ceux que personne ne voulait en haut.'}];
-const HOME_OBJ=['o_terminal','o_bed','o_poster','o_board','o_photo','o_wardrobe','o_sofa','o_kitchen','o_fridge','o_safe','o_cat','o_moto'];
+const HOME_OBJ=['o_terminal','o_bed','o_poster','o_board','o_photo','o_wardrobe','o_sofa','o_kitchen','o_fridge','o_safe','o_cat'];
 OBJECTS.forEach(o=>{if(HOME_OBJ.includes(o.id)){o.x+=HX;o.z+=HZ}});
 function spawn(){
   player=makeChar(SPECS.you);

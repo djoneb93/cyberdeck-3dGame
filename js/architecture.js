@@ -16,7 +16,7 @@ const NCACHE={};
 function normalTex(name,tiles,rx,ry){const ph=TEXIMG[name+'_n'];if(!ph)return null;const k=name+tiles;
   if(!NCACHE[k]){const c=document.createElement('canvas');c.width=256;c.height=256*tiles;const g=c.getContext('2d');for(let i=0;i<tiles;i++)g.drawImage(ph,0,i*256,256,256);NCACHE[k]=c}
   const t=new THREE.CanvasTexture(NCACHE[k]);t.wrapS=t.wrapT=THREE.RepeatWrapping;t.repeat.set(rx,ry);t.minFilter=THREE.LinearMipmapLinearFilter;return t}
-const STYLE_PHOTO={concrete:'concrete',brick:'brick',metal:'metal',resi:'concrete'};
+const STYLE_PHOTO={concrete:'concrete',brick:'brick',resi:'concrete'}; // (le métal est peint : plus de tôle perforée)
 let archSeed=20891;const arnd=()=>{archSeed=(archSeed*16807)%2147483647;return (archSeed-1)/2147483646};
 const apick=a=>a[Math.floor(arnd()*a.length)];
 const WARM=['#e8b878','#d8a868','#f0c080','#c89058'],COOL=['#bfe8ff','#9fd8ff','#e8f4ff'];
@@ -49,9 +49,12 @@ function paintFacade(style){
         if(arnd()<.5){lit(px+1,y+7,6,18,apick(WARM),.9);g.fillStyle='rgba(40,20,10,.5)';g.fillRect(px+1,y+15,6,1);g.fillRect(px+4,y+7,1,18)}else dim(px+1,y+7,6,18)
         g.fillStyle='#7a6a58';g.fillRect(px-1,y+26,10,1)}}
   }else if(style==='metal'){
-    if(!photoBase(g,'metal',null,.42)){g.fillStyle='#2c3038';g.fillRect(0,0,64,128)}
-    else for(let y=0;y<128;y+=16)g.fillRect(0,y,0,0);
-    if(!TEXIMG.metal)for(let y=0;y<128;y+=16)for(let px=0;px<64;px+=16){g.fillStyle=arnd()<.5?'#262b33':'#1f232a';g.fillRect(px+1,y+1,14,14);g.fillStyle='#2e343d';g.fillRect(px+1,y+1,14,1)}
+    // bardage métallique uni : grands panneaux à peine nuancés, joints creux, reflet en haut de chaque panneau, rivets, coulures légères
+    const gm=g.createLinearGradient(0,0,64,128);gm.addColorStop(0,'#4a515a');gm.addColorStop(.5,'#414850');gm.addColorStop(1,'#3a4048');g.fillStyle=gm;g.fillRect(0,0,64,128);
+    for(let y=0;y<128;y+=32)for(let px=0;px<64;px+=32){const k=arnd()*.06-.03;g.fillStyle=k>0?'rgba(255,255,255,'+k+')':'rgba(0,0,0,'+(-k)+')';g.fillRect(px+1,y+1,30,30);
+      g.fillStyle='rgba(255,255,255,.07)';g.fillRect(px+1,y+1,30,1);g.fillStyle='rgba(0,0,0,.22)';g.fillRect(px,y,32,1);g.fillRect(px,y,1,32);
+      g.fillStyle='rgba(200,210,220,.35)';[[3,3],[28,3],[3,28],[28,28]].forEach(([rx,ry])=>g.fillRect(px+rx,y+ry,1,1))}
+    for(let i=0;i<14;i++){g.fillStyle='rgba(0,0,0,.05)';g.fillRect((arnd()*64)|0,(arnd()*128)|0,1,6+((arnd()*14)|0))}
     for(let f=0;f<4;f++){const y=f*32+12;g.fillStyle='#0e1218';g.fillRect(0,y-1,64,10);
       for(let s=0;s<8;s++){if(arnd()<.5)lit(s*8+1,y,6,8,apick(['#7af3ff','#ff8ac8','#e8f4ff','#ffd9a0']),.8);else{g.fillStyle='#141c26';g.fillRect(s*8+1,y,6,8);dim(s*8+1,y,6,8)}}}
   }else{ // résidentiel : enduit délavé, petites fenêtres à stores

@@ -274,9 +274,6 @@ function buildWorld(){
     tg.strokeStyle='#1a0a2a';tg.strokeText('MOTH',10,44);const gr=tg.createLinearGradient(0,0,128,0);gr.addColorStop(0,'#ff4fa3');gr.addColorStop(1,'#39e6ff');tg.fillStyle=gr;tg.fillText('MOTH',10,44);
     const tag=new THREE.Mesh(new THREE.PlaneGeometry(2.4,1.2),new THREE.MeshLambertMaterial({map:new THREE.CanvasTexture(tc),transparent:true,polygonOffset:true,polygonOffsetFactor:-2}));tag.position.set(1.68,1.4,6.5);tag.rotation.y=-Math.PI/2;homeShell.add(tag)} // tag sur le mur ouest
   buildHome();
-  const moto=new THREE.Group();moto.position.set(10,0,10.5);scene.add(moto);
-  box(.5,.5,.18,'#15171c',-.75,.25,0,moto);box(.5,.5,.18,'#15171c',.75,.25,0,moto);
-  box(1.6,.35,.32,'#ff8a3d',0,.6,0,moto);box(.7,.12,.3,'#15171c',-.2,.84,0,moto);box(.2,.3,.3,'#ff8a3d',.75,.9,0,moto);box(.06,.12,.2,'#fff4c8',.88,.9,0,moto,true);box(.06,.08,.2,'#ff3b4e',-.82,.66,0,moto,true);
   for(let i=n0;i<scene.children.length;i++){const o=scene.children[i];o.position.x+=HX;o.position.z+=HZ}
 
   // réverbères

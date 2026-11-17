@@ -21,7 +21,7 @@ function buildStation(){
   for(let z=z0+1;z<z1;z+=1.6){box(.03,.6,.03,'#2a3140',GX,6.6,z);box(.5,.08,.5,'#ffe9b0',GX,6.25,z,null,true)}
   // escalier vers le quai ouest (au sud de la halle)
   const st=QUAI_Y/9,sd=(GZ1-.2-QUAI_END)/9;
-  for(let i=0;i<9;i++){const zz=GZ1-.2-(i+.5)*sd;box(1.2,st,sd,'#3a414c',GX-1.62,st*(i+.5),zz);box(1.2,(i+1)*st,sd,'#262b34',GX-1.62,(i+1)*st/2-.001,zz);box(1.18,.025,.05,'#ffcf3a',GX-1.62,st*(i+1)+.01,zz+sd/2-.03,null,true)}
+  for(let i=0;i<9;i++){const zz=GZ1-.2-(i+.5)*sd;box(1.2,(i+1)*st,sd,'#3a414c',GX-1.62,(i+1)*st/2,zz); /* une seule pièce par marche : plus de faces superposées */box(1.18,.025,.05,'#ffcf3a',GX-1.62,st*(i+1)+.01,zz+sd/2-.03,null,true)}
   const ang=Math.atan2(QUAI_Y,GZ1-.2-QUAI_END),rl=Math.hypot(QUAI_Y,GZ1-.2-QUAI_END);
   [-1,1].forEach(s=>{const r=box(.05,.05,rl,'#cfe8ff',GX-1.62+s*.62,QUAI_Y/2+.95,(GZ1-.2+QUAI_END)/2,null,true);r.rotation.x=ang;
     for(let i=0;i<=3;i++)box(.04,.95,.04,'#3a4252',GX-1.62+s*.62,st*9*i/3+.47,GZ1-.2-(GZ1-.2-QUAI_END)*i/3)});

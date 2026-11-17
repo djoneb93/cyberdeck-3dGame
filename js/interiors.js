@@ -94,7 +94,7 @@ function checkDoors(dt){
 }
 
 // ---------- entrer, sortir ----------
-function enterRoom(id){const R=ROOMS[id];
+function enterRoom(id){const R=ROOMS[id];leaveMoto();
   if(id==='club'&&!clubOpen()){openDlg({n1:{s:'nar',t:'Le club Ondes est fermé. Une affiche sur la porte : « Ouverture à 20 h · fermeture à l’aube ». Reviens ce soir.'}});return}
   if(id==='bunker'&&S.rep<10){openDlg({n1:{s:'nar',t:'La porte blindée ne bouge pas. Une caméra pivote vers toi, te détaille, puis se détourne. Ici, on n’ouvre qu’aux visages connus de la Zone Zéro (réputation « Visage connu »).'}});return}
   fadeThen(()=>{S.roof='in_'+id;const sp=R.o.spawn||[0,R.d/2-2.2];player.position.set(R.cx+sp[0],IY,R.cz+sp[1]);player.userData.ry=Math.PI;player.userData.jy=0;player.userData.jv=0;
@@ -330,7 +330,9 @@ IN_DEF.market={w:14,d:10,h:3.6,trim:'#f6b35c',light:[0xffb547,0xff4fa3],fog:0x14
       g.fillStyle='#b98cff';g.beginPath();g.ellipse(W/2,H/2,W*.38,H*.22*bl,0,0,7);g.fill();g.fillStyle='#0a0614';g.beginPath();g.arc(W/2+Math.sin(t*.8)*8,H/2,H*.13*bl,0,7);g.fill()},48);
     R.sign('ORACLE','#b98cff',-w/2+1.52,2.05,1.6,Math.PI/2,.035);
     // guirlandes de lanternes, sacs d'épices au centre
-    for(let r=0;r<3;r++)for(let i=0;i<12;i++)R.B(.14,.18,.14,['#ffb547','#ff4fa3','#7dffb0','#5ce1e6'][(i+r)%4],-5.5+i,3.2-Math.abs(Math.sin(i*.5))*.2,-1.6+r*1.6,true);
+    // chaque rangée pend à un câble tendu d'un mur à l'autre, chaque lanterne à un cordon
+    for(let r=0;r<3;r++){const zr=-1.6+r*1.6;R.B(R.w,.025,.025,'#15171c',0,3.42,zr);
+      for(let i=0;i<12;i++){const y=3.2-Math.abs(Math.sin(i*.5))*.2;R.B(.015,3.42-(y+.09),.015,'#15171c',-5.5+i,(3.42+y+.09)/2,zr);R.B(.14,.18,.14,['#ffb547','#ff4fa3','#7dffb0','#5ce1e6'][(i+r)%4],-5.5+i,y,zr,true)}}
     [[-1,.9,'#d0353f'],[-.4,1.3,'#ffb547'],[-1.2,1.6,'#e8d070'],[.2,.8,'#7a5a3a']].forEach(([x,z,c])=>{const s=new THREE.Mesh(new THREE.CylinderGeometry(.24,.28,.55,10),mat(c));s.position.set(x,.27,z);R.g.add(s)});R.block(-.5,1.2,.95,.65);
     R.who(-3,.4,Math.PI*.2,null,'sway');R.who(2.4,-1.6,Math.PI,null,'sway');R.who(3.6,2.2,-2.2,null,'sway');R.who(-4.6,2.6,.6,{...randomSpec(),coat:'#5a4a3a'});
     R.obj(-4.7,-2.6,1.3,'Étal des implants',lines(['« Œil de nuit, garanti six mois. Main de précision, à peine utilisée. Ne demande pas d’où ça vient. »','« Toi, tu as déjà une cicatrice derrière l’oreille. Le Doc t’a vu ? Il fait du meilleur travail que moi. »']));

@@ -5,6 +5,7 @@
 const R=.27;
 function blocked(x,z){
   const zo=zoneOf();if(zo){const Z=ZONES[zo];if(Math.abs(x-Z.x)>Z.hw||Math.abs(z-Z.z)>Z.hd)return true;return Z.blocks.some(([cx,cz,hx,hz])=>Math.abs(x-cx)<hx+R&&Math.abs(z-cz)<hz+R)}
+  if(motoBlocks(x,z))return true; // la moto garée
   if(isSolid(x-R,z-R)||isSolid(x+R,z-R)||isSolid(x-R,z+R)||isSolid(x+R,z+R))return true;
   for(const n of npcs){const dx=n.mesh.position.x-x,dz=n.mesh.position.z-z;if(dx*dx+dz*dz<.36)return true}
   for(const s of statics){const dx=s.position.x-x,dz=s.position.z-z;if(dx*dx+dz*dz<.36)return true}
@@ -15,7 +16,7 @@ function distTo(o){const p=o.mesh?o.mesh.position:o;return Math.hypot(p.x-player
 
 // montée / descente d'escalier : le personnage suit les marches
 let climb=null;
-function climbStairs(up){if(climb)return;const a={x:GX-1.62,y:0,z:GZ1+.5},b={x:GX-1.62,y:QUAI_Y,z:QUAI_END-.35};
+function climbStairs(up){if(climb)return;leaveMoto();const a={x:GX-1.62,y:0,z:GZ1+.5},b={x:GX-1.62,y:QUAI_Y,z:QUAI_END-.35};
   climb={from:up?a:b,to:up?b:a,t:0,up};overlayOpen=true;target=null;pendingTalk=null}
 function updatePlayer(dt){
   if(taxiRide)return; // dans le taxi : c'est lui qui te déplace
@@ -37,7 +38,7 @@ function updatePlayer(dt){
   }
   const len=Math.hypot(mx,mz);const ud=player.userData;
   if(len>0){
-    mx/=len;mz/=len;const sp=4*dt;
+    mx/=len;mz/=len;const sp=(riding?4*MOTO_SPEED:4)*dt; // à moto : 1,5 fois plus vite
     const ox=player.position.x,oz=player.position.z;
     if(!blocked(ox+mx*sp,oz))player.position.x+=mx*sp;
     if(!blocked(player.position.x,oz+mz*sp))player.position.z+=mz*sp;
@@ -46,7 +47,7 @@ function updatePlayer(dt){
     ud.ry=Math.atan2(mx,mz);ud.moving=moved>sp*.2;
   }else ud.moving=false;
   const J=player.userData;if(J.jv||J.jy){J.jv=(J.jv||0)-22*dt;J.jy=Math.max(0,(J.jy||0)+J.jv*dt);if(J.jy===0)J.jv=0}
-  player.position.y=zoneY()+(J.jy||0);
+  player.position.y=zoneY()+(J.jy||0)+(riding?.3:0); // en selle, un peu plus haut
   S.px=player.position.x;S.pz=player.position.z;S.ry=ud.ry;
 }
 const lerp=(a,b,t)=>a+(b-a)*t;
@@ -63,7 +64,7 @@ function nearest(){
 }
 function interact(){const t=nearest();if(!t)return;if(t.kind==='taxi'){endRide();return}if(t.kind==='npc')talkTo(t.n);else if(t.kind==='spot')openDlg(beatDlg(t.id));else if(t.o.act)t.o.act();else openDlg(t.o.dyn?{n1:{s:'nar',t:t.o.dyn()}}:t.o.id)}
 // monter sur le toit / redescendre : fondu au noir, puis on réapparaît de l'autre côté de la porte
-function goRoof(up){const f=$('fade');f.style.opacity=1;overlayOpen=true;target=null;pendingTalk=null;
+function goRoof(up){leaveMoto();const f=$('fade');f.style.opacity=1;overlayOpen=true;target=null;pendingTalk=null;
   setTimeout(()=>{S.roof=up?'roof':false;const p=up?{x:ROOF.x+1.9,z:ROOF.z-.45}:FP('roofs',1.6,0);player.position.set(p.x,up?ROOF.y:0,p.z);player.userData.ry=up?0:0;
     focus.set(p.x,player.position.y+1.5,p.z);save();f.style.opacity=0;overlayOpen=false;toast(up?'Toit de la tour Zéro':'Rue · Toits de Zone Zéro','')},380)}
 function talkTo(n){
@@ -232,7 +233,7 @@ function frame(){
   if(holo){holo.position.y=holo.userData.baseY+Math.sin(tAcc*1.3)*.08;const hm=holo.userData.plane.material;hm.opacity=.45+Math.sin(tAcc*9)*.04+(Math.random()<.02?-.25:0);holo.userData.moving=false;}
   updateCamera(dt);
   sprites.forEach(s=>updateSprite(s,dt));
-  updateRain(dt);updateInteriors(dt);
+  updateRain(dt);updateInteriors(dt);updateMoto(dt);
   if(started)updateLabels();
   saveT+=dt;if(started&&saveT>4){saveT=0;save()}
   if(composer)composer.render();else renderer.render(scene,camera);
@@ -278,7 +279,7 @@ $('endClose').onclick=()=>{$('ending').hidden=true;overlayOpen=false};
 function start(hotData){
   const saved=(hotData&&hotData.S)||loadSave();
   if(saved){if(saved.mapv!==5){const n=NEW_STATE();saved.px=n.px;saved.pz=n.pz;saved.ry=0;saved.roof=false;saved.mapv=5}S=Object.assign(NEW_STATE(),saved);for(const k in S.q){const q=S.q[k];if(q.ep==null){q.ep=q.won?1:0;q.wins=q.won?1:0}}}
-  setupFX();buildWorld();buildPerimeter();spawn();buildLife();buildTaxi();buildTraffic();buildInteriors();registerBenches();makeMarkers();makeRain();setupWeather();setupDayNight();resize();placePlayer();
+  setupFX();buildWorld();buildPerimeter();spawn();buildLife();buildTaxi();buildTraffic();buildInteriors();registerBenches();buildMoto();makeMarkers();makeRain();setupWeather();setupDayNight();resize();placePlayer();
   $('loading').remove();
   if(hotData&&hotData.S&&hotData.running)begin(false);else showMenu();  try{window.claude&&window.claude.hot&&window.claude.hot.snapshot&&window.claude.hot.snapshot(()=>({S,running:started}))}catch(e){}
   frame();
@@ -303,7 +304,7 @@ function registerBenches(){BENCHES.forEach((b,i)=>OBJECTS.push({id:'bench_'+i,x:
 let trainRide=null;
 const TRAIN_STOP=()=>GZ1-.6;
 function trainAtQuai(){return train&&Math.abs(train.position.z-TRAIN_STOP())<.5&&!trainRide}
-function boardTrain(){if(!trainAtQuai())return;fadeThen(()=>{trainRide={t:0,phase:'ride'};player.visible=false;target=null;pendingTalk=null;toast('Tu montes à bord. Les portes se referment.','')})}
+function boardTrain(){if(!trainAtQuai())return;leaveMoto();fadeThen(()=>{trainRide={t:0,phase:'ride'};player.visible=false;target=null;pendingTalk=null;toast('Tu montes à bord. Les portes se referment.','')})}
 function trainCam(dt){
   if(!trainRide)return false;const R=trainRide;R.t+=dt;
   if(R.phase==='ride'){const z=TRAIN_STOP()-(TRAIN_STOP()+170)*Math.pow(Math.min(1,R.t/16),2);train.position.z=z;

@@ -113,7 +113,7 @@ const hs=(x,z)=>{solid[I(x+HX,z+HZ)]=1},hf=(x0,z0,x1,z1)=>fill(solid,x0+HX,z0+HZ
 for(let x=2;x<=11;x++){hs(x,2);if(x!==6&&x!==7)hs(x,9)}
 for(let z=2;z<=9;z++){hs(2,z);hs(11,z)}
 hf(3,3,4,5);hf(8,3,10,3);hs(10,8);hf(10,4,10,7);hf(3,6,3,8);hs(5,3);hs(4,8);
-hf(9,10,10,10); // moto
+// (la moto n'est plus figée devant la porte : voir js/moto.js)
 // murs extérieurs de l'immeuble (2 étages) autour de la planque ; seule la porte reste ouverte
 for(let z=1;z<=10;z++){hs(1,z);hs(12,z)}for(let x=1;x<=12;x++){hs(x,1);if(x!==6&&x!==7)hs(x,10)}
 const isSolid=(x,z)=>{const cx=Math.floor(x),cz=Math.floor(z);if(cx<0||cz<0||cx>=W||cz>=H)return true;return solid[I(cx,cz)]===1};

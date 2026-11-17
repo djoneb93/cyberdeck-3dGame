@@ -36,7 +36,7 @@ function taxiAct(){
   else if(taxi.state==='solo'){taxi.state='come';taxi.t=0;taxi.from=taxi.g.position.clone();toast('Taxi appelé · il arrive','')}
 }
 function fadeThen(fn){const f=$('fade');f.style.opacity=1;overlayOpen=true;setTimeout(()=>{fn();f.style.opacity=0;overlayOpen=false},380)}
-function startRide(){
+function startRide(){leaveMoto();
   fadeThen(()=>{taxiRide=true;taxi.state='ride';taxi.u=0;player.visible=false;target=null;pendingTalk=null;taxi.stops.forEach(s=>s.done=false);
     distT=10;pitchT=.32;toast('Visite de NEO-BXL · E pour descendre','mem')});
 }

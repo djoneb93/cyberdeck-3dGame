@@ -60,7 +60,9 @@ function buildLandmarks(){buildAnnexes();
   box(2*a+.4,.12,.12,'#3a414c',M.x,5.15,M.z);
   for(let k=-1;k<=1;k++){const pts=[];for(let i=0;i<=10;i++){const s=i/10;pts.push(new THREE.Vector3(M.x-a+2*a*s,4.3-Math.sin(s*Math.PI)*.7,M.z+k*1.8))}
     scene.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts),new THREE.LineBasicMaterial({color:0x05070b})));
-    for(let i=1;i<10;i+=2){const v=pts[i];LM.pulse.push(box(.2,.26,.2,pick(['#ff4fa3','#ffb547','#7cf29a','#39e6ff']),v.x,v.y-.2,v.z,null,true))}}
+    for(let i=1;i<10;i+=2){const v=pts[i];box(.02,.08,.02,'#0c0e12',v.x,v.y-.04,v.z);LM.pulse.push(box(.2,.26,.2,pick(['#ff4fa3','#ffb547','#7cf29a','#39e6ff']),v.x,v.y-.21,v.z,null,true))}}
+  // les guirlandes sont accrochées à deux poutres posées sur les côtés de la charpente (plus de câbles dans le vide)
+  [-1,1].forEach(s=>{box(.1,.1,2*a,'#3a414c',M.x+s*a,4.3,M.z);[-1,0,1].forEach(k=>box(.06,.35,.06,'#3a414c',M.x+s*a,4.47,M.z+k*a*.9))});
   // club Ondes : anneau d'égaliseur autour du dôme, lasers au sommet
   const C=PL.club,r=C.hw+.35;
   for(let i=0;i<28;i++){const ang=i/28*Math.PI*2,bx=C.x+Math.cos(ang)*r,bz=C.z+Math.sin(ang)*r;if(Math.abs(bx-(C.x-C.hw))<1.8&&Math.abs(bz-C.z)<2)continue; // pas devant l'entrée
