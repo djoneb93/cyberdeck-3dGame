@@ -63,7 +63,7 @@ function spawn(){
   const lanes=[{ax:'x',c:UZ(AVE[2])+2.1,a0:UX(.004),a1:UX(.996),side:1,n:6},{ax:'x',c:UZ(AVE[1])+2.1,a0:UX(.004),a1:UX(.996),side:1,n:5},{ax:'x',c:UZ(AVE[3])+2.1,a0:UX(.004),a1:UX(.996),side:1,n:5},
     {ax:'z',c:UX(AVE[1])-2.1,a0:UZ(.004),a1:UZ(.996),side:-1,n:5},{ax:'z',c:UX(AVE[2])+2.1,a0:UZ(.004),a1:UZ(.996),side:1,n:5},{ax:'z',c:UX(AVE[3])-2.1,a0:UZ(.004),a1:UZ(.996),side:-1,n:4},
     {ax:'z',c:13.6,a0:UZ(.0),a1:UZ(1),side:1,n:4}];
-  lanes.forEach(L=>{for(let i=0;i<L.n;i++){let a=0;for(let t=0;t<12;t++){a=L.a0+rnd()*(L.a1-L.a0);if(!(L.ax==='x'?isSolid(a,L.c):isSolid(L.c,a)))break}
+  lanes.forEach(L=>{for(let i=0;i<L.n+2;i++){ /* deux passants de plus par trottoir */let a=0;for(let t=0;t<12;t++){a=L.a0+rnd()*(L.a1-L.a0);if(!(L.ax==='x'?isSolid(a,L.c):isSolid(L.c,a)))break}
     const m=makeChar(randomSpec());if(L.ax==='x')m.position.set(a,0,L.c);else m.position.set(L.c,0,a);
     walkers.push({m,L,v:(L.side>0?1:-1)*(1.1+rnd()*.8),off:0}) /* trottoir à sens unique */}});
   [[ '#5a2a6a','#ff4fa3',14,UZ(AVE[1]),7],[ '#1e3a4a','#39e6ff',12,UZ(AVE[2]),-5],[ '#4a3a1a','#ffb547',10,UZ(AVE[3]),9],[ '#2a2a2a','#ff3b4e',13,UZ(AVE[0])+2,6]].forEach(([b,c,y,z,v],i)=>{
@@ -105,7 +105,7 @@ function updateWalkers(dt){
     // boîte de collision : un mur devant ou trop près sur le côté, et l'on fait demi-tour (jamais sur la chaussée)
     const wall=(a)=>X?(isSolid(a,bb-.2)||isSolid(a,bb+.2)):(isSolid(bb-.2,a)||isSolid(bb+.2,a));
     if(na>L.a1||na<L.a0){ // bout de la file : on revient au début du trottoir, hors du champ de la caméra
-      const start=dir>0?L.a0:L.a1,[sx,sz]=at(start,L.c);if(!inView(new THREE.Vector3(p.x,1,p.z))&&!inView(new THREE.Vector3(sx,1,sz))&&!walkers.some(o=>o!==w&&Math.hypot((X?o.m.position.x:o.m.position.z)-start,(X?o.m.position.z:o.m.position.x)-L.c)<1)){na=start;w.off=0}else{w.v=-w.v;na=pa}}
+      const start=dir>0?L.a0:L.a1,[sx,sz]=at(start,L.c);if(!inView(new THREE.Vector3(p.x,1,p.z))&&!inView(new THREE.Vector3(sx,1,sz))&&!walkers.some(o=>o!==w&&Math.hypot((X?o.m.position.x:o.m.position.z)-start,(X?o.m.position.z:o.m.position.x)-L.c)<1)){na=start;w.off=0;reskin(w.m)}else{w.v=-w.v;na=pa}} /* un nouveau passant (nouvelle tête) qui arrive */
     else if(!onRoad&&wall(na+dir*.45)){w.v=-w.v;na=pa}
     // garde finale : jamais posé sur une case solide (on reste en place et on revient au milieu du trottoir)
     const [fx,fz]=at(na,bb);if(isSolid(fx,fz)){w.off=0;if(isSolid(p.x,p.z)){const [cx2,cz2]=at(pa,L.c);if(!isSolid(cx2,cz2)){p.x=cx2;p.z=cz2}}}

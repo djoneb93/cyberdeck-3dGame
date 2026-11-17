@@ -24,6 +24,7 @@ function updatePlayer(dt){
     player.position.set(c.from.x+(c.to.x-c.from.x)*e,c.from.y+(c.to.y-c.from.y)*Math.min(1,Math.max(0,(e-.08)/.84)),c.from.z+(c.to.z-c.from.z)*e);
     ud.ry=Math.atan2(c.to.x-c.from.x,c.to.z-c.from.z);ud.moving=true;
     if(c.t>=1){S.roof=c.up?'quai':false;climb=null;overlayOpen=false;ud.moving=false;S.px=player.position.x;S.pz=player.position.z}return}
+  if(dancing>0&&danceStep(dt))return; // on danse au club
   // assis sur un banc : on se relève dès qu'on veut marcher (touches ou clic)
   if(seated){const go=!dlgOpen&&!overlayOpen&&(target||['KeyW','KeyS','KeyA','KeyD','ArrowUp','ArrowDown','ArrowLeft','ArrowRight'].some(k=>keys[k]));
     if(!go){player.userData.moving=false;return}standUp()}
@@ -322,3 +323,13 @@ function dreamSequence(){
     d.style.opacity=0;setTimeout(()=>{d.remove();overlayOpen=false;toast('Tu te réveilles dans ta planque, le cœur battant.','mem')},1300)};
   setTimeout(next,1200);
 }
+
+/* ===================== DANSER (club Ondes) ===================== */
+// Le personnage se balance, sautille et tourne sur lui-même pendant une dizaine de secondes ; il s'arrête dès qu'on marche.
+let dancing=0;
+function startDance(){if(dancing>0){dancing=0;return}dancing=12;target=null;pendingTalk=null;toast('Tu te laisses porter par la basse…','')}
+function danceStep(dt){const ud=player.userData;
+  if(['KeyW','KeyS','KeyA','KeyD','ArrowUp','ArrowDown','ArrowLeft','ArrowRight'].some(k=>keys[k])||target||dlgOpen){dancing=0;return false}
+  dancing-=dt;if(dancing<=0){dancing=0;return false}
+  const b=tAcc*124/60*Math.PI; // sur le tempo du club
+  ud.ry+=dt*(Math.sin(tAcc*.9)>0?2.2:-2.2);ud.moving=Math.sin(b*2)>0;player.position.y=zoneY()+Math.abs(Math.sin(b))*.14;return true}

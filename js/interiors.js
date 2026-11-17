@@ -189,6 +189,7 @@ const IN_DEF={
       [[-2,-.6],[-.5,0],[1.2,-1],[2.3,.4],[-1.3,1.4],[.6,1.6],[-2.6,.9]].forEach(([x,z])=>R.who(x,z,Math.random()*6,null,'dance'));
       R.obj(0,-d/2+2.3,1.3,'Parler au DJ',lines(['Le DJ retire un écouteur : « Lou ? Elle joue plus tard. Ce soir, c’est moi qui chauffe la salle. »','« Tu sens la basse dans ta poitrine ? C’est ça, Ondes. Pas besoin d’implant pour ressentir. »']));
       R.obj(.5,.4,1.4,'Danser',lines(['Tu te laisses porter par la basse. Pendant quelques minutes, tu oublies que tu as oublié.','Les dalles changent de couleur sous tes pieds. Quelqu’un te sourit dans la lumière violette.']));
+      OBJECTS[OBJECTS.length-1].act=()=>startDance(); // « Danser » : le personnage danse pour de bon
       R.obj(w/2-1.8,1.4,1.2,'Commander au bar',lines(['« Un Bleu Néon, comme Lou ? » Le verre brille dans le noir. Ça a le goût de menthe et de pile électrique.','« Ici, l’eau est gratuite. C’est la règle de la maison. »']));
     }},
   laundry:{w:10,d:8,h:3.2,trim:'#7cf29a',light:[0x9fd8c8,0x4fb8cc],fog:0x0a1614,

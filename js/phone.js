@@ -26,14 +26,20 @@ function buildMinimap(){
   g.fillStyle='#7cf29a';g.fillRect((HX+2)*k,(HZ+2)*k,10*k,8*k); // ta planque
   mmBase=c;$('minimap').hidden=!S.minimap;
 }
+// la mini-carte est ronde et centrée sur toi : elle défile pendant que tu te déplaces (le nord reste en haut)
+let mmLast=null;
 function updateMinimap(dt){
-  const show=!!(mmBase&&S.minimap&&started&&!$('hudL').hidden);$('mmWrap').hidden=!show;$('minimap').hidden=!show;if(!show)return;mmT+=dt;if(mmT<.15)return;mmT=0;const cv=$('minimap'),g=cv.getContext('2d'),k=2,z=zoneOf();
-  g.clearRect(0,0,cv.width,cv.height);g.drawImage(mmBase,0,0);
-  if(typeof moto!=='undefined'&&moto){g.fillStyle='#ff8a3d';g.fillRect(moto.position.x*k-2,moto.position.z*k-2,4,4)}
-  if(typeof taxi!=='undefined'&&taxi){g.fillStyle='#ffe14d';g.fillRect(taxi.g.position.x*k-2,taxi.g.position.z*k-2,4,4)}
-  if(z&&String(z).startsWith('in_')){$('mmLabel').textContent=(IN_NAMES[z.slice(3)]||'Intérieur');return}
-  $('mmLabel').textContent='Zone Zéro';const p=player.position,a=player.userData.ry||0;
-  const va=Math.atan2(-Math.cos(yaw),-Math.sin(yaw)); // là où regarde la caméra
-  g.save();g.translate(p.x*k,p.z*k);g.fillStyle='rgba(57,230,255,.18)';g.beginPath();g.moveTo(0,0);g.arc(0,0,22,va-.5,va+.5);g.fill();
-  g.rotate(-a+Math.PI);g.fillStyle='#39e6ff';g.beginPath();g.moveTo(0,-5);g.lineTo(4,4);g.lineTo(-4,4);g.closePath();g.fill();g.restore();
+  const show=!!(mmBase&&S.minimap&&started&&!$('hudL').hidden);$('mmWrap').hidden=!show;$('minimap').hidden=!show;if(!show)return;mmT+=dt;if(mmT<.12)return;mmT=0;
+  const cv=$('minimap'),g=cv.getContext('2d'),R=cv.width/2,k=2,s=1.6,z=zoneOf(),inRoom=!!(z&&String(z).startsWith('in_'));
+  if(!inRoom&&!z)mmLast={x:player.position.x,z:player.position.z};const c=inRoom||!mmLast?(mmLast||{x:W/2,z:H/2}):mmLast; // dans une pièce : la carte reste là où tu es entré
+  const px=x=>R+(x-c.x)*k*s,pz=zz=>R+(zz-c.z)*k*s;
+  g.clearRect(0,0,cv.width,cv.height);g.save();g.beginPath();g.arc(R,R,R-1,0,7);g.clip();g.fillStyle='#07090e';g.fillRect(0,0,cv.width,cv.height);
+  g.imageSmoothingEnabled=false;g.drawImage(mmBase,px(0),pz(0),mmBase.width*s,mmBase.height*s);
+  if(typeof moto!=='undefined'&&moto){g.fillStyle='#ff8a3d';g.fillRect(px(moto.position.x)-3,pz(moto.position.z)-3,6,6)}
+  if(typeof taxi!=='undefined'&&taxi){g.fillStyle='#ffe14d';g.fillRect(px(taxi.g.position.x)-3,pz(taxi.g.position.z)-3,6,6)}
+  const va=Math.atan2(-Math.cos(yaw),-Math.sin(yaw)),a=player.userData.ry||0; // le regard de la caméra, puis toi
+  g.translate(px(c.x),pz(c.z));g.fillStyle='rgba(57,230,255,.2)';g.beginPath();g.moveTo(0,0);g.arc(0,0,30,va-.5,va+.5);g.fill();
+  g.rotate(-a+Math.PI);g.fillStyle='#39e6ff';g.beginPath();g.moveTo(0,-6);g.lineTo(5,5);g.lineTo(-5,5);g.closePath();g.fill();g.restore();
+  g.strokeStyle='rgba(57,230,255,.6)';g.lineWidth=2;g.beginPath();g.arc(R,R,R-1,0,7);g.stroke();g.fillStyle='#cfe8ff';g.font='bold 10px monospace';g.textAlign='center';g.fillText('N',R,12);
+  $('mmLabel').textContent=inRoom?(IN_NAMES[z.slice(3)]||'Intérieur'):'Zone Zéro';
 }

@@ -199,13 +199,25 @@ const SKINS=['#f1c7a5','#d9b08c','#c99a7a','#a8754f','#7a4e32','#5a3a28'];
 const HAIRS=['#111216','#3a2a20','#6b4a2a','#c9a24a','#e8e8e4','#ff4fa3','#39e6ff','#b46bff','#7a2e22'];
 const TOPS=['#3a2a4a','#1e3a4a','#5a2a2a','#2a4a3a','#ff8a3d','#c9b7ff','#d8d8d8','#ffb547','#2b2d31','#7a2e22','#39506a','#ff4fa3'];
 const PANTS=['#1b1d24','#23262c','#2a3140','#3a2f28','#141018','#2a2a3a'];
-function randomSpec(){
-  const hs=pick(['short','long','bob','cap','buzz','messy','short']);const top=pick(TOPS);
-  const sp={skin:pick(SKINS),hair:pick(HAIRS),hs,top,pants:pick(PANTS),shoes:pick(['#d8d8d8','#141414','#39e6ff','#5a4030']),eyes:'#111',capC:pick(['#ff3b4e','#1e3a4a','#ffb547','#161616']),f:[],s:[],scale:.9+rnd()*.18};
-  if(rnd()<.3)sp.coat=pick(['#2b2d31','#3a3f4c','#5a4a3a','#1e2a44']);
-  if(rnd()<.35){const a=pick(['#39e6ff','#ff4fa3','#ffb547','#b46bff']);sp.f.push([10,27,12,2,a]);sp.s.push([13,27,7,2,a])}
-  if(rnd()<.25){const gc=pick(['#39e6ff','#ff3b4e','#111']);sp.f.push([12,11,8,1,gc]);sp.s.push([17,11,5,1,gc])} // visière / lunettes
-  if(rnd()<.2)sp.beard=sh(sp.hair,.9);
+// Un passant au hasard, façon cyberpunk : coiffures, casques à visière, masques, yeux et bras cybernétiques, liserés néon…
+// (rand : le tirage à utiliser ; par défaut celui de la ville, Math.random pour changer de tête en cours de partie)
+const NEONS=['#39e6ff','#ff4fa3','#ffb547','#b46bff','#7dffb0','#ff3b4e'];
+function randomSpec(rand){
+  const R=rand||rnd,P=a=>a[Math.floor(R()*a.length)];
+  const hs=P(['short','long','bob','cap','buzz','messy','short','slick','asym','helmet','buzz']);const top=P(TOPS.concat(['#14161c','#1a1d26','#242838','#3a1e4a']));
+  const sp={skin:P(SKINS),hair:P(HAIRS),hs,top,pants:P(PANTS),shoes:P(['#d8d8d8','#141414','#39e6ff','#5a4030','#ff4fa3']),eyes:'#111',capC:P(['#ff3b4e','#1e3a4a','#ffb547','#161616']),visor:P(NEONS),f:[],s:[],b:[],scale:.88+R()*.2};
+  const add=(f,s,b)=>{if(f)sp.f.push(f);if(s)sp.s.push(s);if(b)sp.b.push(b)};
+  if(R()<.35)sp.coat=P(['#2b2d31','#3a3f4c','#5a4a3a','#1e2a44','#14161c','#3a1e30']);
+  if(R()<.3){const a=P(NEONS);add([10,27,12,2,a],[13,27,7,2,a],[10,27,12,2,a])} // ceinture lumineuse
+  if(R()<.22){const gc=P(['#39e6ff','#ff3b4e','#111','#b46bff']);add([12,11,8,1,gc],[17,11,5,1,gc])} // visière / lunettes
+  if(hs==='buzz'&&R()<.5){const m=P(NEONS);add([14,0,4,5,m],[14,0,5,5,m],[14,0,4,5,m])} // crête
+  if(R()<.18)add([12,12,8,3,'#1a1e26'],[16,12,6,3,'#1a1e26']); // masque respiratoire
+  if(R()<.15){const e=P(['#ff3b4e','#39e6ff']);add([17,10,2,1,e],[19,10,1,1,e])} // œil cybernétique
+  if(R()<.2){const c=P(NEONS);add([11,17,10,1,c],[13,17,7,1,c],[11,17,10,1,c])} // collier lumineux
+  if(sp.coat&&R()<.4){const c=P(NEONS);add([10,19,1,24,c],null,null);sp.f.push([21,19,1,24,c])} // liserés du manteau
+  if(R()<.15){add([8,19,4,2,'#5a6070'],[12,18,6,2,'#5a6070'],[8,19,4,2,'#5a6070']);sp.f.push([20,19,4,2,'#5a6070'])} // épaulettes
+  if(R()<.12){add([22,20,2,16,'#8899aa'],[14,20,3,16,'#8899aa']);sp.f.push([22,30,2,1,P(NEONS)])} // bras mécanique
+  if(R()<.2)sp.beard=sh(sp.hair,.9);
   return sp;
 }
 
@@ -229,3 +241,5 @@ const SPECS={
   guard:{skin:'#2a2e36',head:'#2a2e36',hair:'#2a2e36',hs:'helmet',visor:'#ff3b4e',top:'#1a1d24',sleeve:'#2a2e36',pants:'#1a1d24',shoes:'#111318',eyes:'#ff3b4e',hand:'#2a2e36',scale:1.1,
     f:[[8,19,4,4,'#3a3f4c'],[20,19,4,4,'#3a3f4c'],[10,28,12,1,'#ff3b4e']],s:[[14,19,5,4,'#3a3f4c'],[13,28,7,1,'#ff3b4e']]}
 };
+// change l'apparence d'un passant (quand il revient hors du champ de la caméra) : on croise moins souvent les mêmes têtes
+function reskin(m){const ud=m.userData;ud.tex.image=makeSheet(randomSpec(Math.random));ud.tex.needsUpdate=true}

@@ -22,11 +22,32 @@ IN_DEF.metro={w:32,d:12,h:4.4,trim:'#39e6ff',light:[0xcfe8ff,0x39e6ff],fog:0x0a1
     // la voie, au nord : fosse sombre, rails, bord du quai jaune ; on ne peut pas y descendre
     R.B(w,.02,2.6,'#15171c',0,.01,-d/2+1.3);for(const z of [-d/2+.8,-d/2+1.8])R.B(w,.04,.08,'#8a929c',0,.03,z);R.B(w,.03,.12,'#ffd23f',0,.02,-d/2+2.7,true);R.block(0,-d/2+1.3,w/2,1.35);
     // la rame : trois voitures, vitres éclairées, qui arrivent de l'ouest, s'arrêtent, puis repartent à l'est
-    const tr=new THREE.Group();R.g.add(tr);const body=new THREE.MeshPhongMaterial({color:0xb8c0c8,shininess:80,specular:0x667788});
-    for(let k=0;k<3;k++){const cx=-10+k*10;const b=new THREE.Mesh(boxGeo,body);b.scale.set(9.6,2.6,2.2);b.position.set(cx,1.45,-d/2+1.3);tr.add(b);
-      box(9.2,.7,.02,'#ffe9b0',cx,1.9,-d/2+2.42,tr,true);box(9.62,.12,.02,'#39e6ff',cx,.95,-d/2+2.42,tr,true);for(let i=-1;i<=1;i++)box(.9,1.7,.03,'#2a3140',cx+i*3.2,1.2,-d/2+2.43,tr)}
-    box(.05,.3,2,'#eaf6ff',15.1,1.6,-d/2+1.3,tr,true);
+    // la rame : trois voitures au profil arrondi (même principe que le TGV, nez court et bombé), vitres éclairées par des néons intérieurs
+    const tr=new THREE.Group();R.g.add(tr);R.metro=tr;
+    const tz=-d/2+1.3,mm=new THREE.MeshPhongMaterial({vertexColors:true,specular:0x667788,shininess:80});
+    const col=(x,y,t,c)=>{if(y>1.38&&y<2.02)c.set('#10161e');else if(Math.abs(y-.92)<.07)c.set('#39e6ff');else if(y<.3)c.set('#2a3038');else c.set('#c4ccd4')};
+    const ic=document.createElement('canvas');ic.width=256;ic.height=32;const ig=ic.getContext('2d');ig.fillStyle='#e8f4ff';ig.fillRect(0,0,256,32);ig.fillStyle='#cfe0ee';ig.fillRect(0,0,256,5);
+    for(let i=0;i<16;i++){ig.fillStyle='#1e5a8a';ig.fillRect(i*16+3,18,10,14);ig.fillStyle='#20242c';if(Math.random()<.45){ig.beginPath();ig.arc(i*16+8,14,3.5,0,7);ig.fill();ig.fillRect(i*16+5,17,6,10)}}
+    for(let i=0;i<8;i++){ig.fillStyle='#1a2028';ig.fillRect(i*32+30,0,3,32)}
+    const im=new THREE.MeshBasicMaterial({map:new THREE.CanvasTexture(ic)});
+    for(let k=0;k<3;k++){const L=9.4,cx=-10+k*10,front=k===2,back=k===0;const rings=[],zs=[];
+      for(let i=0;i<=20;i++){const u=i/20,z=-L/2+u*L;let t=0;if(front&&z>L/2-1.4)t=(z-(L/2-1.4))/1.4;if(back&&z<-L/2+1.4)t=(-L/2+1.4-z)/1.4;
+        rings.push(superRing(36,1.05*(1-.3*t*t),.12+.1*t*t,2.6-.55*t*t,.42));zs.push(z)}
+      const car=new THREE.Mesh(loft(rings,zs,col),mm);car.rotation.y=Math.PI/2;car.position.set(cx,0,tz);tr.add(car);
+      [-1,1].forEach(s=>{const w=new THREE.Mesh(new THREE.PlaneGeometry(L-(front||back?1.8:.4),.6),im);w.position.set(cx+(front?-.7:back?.7:0),1.7,tz+s*1.07);w.rotation.y=s>0?0:Math.PI;tr.add(w)});
+      box(L-.6,.04,.04,'#eaf6ff',cx,2.55,tz,tr,true)}
+    box(.04,.25,.9,'#eaf6ff',15.2,1.2,tz,tr,true);box(.04,.2,.6,'#ff2a3a',-15.2,1.2,tz,tr,true); // phares, feux arrière
     R.anims.push({k:0,f:t=>{const c=t%30;tr.position.x=c<6?-40+40*(1-Math.pow(1-c/6,2)):c<14?0:c<20?40*Math.pow((c-14)/6,2):60}}); // arrive, s'arrête 8 s, repart
+    R.metroStopped=()=>{const c=tAcc%30;return c>=6&&c<14};
+    // les bouches de tunnel aux deux bouts de la voie : arche noire en profondeur, encadrement et néon (comme la sortie du TGV)
+    [-1,1].forEach(s=>{const g=new THREE.Group();g.position.set(s*(w/2-.02),0,tz);g.rotation.y=-s*Math.PI/2;R.g.add(g);
+      const sh=new THREE.Shape();sh.moveTo(-1.45,0);sh.lineTo(-1.45,2.2);sh.absarc(0,2.2,1.45,Math.PI,0,true);sh.lineTo(1.45,0);sh.closePath();
+      const hole=new THREE.Mesh(new THREE.ShapeGeometry(sh,24),new THREE.MeshBasicMaterial({color:0x010102,fog:false}));hole.position.z=.01;g.add(hole);
+      const fr=new THREE.Mesh(new THREE.TorusGeometry(1.6,.14,8,28,Math.PI),mat('#2a2e36'));fr.position.set(0,2.2,.06);g.add(fr);
+      const ne=new THREE.Mesh(new THREE.TorusGeometry(1.48,.03,6,40,Math.PI),mat('#ff4fa3',true));ne.position.set(0,2.2,.1);g.add(ne);
+      [-1.6,1.6].forEach(x=>{box(.28,2.2,.12,'#2a2e36',x,1.1,.06,g);box(.04,2.2,.04,'#ff4fa3',x*.93,1.1,.12,g,true)})});
+    // néons au plafond de la station
+    for(let i=-3;i<=3;i++)R.B(3,.05,.12,'#eaf6ff',i*4.4,R.h-.06,-1.4,true);
     // les commerces, au sud : vitrines en profondeur, comptoir de presse, distributeurs de tickets
     [-8,-2.5,3,8.5].forEach((x,i)=>shopWindow(R.cx+x,IY+1.25,R.cz+d/2-.06,4.2,1.9,0,-1,[2,4,5,3][i]));
     R.S(2.4,1,.7,'#2a3140',-12.6+4,.5,d/2-1.1);R.B(2.4,.05,.75,'#39e6ff',-8.6,1.02,d/2-1.1,true);
@@ -42,4 +63,5 @@ IN_DEF.metro={w:32,d:12,h:4.4,trim:'#39e6ff',light:[0xcfe8ff,0x39e6ff],fog:0x0a1
     R.obj(4.5,-d/2+4,1.3,'Distributeur de tickets',()=>'« LIGNE M · service de nuit perturbé. Les rames ne s’arrêtent qu’à Zone Zéro jusqu’à nouvel ordre. » Le distributeur avale une pièce et ne rend rien.');
     R.obj(-8.6,d/2-2.1,1.3,'Kiosque à journaux',lines(['« Le Courrier de BXL ? Il n’en reste plus. Les gens lisent tout sur leurs implants, maintenant. »','« Tu prends la M ? Elle passe toutes les trente secondes, mais elle ne va nulle part. Personne ne sait pourquoi. »']));
     R.obj(-4,-d/2+4.2,1.3,'Regarder le quai',()=>'Le quai sent l’huile et l’ozone. Sur le mur d’en face, quelqu’un a peint un papillon de nuit, en cyan.');
+    R.obj(0,-d/2+3.2,1.4,'Monter dans le métro',()=>R.metroStopped()?'Les portes restent closes. À côté, un lecteur clignote en rouge : « LIGNE M · carte d’accès requise ». Il va falloir en trouver une.':'Le quai est vide. Au fond du tunnel, une lueur annonce la prochaine rame. De toute façon, sans carte d’accès, les portes ne s’ouvriront pas.');
   }};

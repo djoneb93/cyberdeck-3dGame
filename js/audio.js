@@ -83,13 +83,17 @@ function updateAudio(dt){
   setG(L.city,inside?.015:.035); // un fond de ville très bas, partout
   // brouhaha : dans le Néon Noir, dans le Bazar souterrain, et sous la verrière du Bazar Néon ; les voix montent et descendent comme des phrases
   const M=PL.market,inMk=!z&&Math.abs(p.x-M.x)<M.hw+1&&Math.abs(p.z-M.z)<M.hd+1,bab=z==='in_bar'?.07:z==='in_market'?.08:z==='in_metro'?.03:inMk?.055:0;
-  L.babble.forEach((b,i)=>{b.g.gain.setTargetAtTime(bab*(i?.35:1)*(.5+.5*Math.random()),now(),.08);b.fl.frequency.setTargetAtTime((i?2100:900)*(.85+.3*Math.random()),now(),.1)});
+  murmur(D,bab*1.6); // des voix qui parlent entre elles, par-dessus un fond calme
+  L.babble.forEach((b,i)=>{b.g.gain.setTargetAtTime(bab*.45*(i?.35:1)*(.5+.5*Math.random()),now(),.08);b.fl.frequency.setTargetAtTime((i?2100:900)*(.85+.3*Math.random()),now(),.1)});
   portSounds(D,!z&&p.x<20&&p.z>UZ(.12)&&p.z<UZ(.66));
   // sons de proximité, 3 m au plus : le passant le plus proche, la mer, le TGV, une voiture, une voiture volante, le club
   let wd=1e9,wq=null;walkers.forEach(o=>{const q=o.m.position,d=Math.hypot(q.x-p.x,q.z-p.z);if(d<wd){wd=d;wq=q}});setG(L.crowd,out*near(wd)*.07,.3);if(wq)panTo(L.crowd,wq.x,wq.z);
   const ds=Math.max(0,p.x-9.8);setG(L.sea,out*near(ds)*.24*(.65+.35*Math.sin(tAcc*.5)),.6);L.sea.fl.frequency.setTargetAtTime(380+260*Math.max(0,Math.sin(tAcc*.5)),now(),.5);panTo(L.sea,8,p.z);
   if(train){const tz=train.position.z,v=lastTrainZ==null?0:Math.abs(tz-lastTrainZ)/D;lastTrainZ=tz;const cz=Math.max(tz-40,Math.min(tz,p.z)),d=Math.hypot(GX-p.x,cz-p.z)-1.4;
     setG(L.train,(z==='quai'?1:out)*near(Math.max(0,d))*Math.min(.3,.03+v*.03));L.train.fl.frequency.setTargetAtTime(150+v*8,now(),.3);panTo(L.train,GX,cz)}
+  // la rame du métro : son grondement, quand on est à moins de 3 m de la voie
+  const MR=ROOMS.metro;if(z==='in_metro'&&MR&&MR.metro){const tx=MR.metro.position.x,v=MR.lastX==null?0:Math.abs(tx-MR.lastX)/D;MR.lastX=tx;const lx=p.x-MR.cx,lz=p.z-MR.cz;
+    const along=Math.max(0,Math.abs(lx-tx)-15),dd=Math.hypot(along,Math.max(0,Math.abs(lz-(-MR.d/2+1.3))-1.1));setG(L.train,near(dd)*Math.min(.35,.04+v*.02));L.train.fl.frequency.setTargetAtTime(130+v*6,now(),.3);panTo(L.train,MR.cx+tx,p.z-2)}
   let cd=1e9,cq=null;aveCars.forEach(c=>{const q=c.g.position,d=Math.hypot(q.x-p.x,q.z-p.z);if(d<cd){cd=d;cq=q}});setG(L.cars,out*near(cd)*.06,.15);if(cq)panTo(L.cars,cq.x,cq.z);
   let fd=1e9,fy=null;flyers.forEach(f=>{const d=f.g.position.distanceTo(p);if(d<fd){fd=d;fy=f}});setG(L.fly,out*near(fd)*.05,.3);if(fy)panTo(L.fly,fy.g.position.x,fy.g.position.z);
   // la moto : un ronronnement doux et discret
@@ -146,3 +150,13 @@ function portSounds(D,here){if(!here){return}for(const k in portT)portT[k]-=D;co
   if(portT.creak<=0){portT.creak=7+Math.random()*6;const o=c.createOscillator(),fl=c.createBiquadFilter(),g=c.createGain(),l=c.createOscillator(),lg=c.createGain();o.type='sawtooth';o.frequency.value=120;l.frequency.value=7;lg.gain.value=25;l.connect(lg);lg.connect(o.frequency);
     fl.type='bandpass';fl.frequency.value=700;fl.Q.value=4;env(g,.15,.03,.7);o.connect(fl);fl.connect(g);g.connect(out);o.start(t);l.start(t);o.stop(t+1);l.stop(t+1)}
 }
+
+// ---- des voix : des « phrases » de syllabes (une voix grave, deux médiums, une aiguë), avec des voyelles et une intonation ----
+const SPK=[{p:115,n:0},{p:175,n:.8},{p:150,n:1.7},{p:225,n:2.6}],VOW=[[800,1200],[400,2000],[300,2300],[500,900],[350,800],[600,1700]];
+function murmur(D,lvl){if(!(lvl>0))return;const t0=now();SPK.forEach(s=>{s.n-=D;if(s.n>0)return;
+  const n=3+Math.floor(Math.random()*7);let t=t0+.05;for(let i=0;i<n;i++){const dur=.09+Math.random()*.12;syl(t,dur,s.p*(1+.12*Math.sin(i*1.3))*(i===n-1?.85:1),lvl);t+=dur+.02+Math.random()*.05}
+  s.n=(t-t0)+.8+Math.random()*2.8})}
+function syl(t,dur,f0,lvl){const c=AUD.ctx,o=c.createOscillator();o.type='sawtooth';o.frequency.setValueAtTime(f0,t);o.frequency.linearRampToValueAtTime(f0*(.9+Math.random()*.2),t+dur);
+  const v=VOW[Math.floor(Math.random()*VOW.length)],g=c.createGain();g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(lvl,t+.025);g.gain.linearRampToValueAtTime(0,t+dur);
+  v.forEach((F,i)=>{const b=c.createBiquadFilter();b.type='bandpass';b.frequency.value=F;b.Q.value=5;const bg=c.createGain();bg.gain.value=i?.5:1;o.connect(b);b.connect(bg);bg.connect(g)});
+  const lp=c.createBiquadFilter();lp.type='lowpass';lp.frequency.value=1700;g.connect(lp);lp.connect(AUD.N.room);o.start(t);o.stop(t+dur+.03)}

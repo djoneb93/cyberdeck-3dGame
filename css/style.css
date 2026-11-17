@@ -148,8 +148,8 @@ body.glitch #c{animation:glitch .42s steps(2) 1}
 #setKeys{text-align:left;line-height:1.7}
 /* mini-carte (en bas à droite) et téléphone */
 #mmWrap{position:fixed;right:12px;bottom:70px;z-index:5;pointer-events:none}
-#minimap{display:block;width:184px;height:152px;border:1px solid rgba(57,230,255,.45);background:#07090e;image-rendering:pixelated;box-shadow:0 0 18px rgba(57,230,255,.15)}
-#mmLabel{font:11px var(--f-m);color:#39e6ff;text-align:right;margin-top:3px;letter-spacing:.06em}
+#minimap{display:block;width:170px;height:170px;border-radius:50%;background:#07090e;image-rendering:pixelated;box-shadow:0 0 18px rgba(57,230,255,.15)}
+#mmLabel{font:11px var(--f-m);color:#39e6ff;text-align:center;margin-top:3px;letter-spacing:.06em}
 #phone{position:fixed;left:50%;bottom:16px;transform:translateX(-50%);width:230px;z-index:20;padding:12px;border-radius:22px;border:2px solid #39e6ff55;background:#0b0e16ee;display:grid;gap:10px}
 #phone .phTop{display:flex;justify-content:space-between;font:11px var(--f-m);color:var(--dim)}
 #phone .phTitle{font:700 15px var(--f-d);letter-spacing:.08em;color:var(--fg)}
