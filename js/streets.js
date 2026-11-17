@@ -3,6 +3,7 @@
 'use strict';
 
 let srnd_s=7331;const srnd=()=>{srnd_s=(srnd_s*16807)%2147483647;return (srnd_s-1)/2147483646};
+const TREE_GEO=new THREE.IcosahedronGeometry(.78,1),LEAFM={},leafMat=c=>LEAFM[c]||(LEAFM[c]=new THREE.MeshLambertMaterial({color:c,flatShading:true}));
 const FURN=[],trafficLights=[],puddles=[],BENCHES=[];let wetness=-1; // BENCHES : bancs où l’on peut s’asseoir (fx, fz : direction du regard)
 // ---------- textures du sol (tuile de 4 × 4 unités, appliquée selon la position dans le monde) ----------
 function groundTex(kind){
@@ -62,7 +63,8 @@ function buildStreets(){
     else if(r<.46){sd('#4a3526',false,x,.42,z,X?.38:1.4,.08,X?1.4:.38);sd('#4a3526',false,x+(X?.17:0),.66,z+(X?0:.17),X?.05:1.4,.34,X?1.4:.05);sd('#2a3140',false,x,.2,z,X?.3:1.2,.38,X?1.2:.3);FURN.push([x,z,.6]);BENCHES.push({x,z,fx:X?-1:0,fz:X?0:-1})}
     else if(r<.68){sd('#2a2f38',false,x,.25,z,.9,.5,.9);sd(pick(['#39e6ff','#ff4fa3','#7dffb0']),true,x,.51,z,.92,.04,.92);sd('#3a2a20',false,x,1.2,z,.12,1.5,.12);
       const fol=pick([['#1f4a32','#2a5a3a'],['#244a3e','#2c5a46'],['#2a5a3a','#356a42']]); // une seule teinte de feuillage par arbre (plus de mauve qui perce le vert)
-      [[0,2.1,0,1.1,0],[.25,2.5,.15,.8,1],[-.2,2.6,-.1,.7,1]].forEach(([dx,y,dz,s,k])=>sd(fol[k],false,x+dx,y,z+dz,s,s*.8,s));FURN.push([x,z,.55])}
+      { // un seul houppier arrondi par arbre : plus de feuillages qui se traversent
+        const cr=new THREE.Mesh(TREE_GEO,leafMat(fol[0]));cr.position.set(x,2.3,z);cr.scale.set(1,.82,1);cr.rotation.y=srnd()*6;scene.add(cr)}FURN.push([x,z,.55])}
     else if(r<.78){sd('#d8a020',false,x,.3,z,.26,.6,.26);sd('#e8b030',false,x,.64,z,.32,.08,.32);sd('#d8a020',false,x,.4,z,.42,.08,.1);FURN.push([x,z,.25])}
     else if(r<.9){[-.5,.5].forEach(o=>{const bx=x+(X?0:o),bz=z+(X?o:0);sd('#3a414c',false,bx,.35,bz,.14,.7,.14);sd('#ffb547',true,bx,.66,bz,.16,.04,.16);FURN.push([bx,bz,.15])})}
     else{sd('#20262f',false,x,.6,z,.34,1.2,.26);sd('#39e6ff',true,x+(X?.18:0),.85,z+(X?0:.18),X?.02:.2,.3,X?.2:.02);FURN.push([x,z,.3])}};

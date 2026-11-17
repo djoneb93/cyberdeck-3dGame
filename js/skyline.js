@@ -35,7 +35,7 @@ function buildPerimeter(){
           B('#2a3242',false,x2,hb+.08,z2,L.X?d:w+.2,.16,L.X?w+.2:d)}
         // rez-de-chaussée sur la rue : vitrine lumineuse, auvent, liseré néon ; parfois une enseigne verticale
         const [fx,fz]=S.P(am,-.04),[ax,az]=S.P(am,-.3),[nx,nz]=S.P(am,-.55),fw=w*.74,sc=rp(D.sc);
-        B(sc,true,fx,.95,fz,L.X?.06:fw,1.3,L.X?fw:.06);B('#1d2430',false,ax,2.05,az,L.X?.55:fw+.3,.1,L.X?fw+.3:.55);B(D.neon,true,nx,2,nz,L.X?.05:fw+.3,.05,L.X?fw+.3:.05);
+        shopWindow(fx,.95,fz,fw,1.3,S.front[0],S.front[1]);B('#1d2430',false,ax,2.05,az,L.X?.55:fw+.3,.1,L.X?fw+.3:.55);B(D.neon,true,nx,2,nz,L.X?.05:fw+.3,.05,L.X?fw+.3:.05);
         if(r()<.3&&hb>8){const [vx,vz]=S.P(am+w/2-.6,-.25);B('#14181f',false,vx,hb*.55,vz,L.X?.4:.12,hb*.45,L.X?.12:.4);const [ex,ez]=S.P(am+w/2-.6,-.33);B(rp(['#ff4fa3','#39e6ff','#ffb547',D.neon]),true,ex,hb*.55,ez,L.X?.04:.06,hb*.4,L.X?.06:.04)}
         // toit : corniche, climatiseurs, parfois un château d'eau ou une antenne
         const [cx,cz]=S.P(am,d/2);B('#2a3242',false,cx,hb+.08,cz,L.X?d+.2:w+.2,.16,L.X?w+.2:d+.2);
@@ -61,7 +61,7 @@ function buildPerimeter(){
   // ---- les trottoirs extérieurs : arbres, lampadaires, bancs, poubelles, tous centrés sur le trottoir ----
   const leafM=new THREE.MeshLambertMaterial({color:0x2c5a34,flatShading:true}),leafM2=new THREE.MeshLambertMaterial({color:0x3a6e3c,flatShading:true});
   const tree=(x,z)=>{B('#4a4f58',false,x,.2,z,.9,.4,.9);B('#2a2218',false,x,.42,z,.7,.04,.7);B('#4a3524',false,x,1.2,z,.14,1.6,.14);
-    [[0,2.4,0,.75,leafM],[.3,2.1,.2,.5,leafM2],[-.28,2.2,-.15,.55,leafM2],[0,2.85,.05,.5,leafM]].forEach(([dx,y,dz,rr,m])=>{const f=new THREE.Mesh(new THREE.IcosahedronGeometry(rr,1),m);f.position.set(x+dx,y,z+dz);f.rotation.y=r()*6;scene.add(f)});FURN.push([x,z,.48])};
+    const f=new THREE.Mesh(TREE_GEO,r()<.5?leafM:leafM2);f.position.set(x,2.45,z);f.scale.set(1.05,.9,1.05);f.rotation.y=r()*6;scene.add(f);FURN.push([x,z,.48])}; // un seul houppier, une seule teinte
   // dx, dz : la direction de la chaussée (la crosse du lampadaire penche vers elle, le dossier du banc lui tourne le dos)
   const lamp=(x,z,ax,dx,dz)=>{B('#2a2e36',false,x,2,z,.1,4,.1);B('#2a2e36',false,x+dx*.35,4,z+dz*.35,ax?.8:.08,.08,ax?.08:.8);B('#fff1d6',true,x+dx*.7,3.93,z+dz*.7,.3,.05,.3);
     glow(x+dx*.7,z+dz*.7,2.4,'#ffd9a0',.22);FURN.push([x,z,.16])};
@@ -127,15 +127,16 @@ function buildGroundDetails(free){
     decal(g=>{g.strokeStyle='rgba(255,255,255,.55)';g.lineWidth=3;g.beginPath();g.moveTo(32,8);g.lineTo(32,50);g.moveTo(18,36);g.lineTo(32,52);g.lineTo(46,36);g.stroke()})]; // flèche peinte
   const lists=DEC.map(()=>[]);
   const props=[];
-  const PX=MKT_PIT.x,PZ=MKT_PIT.z,keep=[[PX,PZ,2.2],[64.2,61.5,3.6],...NPC_DEF.map(n=>[n.x,n.z,1.6])]; // trémie du Bazar, place du taxi, personnages
+  const PX=MKT_PIT.x,PZ=MKT_PIT.z,keep=[[PX,PZ,2.2],[64.2,61.5,3.6],[52.4,51.1,1.8],...NPC_DEF.map(n=>[n.x,n.z,1.6])]; // trémie du Bazar, place du taxi, personnages
   for(let z=1;z<H-1;z++)for(let x=11;x<W-1;x++){const t=tile[I(x,z)];if((t!==0&&t!==1&&t!==4)||solid[I(x,z)])continue;if(nearEntrance(x,z)||keep.some(([a,b,rr])=>Math.hypot(x+.5-a,z+.5-b)<rr))continue;
     const cx=x+.2+r()*.6,cz=z+.2+r()*.6;
     if(r()<.07){const k=t===1?[0,1,3,4][Math.floor(r()*4)]:Math.floor(r()*DEC.length);if(k===5&&t===1)continue;lists[k].push([cx,cz,r()*6,.6+r()*.7])}
-    else if(t===0&&r()<.012){let ok=true;for(let a=-1;a<=1;a++)for(let b=-1;b<=1;b++){const tt=tile[I(x+a,z+b)];if(tt===2||solid[I(x+a,z+b)])ok=false}if(ok&&free(cx,cz,.6))props.push([cx,cz,Math.floor(r()*6),r()*6])}}
+    else if(t===0&&r()<.016){let ok=true;for(let a=-1;a<=1;a++)for(let b=-1;b<=1;b++){const tt=tile[I(x+a,z+b)];if(tt===2||solid[I(x+a,z+b)])ok=false}if(ok&&free(cx,cz,.6))props.push([cx,cz,r()<.35?3:Math.floor(r()*6),r()*6])}}
   DEC.forEach((tx,k)=>{const L=lists[k];if(!L.length)return;const m=new THREE.InstancedMesh(new THREE.PlaneGeometry(1,1).rotateX(-Math.PI/2),new THREE.MeshBasicMaterial({map:tx,transparent:true,depthWrite:false,opacity:k===5?.9:.85,blending:k===5?THREE.AdditiveBlending:THREE.NormalBlending}),L.length);
     const m4=new THREE.Matrix4(),q=new THREE.Quaternion(),e=new THREE.Euler(),sc=new THREE.Vector3(),p=new THREE.Vector3();
     L.forEach(([x,z,a,s2],i)=>{e.set(0,a,0);q.setFromEuler(e);p.set(x,.017+k*.001,z);sc.set(s2,1,s2);m4.compose(p,q,sc);m.setMatrixAt(i,m4)});m.renderOrder=1;scene.add(m)});
   // les objets : chacun bloque le passage et ne touche rien d'autre
+  props.push([52.4,50.6,3,0],[52.4,51.7,3,0]); // deux distributeurs fixes à côté du Bunker
   // les distributeurs et les chariots se tournent vers la rue la plus proche (on peut s’en servir depuis le trottoir)
   const faceRoad=(x,z)=>{let best=null,bd=99;[[0,1],[1,0],[0,-1],[-1,0]].forEach(([dx,dz])=>{for(let s=1;s<8;s++){const t=tile[I(Math.floor(x+dx*s),Math.floor(z+dz*s))];if(solid[I(Math.floor(x+dx*s),Math.floor(z+dz*s))])break;if(t===1||t===2){if(s<bd){bd=s;best=Math.atan2(dx,dz)}break}}});return best}
   props.forEach(([x,z,k,a])=>{if(k===3||k===4){const fr=faceRoad(x,z);if(fr!==null)a=fr}

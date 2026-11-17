@@ -226,7 +226,7 @@ function frame(){
   updateWalkers(dt);
   npcs.forEach(n=>{const d=distTo(n);let want=n.baseRy;if(d<3.2||talking===n)want=Math.atan2(player.position.x-n.mesh.position.x,player.position.z-n.mesh.position.z);
     n.mesh.userData.ry=lerpAngle(n.mesh.userData.ry,want,Math.min(1,dt*5));});
-  updateCity(dt);updateStation(dt);updateLife(dt);updateTaxi(dt);updateTraffic(dt);updateStreets(dt);updateLandmarks(dt);updateWeather(dt);updateDoors(dt);updateFlyers(dt);updateDayNight(dt);
+  updateCity(dt);updateStation(dt);updateLife(dt);updateTaxi(dt);updateTraffic(dt);updateStreets(dt);updateLandmarks(dt);updateWeather(dt);updateDoors(dt);updateFlyers(dt);updateDayNight(dt);updateShops();
   beacons.forEach(b=>b.visible=Math.sin(tAcc*3)>-.2);updateMarkers();
   if(cat)cat.userData.body.scale.y=1+Math.sin(tAcc*2.2)*.06;
   if(holo){holo.position.y=holo.userData.baseY+Math.sin(tAcc*1.3)*.08;const hm=holo.userData.plane.material;hm.opacity=.45+Math.sin(tAcc*9)*.04+(Math.random()<.02?-.25:0);holo.userData.moving=false;}

@@ -105,6 +105,52 @@ const INTERIOR_GLSL=`
   }
 }
 #endif`;
+// ---- vitrines des rez-de-chaussée : un commerce en profondeur derrière la vitre (bowling, banque, nouilles, boutique, électronique, café) ----
+// Le shader suit le regard depuis la caméra dans une pièce de 2,6 m de profondeur et dessine le décor selon la surface touchée.
+const SHOP_FS=`uniform vec3 uT,uB,uN;uniform vec2 uS;uniform float uTheme,uSeed,uTime;varying vec3 vW;varying vec2 vUv;
+float hs(float n){return fract(sin(n*12.9898+uSeed*78.233)*43758.5453);}
+void main(){
+  vec3 rd=normalize(vW-cameraPosition);vec3 d=vec3(dot(rd,uT),dot(rd,uB),max(-dot(rd,uN),.06));
+  float W=uS.x,Y0=-.35,Y1=2.4,D=2.6;vec3 p=vec3(vUv.x*W,vUv.y*uS.y,0.);
+  vec3 t3=vec3(d.x>0.?(W-p.x)/d.x:-p.x/d.x,d.y>0.?(Y1-p.y)/d.y:(Y0-p.y)/d.y,D/d.z);float t=min(t3.x,min(t3.y,t3.z));vec3 h=p+d*t;
+  bool back=t==t3.z,flo=t==t3.y&&d.y<0.,cei=t==t3.y&&d.y>=0.;vec3 c;float th=uTheme;
+  if(th<.5){ // bowling : pistes en bois, rigoles, quilles au fond, néon rose
+    if(flo){c=vec3(.62,.42,.22);if(fract(h.x/.9)<.1)c=vec3(.08);if(fract(h.z*1.5)<.04)c*=.8;}
+    else if(back){c=vec3(.07,.05,.11);float lx=fract(h.x/.9);if(h.y<.15&&lx>.25&&lx<.75&&mod(floor(lx*14.),2.)==0.)c=vec3(.95);if(abs(h.y-1.6)<.05)c=vec3(1.4,.3,.9);}
+    else if(cei){c=vec3(.05,.04,.08);if(fract(h.x/.9)<.05)c=vec3(.4,.9,1.3);}else c=vec3(.12,.08,.16);}
+  else if(th<1.5){ // banque : marbre, guichets, comptoir, logo doré
+    if(flo){c=mod(floor(h.x*1.5)+floor(h.z*1.5),2.)<1.?vec3(.72,.72,.68):vec3(.5,.52,.5);}
+    else if(back){c=vec3(.36,.26,.18);if(h.y<.75)c=vec3(.16,.16,.18);if(abs(h.y-.76)<.03)c=vec3(.9,.7,.3);if(h.y>.8&&h.y<1.55&&fract(h.x/1.1)>.12)c=vec3(.45,.55,.6);if(length(vec2(fract(h.x/(W*.5))-.5,h.y-1.95))<.12)c=vec3(1.2,.9,.35);}
+    else if(cei)c=vec3(.85,.82,.75);else c=vec3(.42,.32,.24);}
+  else if(th<2.5){ // nouilles : carrelage rouge, comptoir, menus lumineux, lanternes
+    if(flo)c=mod(floor(h.x*3.)+floor(h.z*3.),2.)<1.?vec3(.45,.12,.1):vec3(.3,.08,.07);
+    else if(back){c=vec3(.25,.18,.12);if(h.y<.7)c=vec3(.3,.14,.08);if(h.y>1.1&&h.y<1.6&&fract(h.x/.7)>.1){c=vec3(1.1,1.,.8);if(fract(h.y*10.)<.25&&fract(h.x*4.)<.7)c=vec3(.2);}}
+    else if(cei){c=vec3(.12,.06,.05);if(length(vec2(fract(h.x/.8)-.5,fract(h.z/.8)-.5))<.18)c=vec3(1.5,.35,.2);}else c=vec3(.3,.2,.14);}
+  else if(th<3.5){ // boutique de vêtements : bois clair, portants de vêtements colorés, spots
+    if(flo)c=vec3(.6,.5,.38)*(fract(h.x*2.)<.05?.8:1.);
+    else if(back){c=vec3(.85,.84,.8);if(h.y>.35&&h.y<1.45){float k=floor(h.x*7.);if(fract(h.x*7.)<.75)c=vec3(hs(k),hs(k+1.),hs(k+2.))*.8+.1;}if(abs(h.y-1.5)<.02)c=vec3(.3);}
+    else if(cei){c=vec3(.8);if(length(vec2(fract(h.x/.7)-.5,fract(h.z/.7)-.5))<.1)c=vec3(1.6,1.5,1.3);}else c=vec3(.75,.74,.7);}
+  else if(th<4.5){ // électronique : étagères d'écrans qui clignotent
+    if(flo)c=vec3(.18,.2,.24);
+    else if(back){c=vec3(.08,.09,.12);vec2 g=vec2(floor(h.x/.45),floor((h.y+.35)/.42));vec2 f=vec2(fract(h.x/.45),fract((h.y+.35)/.42));
+      if(f.x>.1&&f.x<.9&&f.y>.18&&f.y<.85){float k=hs(g.x*7.+g.y*13.);c=mix(vec3(.1,.6,1.2),vec3(1.2,.3,.8),k)*(.7+.3*sin(uTime*2.+k*20.));}if(f.y<.1)c=vec3(.3,.32,.36);}
+    else if(cei)c=vec3(.6,.65,.75);else c=vec3(.1,.11,.14);}
+  else{ // café : bois sombre, tables et chaises en silhouette, lumière dorée
+    if(flo)c=vec3(.35,.24,.15)*(fract(h.z*2.5)<.05?.7:1.);
+    else if(back){c=vec3(.42,.3,.2);if(h.y>1.&&h.y<1.5&&fract(h.x/.8)<.5)c=vec3(.18,.12,.08);if(abs(h.y-1.9)<.25&&fract(h.x/1.3)<.15)c=vec3(1.3,1.,.6);}
+    else if(cei)c=vec3(.3,.22,.15);else c=vec3(.38,.27,.18);
+    if(!back&&!cei&&h.z>.8&&h.z<1.6&&h.y<.4&&abs(fract(h.x/1.2)-.5)<.25)c*=.35;}
+  c*=1.-.45*h.z/D;
+  float fr=pow(1.-clamp(-dot(rd,uN),0.,1.),3.);c=mix(c,vec3(.3,.36,.46),fr*.6);
+  if(fract(p.x/1.2)<.025||vUv.y<.04||vUv.y>.96)c=vec3(.08,.09,.11);
+  gl_FragColor=vec4(c,1.);}`;
+const SHOP_VS='varying vec3 vW;varying vec2 vUv;void main(){vUv=uv;vec4 w=modelMatrix*vec4(position,1.);vW=w.xyz;gl_Position=projectionMatrix*viewMatrix*w;}';
+const SHOPS=[];
+function shopWindow(x,y,z,w,h,nx,nz,theme){
+  const m=new THREE.ShaderMaterial({vertexShader:SHOP_VS,fragmentShader:SHOP_FS,uniforms:{uT:{value:new THREE.Vector3(nz,0,-nx)},uB:{value:new THREE.Vector3(0,1,0)},uN:{value:new THREE.Vector3(nx,0,nz)},
+    uS:{value:new THREE.Vector2(w,h)},uTheme:{value:theme==null?Math.floor(Math.abs(Math.sin(x*12.9+z*7.3))*6):theme},uSeed:{value:x*.37+z*.71},uTime:{value:0}}});
+  const p=new THREE.Mesh(new THREE.PlaneGeometry(w,h),m);p.position.set(x+nx*.05,y,z+nz*.05);p.rotation.y=Math.atan2(nx,nz);scene.add(p);SHOPS.push(m);return p}
+function updateShops(){SHOPS.forEach(m=>m.uniforms.uTime.value=tAcc)}
 function interiorShader(s){s.fragmentShader=s.fragmentShader.replace('#include <emissivemap_fragment>',INTERIOR_GLSL)}
 const MATC={};
 function styleMat(style,rx,ry,variant){
@@ -154,7 +200,7 @@ function archTower(b,k){
     for(let i=0;i<4;i++)det(apick(['#2f7a3e','#3d9a50','#25603a']),false,x-w/4+(arnd()-.5)*w*.36,2.6,z+w/4+(arnd()-.5)*w*.36,.4,.4+arnd()*.5,.4);det('#ffd59a',true,x-w/4,2.42,z+w/2-.05,w*.48,.05,.05)}
   // rez-de-chaussée commerçant sur les façades planes
   if(b.box&&!b.comm){const sc=apick(['#3e2e1a','#14323a','#3a1c2c','#1a3424','#2a2240']);const fw=type==='chamfer'?w*.6:w*.72;
-    det(sc,true,x,.95,z+w/2+.04,fw,1.3,.06);det(sc,true,x+w/2+.04,.95,z,.06,1.3,fw);
+    shopWindow(x,.95,z+w/2+.04,fw,1.3,0,1);shopWindow(x+w/2+.04,.95,z,fw,1.3,1,0); // vitrines avec un commerce en profondeur
     det('#1d2430',false,x,2.05,z+w/2+.22,fw+.3,.1,.55);det('#1d2430',false,x+w/2+.22,2.05,z,.55,.1,fw+.3);det(neon,true,x,2,z+w/2+.5,fw+.3,.05,.05)}
   // façades : climatiseurs, conduites, escaliers de secours
   if(b.box&&style!=='glass'&&!b.comm&&type!=='balcony'){for(let i=0;i<5;i++){const y=4+((arnd()*(Math.max(1,h-6)))|0),o=-w*.35+arnd()*w*.4;det('#8a929c',false,x+w/2+.16,y,z+o,.3,.34,.5)}

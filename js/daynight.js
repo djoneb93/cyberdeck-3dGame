@@ -46,7 +46,7 @@ function updateSky(h,d,gld){
   daySky.position.set(cp.x,0,cp.z);if(skyMesh)skyMesh.position.set(cp.x,0,cp.z); // les ciels suivent la caméra : jamais coupés par la distance d’affichage
   const out=!String(zoneOf()||"").startsWith("in_");[daySky,sunSpr,moonSpr,moonHalo,skyMesh,dnStars].forEach(o=>{if(o)o.visible=out}); // dans une pièce : pas de ciel
   daySky.material.opacity=Math.max(d,gld*.75);daySky.material.color.copy(wx.sky).lerp(C_DUSK,gld*.65);daySky.rotation.y+=.0004;
-  sunSpr.position.set(cx-Math.cos(a)*150,Math.sin(a)*42+4,cz-60);sunSpr.material.opacity=Math.max(0,Math.min(1,Math.sin(a)*3+.3))*(wx.rain>.5?.35:1);sunSpr.material.color.copy(C_SUN).lerp(C_SUNSET,gld);
+  sunSpr.position.set(cx-Math.cos(a)*150,Math.sin(a)*42+4,cz-60);sunSpr.material.opacity=Math.max(0,Math.min(1,Math.sin(a)*3+.3))*(wx.rain>.5?.25:.6);sunSpr.material.color.copy(C_SUN).lerp(C_SUNSET,gld);
   moonSpr.position.set(cx+Math.cos(a)*150,-Math.sin(a)*42+4,cz-60);moonSpr.material.opacity=Math.max(0,Math.min(1,-Math.sin(a)*3))*(1-d);moonHalo.position.copy(moonSpr.position);moonHalo.material.opacity=moonSpr.material.opacity*.45;
 }
 // lumière du jour (0 la nuit, 1 en plein jour) et lueur dorée de l'aube et du crépuscule
@@ -69,13 +69,13 @@ function updateDayNight(dt){
   if(skyMesh)skyMesh.material.opacity=1-Math.max(d,gld*.5);updateSky(h,d,gld);
   if(dnStars)dnStars.material.opacity=.7*(1-Math.min(1,d*2+gld));
   // ciel et sol, soleil (ou lune)
-  hemi.intensity+=d*.45+gld*.2;hemi.color.copy(C_HEMI_N).lerp(C_HEMI_D,d);hemi.groundColor.copy(C_GND_N).lerp(C_GND_D,d);
+  hemi.intensity+=d*.38+gld*.18;hemi.color.copy(C_HEMI_N).lerp(C_HEMI_D,d);hemi.groundColor.copy(C_GND_N).lerp(C_GND_D,d);
   const a=(h-6)/12*Math.PI;moon.position.set(W/2+Math.cos(a)*-60,Math.max(8,Math.sin(a)*70),H/2+30);moon.target.position.set(W/2,0,H/2);
-  moon.color.copy(C_MOON).lerp(C_SUN,d).lerp(C_SUNSET,gld*.7);moon.intensity=.3+d*.62+gld*.35;
+  moon.color.copy(C_MOON).lerp(C_SUN,d).lerp(C_SUNSET,gld*.7);moon.intensity=.3+d*.5+gld*.3;
   // les néons restent, mais les fenêtres et les lampes comptent moins en plein jour
   const lk=1-d*.7;dnLights.forEach(([l,b])=>l.intensity=b*lk);dnEmis.forEach(([m,b])=>m.emissiveIntensity=b*(1-d*.6));
-  dnNeon.forEach(([m,c])=>m.color.copy(c).multiplyScalar(1+.75*d));
-  if(bloom){bloom.strength=1.15-d*.3;bloom.threshold=.6+d*.2}
+  dnNeon.forEach(([m,c])=>m.color.copy(c).multiplyScalar(1+.2*d));
+  if(bloom){bloom.strength=1.15-d*.8;bloom.threshold=.6+d*.32} // de jour, presque pas de halo : pas d’éblouissement
 }
 function skipPhase(){const fw=p=>((p-S.hour)%24+24)%24,next=PHASES.filter(([p])=>fw(p)>.5).sort((x,y)=>fw(x[0])-fw(y[0]))[0];
   dnSkip=next[0];toast('Le temps passe… · '+next[1],'')}
