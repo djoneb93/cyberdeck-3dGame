@@ -148,10 +148,10 @@ let target=null,pendingTalk=null,stuck=0;
 let dlgOpen=false,started=false,overlayOpen=true,talking=null;
 
 addEventListener('keydown',e=>{
-  if(!$('fiche').hidden&&['Escape','KeyE','KeyF','Enter'].includes(e.code)){e.preventDefault();closeFiche();return}
+  if(!$('fiche').hidden&&['Escape','KeyE','Enter'].includes(e.code)){e.preventDefault();closeFiche();return}
   if(overlayOpen)return;
   if(dlgOpen){
-    if(['Enter','KeyF','KeyE'].includes(e.code)){e.preventDefault();dlgAdvance()}
+    if(['Enter','KeyE'].includes(e.code)){e.preventDefault();dlgAdvance()}
     const n={Digit1:0,Digit2:1,Digit3:2,Numpad1:0,Numpad2:1,Numpad3:2}[e.code];
     if(n!==undefined){const b=$('dlgChoices').querySelectorAll('button')[n];if(b)b.click()}
     return;
@@ -160,7 +160,7 @@ addEventListener('keydown',e=>{
   if(e.code==='KeyQ')yawT+=Math.PI/4; // touche A en AZERTY
   if(e.code==='KeyR')yawT-=Math.PI/4;
   if(e.code==='KeyP'){PIX=PIX%4+1;try{localStorage.setItem('neobxl-pix2',PIX)}catch(_){}resize();toast('Pixels : '+PIX+'×','')}
-  if(['KeyE','KeyF','Enter'].includes(e.code)){e.preventDefault();interact()} // parler, examiner
+  if(['KeyE','Enter'].includes(e.code)){e.preventDefault();interact()} // parler, examiner (F sort le téléphone : js/phone.js)
   if(e.code.startsWith('Arrow'))e.preventDefault();
 });
 addEventListener('keyup',e=>{keys[e.code]=false});

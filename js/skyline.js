@@ -137,7 +137,7 @@ function buildGroundDetails(free){
     decal(g=>{g.strokeStyle='rgba(255,255,255,.55)';g.lineWidth=3;g.beginPath();g.moveTo(32,8);g.lineTo(32,50);g.moveTo(18,36);g.lineTo(32,52);g.lineTo(46,36);g.stroke()})]; // flèche peinte
   const lists=DEC.map(()=>[]);
   const props=[];
-  const PX=MKT_PIT.x,PZ=MKT_PIT.z,keep=[[PX,PZ,2.2],[64.2,61.5,3.6],[52.4,51.1,1.8],...NPC_DEF.map(n=>[n.x,n.z,1.6])]; // trémie du Bazar, place du taxi, personnages
+  const PX=MKT_PIT.x,PZ=MKT_PIT.z,keep=[[PX,PZ,2.2],[METRO_E.x,METRO_E.z,2.4],[METRO_W.x,METRO_W.z,2.4],[64.2,61.5,3.6],[52.4,51.1,1.8],...NPC_DEF.map(n=>[n.x,n.z,1.6])]; // trémie du Bazar, place du taxi, personnages
   for(let z=1;z<H-1;z++)for(let x=11;x<W-1;x++){const t=tile[I(x,z)];if((t!==0&&t!==1&&t!==4)||solid[I(x,z)])continue;if(nearEntrance(x,z)||keep.some(([a,b,rr])=>Math.hypot(x+.5-a,z+.5-b)<rr))continue;
     const cx=x+.2+r()*.6,cz=z+.2+r()*.6;
     if(r()<.07){const k=t===1?[0,1,3,4][Math.floor(r()*4)]:Math.floor(r()*DEC.length);if(k===5&&t===1)continue;lists[k].push([cx,cz,r()*6,.6+r()*.7])}

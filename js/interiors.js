@@ -41,7 +41,8 @@ function makeRoom(id,o,cx,cz){
   R.B(.04,.14,d,o.trim,-w/2+.02,.07,0,true);R.B(.04,.14,d,o.trim,w/2-.02,.07,0,true);
   // la porte de sortie : elle s'efface avec le mur sud quand la caméra passe derrière
   const so=R.south=new THREE.Group();so.position.z=d/2-.06;g.add(so);
-  if(o.stairsDown){ // à l'étage de la planque : pas de porte, un escalier qui descend dans le plancher
+  if(o.noDoor){} // (pièce sans porte au sud : ses sorties sont définies à part)
+  else if(o.stairsDown){ // à l'étage de la planque : pas de porte, un escalier qui descend dans le plancher
     stairPit(g,0,0,d/2-1.35,Math.PI,o.trim);R.block(-.8,d/2-1.35,.06,1.25);R.block(.8,d/2-1.35,.06,1.25)}
   else{
   const dp=new THREE.Mesh(new THREE.PlaneGeometry(1.7,2.5),mat('#05070b'));dp.position.y=1.25;dp.rotation.y=Math.PI;so.add(dp);
@@ -51,7 +52,7 @@ function makeRoom(id,o,cx,cz){
   ZONES['in_'+id]={x:cx,z:cz,hw:w/2-.45,hd:d/2-.45,y:IY,blocks,room:id};
   ROOMS[id]=R;o.build(R);if(o.outside)o.outside();
   // la porte de la rue : on entre en marchant dedans, sans touche à presser
-  const f=o.entry||FP(id,.3,0);ENTRANCES.push({id,x:f.x,z:f.z,r:f.r||.85});
+  if(o.entries)o.entries.forEach(e=>ENTRANCES.push({id,...e}));else{const f=o.entry||FP(id,.3,0);ENTRANCES.push({id,x:f.x,z:f.z,r:f.r||.85})}
 }
 const ENTRANCES=[];let doorArmed=true,doorCool=0,liftArmed=true,stairArmed=true;
 
@@ -86,20 +87,21 @@ function checkDoors(dt){
   const up=!z&&Math.hypot(p.x-(GX-1.62),p.z-(GZ1+.55))<.5,dn=z==="quai"&&Math.hypot(p.x-(GX-1.62),p.z-(QUAI_END-.3))<.5;
   if(!up&&!dn)stairArmed=true;else if(stairArmed){stairArmed=false;climbStairs(up);return}
   if(!z){const e=ENTRANCES.find(e=>Math.hypot(p.x-e.x,p.z-e.z)<e.r);if(!e){doorArmed=true;return}
-    if(doorArmed){doorArmed=false;doorCool=1;enterRoom(e.id)}return}
+    if(doorArmed){doorArmed=false;doorCool=1;enterRoom(e.id,e)}return}
   if(z==="roof"){const inT=Math.hypot(p.x-(ROOF.x+1.9),p.z-(ROOF.z-.75))<.5;if(!inT)liftArmed=true;else if(liftArmed){liftArmed=false;doorCool=1.2;lobbyFromRoof()}return}
   if(z==="in_roofs"){const L=ROOMS.roofs,inT=Math.abs(p.x-L.cx)<.7&&p.z<L.cz-L.d/2+1;if(!inT)liftArmed=true;else if(liftArmed){liftArmed=false;doorCool=1.2;goRoof(true);return}}
   if(!Z.room)return;const R=ROOMS[Z.room];
+  if(R.o.exits){const lx=p.x-R.cx,lz=p.z-R.cz,ex=R.o.exits.find(e=>e.at(lx,lz));if(ex){doorCool=1.2;exitRoom(Z.room,ex.to)}return}
   if(p.z>R.cz+R.d/2-.8&&Math.abs(p.x-R.cx)<.9){doorCool=1.2;exitRoom(Z.room)}
 }
 
 // ---------- entrer, sortir ----------
-function enterRoom(id){const R=ROOMS[id];leaveMoto();
+function enterRoom(id,ent){const R=ROOMS[id];leaveMoto();
   if(id==='club'&&!clubOpen()){openDlg({n1:{s:'nar',t:'Le club Ondes est fermé. Une affiche sur la porte : « Ouverture à 20 h · fermeture à l’aube ». Reviens ce soir.'}});return}
   if(id==='bunker'&&S.rep<10){openDlg({n1:{s:'nar',t:'La porte blindée ne bouge pas. Une caméra pivote vers toi, te détaille, puis se détourne. Ici, on n’ouvre qu’aux visages connus de la Zone Zéro (réputation « Visage connu »).'}});return}
-  fadeThen(()=>{S.roof='in_'+id;const sp=R.o.spawn||[0,R.d/2-2.2];player.position.set(R.cx+sp[0],IY,R.cz+sp[1]);player.userData.ry=Math.PI;player.userData.jy=0;player.userData.jv=0;
+  fadeThen(()=>{S.roof='in_'+id;const sp=(ent&&ent.spawn)||R.o.spawn||[0,R.d/2-2.2];player.position.set(R.cx+sp[0],IY,R.cz+sp[1]);player.userData.ry=ent&&ent.ry!=null?ent.ry:Math.PI;player.userData.jy=0;player.userData.jv=0;
   target=null;pendingTalk=null;yaw=yawT=0;distT=Math.min(distT,6.5);pitchT=Math.max(pitchT,.45);focus.set(player.position.x,IY+1.5,player.position.z);save();toast(IN_NAMES[id],'')})}
-function exitRoom(id){const o=IN_DEF[id];fadeThen(()=>{S.roof=false;const p=o.exit||FP(id,1.7,0);player.position.set(p.x,0,p.z);player.userData.ry=o.exit?o.exit.ry:FACE_RY[PL[id].face];doorArmed=false;
+function exitRoom(id,to){const o=IN_DEF[id];fadeThen(()=>{S.roof=false;const p=to||o.exit||FP(id,1.7,0);player.position.set(p.x,0,p.z);player.userData.ry=p.ry!=null?p.ry:FACE_RY[PL[id].face];doorArmed=false;
   target=null;pendingTalk=null;focus.set(p.x,1.5,p.z);save()})}
 
 // ---------- les pièces ----------
@@ -385,7 +387,7 @@ function lobbyFromRoof(){const R=ROOMS.roofs;fadeThen(()=>{S.roof='in_roofs';pla
 function buildInteriors(){
   inLights=[new THREE.PointLight(0xffffff,0,15,1.4),new THREE.PointLight(0xffffff,0,13,1.4)];inLights.forEach(l=>scene.add(l));
   const wallOf={bunker:()=>photoMat('concrete',3,1,.5),port:()=>photoMat('corrugated',4,1.4,.45)};
-  let k=0;for(const id in IN_DEF){const o=IN_DEF[id];if(!o.wall)o.wall=(wallOf[id]&&wallOf[id]())||mat('#2a2e34');makeRoom(id,o,W+60+k*22,H/2);k++}
+  let k=0;for(const id in IN_DEF){const o=IN_DEF[id];if(!o.wall)o.wall=(wallOf[id]&&wallOf[id]())||mat('#2a2e34');makeRoom(id,o,o.pos?o.pos[0]:W+60+k*22,o.pos?o.pos[1]:H/2);k++}
   // les ascenseurs de la tour se prennent en marchant dedans : plus besoin de les « utiliser »
   for(let i=OBJECTS.length-1;i>=0;i--)if(OBJECTS[i].id==="o_down"||(OBJECTS[i].zone==="in_roofs"&&/ascenseur/.test(OBJECTS[i].label)))OBJECTS.splice(i,1);
 }

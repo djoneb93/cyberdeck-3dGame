@@ -47,9 +47,17 @@
   <button type="button" id="camOut" aria-label="Dézoomer">−</button>
   <button type="button" id="camIn" aria-label="Zoomer">+</button>
 </div>
-<div id="help" class="panel" hidden><b>ZQSD</b> / flèches : marcher · <b>clic</b> au sol : aller<br><b>glisser</b> : tourner et incliner la caméra · <b>A</b> / <b>R</b> : pivoter<br><b>molette</b> : zoom · <b>E</b> ou <b>F</b> : parler · <b>P</b> : pixels · <b>M</b> : météo · <b>N</b> : jour / nuit · <b>Échap</b> : pause</div>
+<div id="help" class="panel" hidden><b>ZQSD</b> / flèches : marcher · <b>clic</b> au sol : aller<br><b>glisser</b> : tourner et incliner la caméra · <b>A</b> / <b>R</b> : pivoter<br><b>molette</b> : zoom · <b>E</b> : parler · <b>F</b> : téléphone · <b>P</b> : pixels · <b>M</b> : météo · <b>N</b> : jour / nuit · <b>Échap</b> : pause</div>
 
 <div id="toasts"></div>
+<div id="mmWrap"><canvas id="minimap" width="184" height="152" hidden></canvas><div id="mmLabel"></div></div>
+<div id="phone" class="panel" hidden>
+  <div class="phTop"><span id="phTime">22:00</span><span>NEO-NET ▂▄▆</span></div>
+  <div class="phTitle">Téléphone</div>
+  <button type="button" id="phMap" class="phApp"><b>Mini-carte</b><i id="phMapState">masquée</i></button>
+  <div id="phMusic" class="phApp"><b>Baladeur</b><i id="phTrack">Néons sous la pluie</i><div class="phCtl"><button type="button" id="phPlay">▶</button><button type="button" id="phNext">⏭</button></div></div>
+  <button type="button" id="phClose" class="phClose">Ranger · F</button>
+</div>
 <div id="fade"></div>
 
 <div id="fiche" class="ov" hidden>
@@ -66,7 +74,7 @@
     <p>Tu ouvres les yeux dans ta planque de la Zone Zéro. Ton dernier souvenir date de 2086. Entre les deux : trois ans effacés.</p>
     <div class="acts menuActs" id="introActs"></div>
     <div class="credits">Imaginé par <b>Benjamin Lambot</b> · réalisé avec <b>Claude</b></div>
-    <div class="keys panel" id="menuKeys" hidden><b>ZQSD</b> ou flèches : marcher · <b>clic / tap</b> au sol : se déplacer<br><b>glisser</b> : tourner et incliner la caméra · <b>A / R</b> : pivoter · <b>molette</b> ou <b>+ −</b> : zoom<br><b>E</b> ou <b>F</b> : parler, examiner, continuer un dialogue · <b>1 2 3</b> : choisir une réponse<br><b>M</b> : météo · <b>N</b> : jour / nuit · <b>P</b> : taille des pixels · <b>Échap</b> : pause</div>
+    <div class="keys panel" id="menuKeys" hidden><b>ZQSD</b> ou flèches : marcher · <b>clic / tap</b> au sol : se déplacer<br><b>glisser</b> : tourner et incliner la caméra · <b>A / R</b> : pivoter · <b>molette</b> ou <b>+ −</b> : zoom<br><b>E</b> ou <b>F</b> : parler, examiner, continuer un dialogue · <b>1 2 3</b> : choisir une réponse<br><b>M</b> : météo · <b>N</b> : jour / nuit · <b>F</b> : téléphone · <b>P</b> : taille des pixels · <b>Échap</b> : pause</div>
   </div>
 </div>
 
@@ -83,7 +91,7 @@
   <div class="card panel cut">
     <div class="lbl">Paramètres</div>
     <div class="tabs"><button type="button" id="tabKeys" class="on">Commandes</button><button type="button" id="tabSound">Son</button></div>
-    <div id="setKeys" class="keys"><b>ZQSD</b> ou flèches : marcher · <b>clic / tap</b> au sol : se déplacer<br><b>glisser</b> : tourner et incliner la caméra · <b>A / R</b> : pivoter · <b>molette</b> ou <b>+ −</b> : zoom<br><b>E</b> ou <b>F</b> : parler, examiner, s’asseoir, monter sur la moto, continuer un dialogue · <b>1 2 3</b> : choisir une réponse<br><b>M</b> : météo · <b>N</b> : jour / nuit · <b>P</b> : taille des pixels · <b>Échap</b> : pause<br>On entre dans les lieux en marchant dans leur porte.</div>
+    <div id="setKeys" class="keys"><b>ZQSD</b> ou flèches : marcher · <b>clic / tap</b> au sol : se déplacer<br><b>glisser</b> : tourner et incliner la caméra · <b>A / R</b> : pivoter · <b>molette</b> ou <b>+ −</b> : zoom<br><b>E</b> : parler, examiner, s’asseoir, monter sur la moto, continuer un dialogue · <b>F</b> : téléphone (mini-carte, baladeur) · <b>1 2 3</b> : choisir une réponse<br><b>M</b> : météo · <b>N</b> : jour / nuit · <b>F</b> : téléphone · <b>P</b> : taille des pixels · <b>Échap</b> : pause<br>On entre dans les lieux en marchant dans leur porte.</div>
     <div class="sound" id="soundSet" hidden>
       <label>Volume général <input type="range" id="volMaster" min="0" max="1" step="0.05"></label>
       <label>Musique <input type="range" id="volMusic" min="0" max="1" step="0.05"></label>
@@ -142,7 +150,9 @@
 <script src="js/audio.js"></script>
 <script src="js/doors.js"></script>
 <script src="js/interiors.js"></script>
+<script src="js/metro.js"></script>
 <script src="js/moto.js"></script>
+<script src="js/phone.js"></script>
 <script src="js/story.js"></script>
 <script src="js/entities.js"></script>
 <script src="js/game.js"></script>

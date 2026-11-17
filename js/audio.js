@@ -39,6 +39,9 @@ function audioInit(){
   L.crowd=layer(AUD.brown,'bandpass',650,1.4);L.city=layer(AUD.brown,'lowpass',150,.7);L.sea=layer(AUD.brown,'lowpass',520,.7);
   L.train=layer(AUD.brown,'lowpass',240,.9);L.cars=layer(AUD.white,'bandpass',800,1.6);
   L.fly=drone('sawtooth',92,'lowpass',380);L.moto=drone('triangle',62,'lowpass',260);L.club=drone('sine',46,'lowpass',160);
+  // brouhaha de conversations (deux bandes de voix), qui ne passe pas par le filtre des intérieurs : on l'entend dans le bar ou le Bazar
+  N.room=c.createGain();N.room.gain.value=0;N.room.connect(N.master);
+  L.babble=['900',' 2100'].map((f,i)=>{const s=c.createBufferSource();s.buffer=AUD.brown;s.loop=true;const fl=c.createBiquadFilter();fl.type='bandpass';fl.frequency.value=+f;fl.Q.value=i?2:1.3;const g=c.createGain();g.gain.value=0;s.connect(fl);fl.connect(g);g.connect(N.room);s.start(0,Math.random()*3);return {g,fl}});
   startMusic();
 }
 function applyVolumes(){const N=AUD.N;if(!AUD.ctx)return;N.master.gain.value=AUD.vol.master;N.sfx.gain.value=AUD.vol.sfx}
@@ -67,9 +70,9 @@ function updateAudio(dt){
   if(!AUD.ctx)return;audT+=dt;if(audT<.1)return;const D=audT;audT=0;
   // la musique : menu et pause (morceau calme) · radio de la planque · club Ondes (morceau dansant) ; sinon, pas de musique
   const z=zoneOf(),club=z==='in_club',radio=!!S.radio&&inPlanque();
-  let mv=0;if(inMenu()||cine){mv=1;MUS.want='calm'}else if(club){mv=1;MUS.want='club'}else if(radio){mv=.6;MUS.want='calm'}
+  let mv=0;if(inMenu()||cine){mv=1;MUS.want="calm"}else if(club){mv=1;MUS.want="club"}else if(S.walkman){mv=.8;MUS.want=S.wmTrack||"calm"}else if(radio){mv=.6;MUS.want="calm"} // le baladeur du téléphone passe avant la radio
   AUD.N.mus.gain.setTargetAtTime(AUD.vol.music*mv,now(),.6);
-  const on=ambienceOn();AUD.N.amb.gain.setTargetAtTime(on?AUD.vol.amb:0,now(),.8);
+  const on=ambienceOn();AUD.N.amb.gain.setTargetAtTime(on?AUD.vol.amb:0,now(),.8);AUD.N.room.gain.setTargetAtTime(on?AUD.vol.amb:0,now(),.8);
   if(!on)return;
   const L=AUD.L,p=player.position,inside=!!(z&&String(z).startsWith('in_')),out=inside?0:1;
   AUD.N.muffle.frequency.setTargetAtTime(inside?480:18000,now(),.25);
@@ -78,6 +81,10 @@ function updateAudio(dt){
   setG(L.rain,rain*.06,1);setG(L.rainLow,rain*.05,1);setG(L.wind,w.sand?.2:((w.storm?.06:0)+(S.roof==='roof'?.07:0)),1);
   if(typeof flash==='number'){if(flash>.9&&lastFlash<.5)thunder();lastFlash=flash}
   setG(L.city,inside?.015:.035); // un fond de ville très bas, partout
+  // brouhaha : dans le Néon Noir, dans le Bazar souterrain, et sous la verrière du Bazar Néon ; les voix montent et descendent comme des phrases
+  const M=PL.market,inMk=!z&&Math.abs(p.x-M.x)<M.hw+1&&Math.abs(p.z-M.z)<M.hd+1,bab=z==='in_bar'?.07:z==='in_market'?.08:z==='in_metro'?.03:inMk?.055:0;
+  L.babble.forEach((b,i)=>{b.g.gain.setTargetAtTime(bab*(i?.35:1)*(.5+.5*Math.random()),now(),.08);b.fl.frequency.setTargetAtTime((i?2100:900)*(.85+.3*Math.random()),now(),.1)});
+  portSounds(D,!z&&p.x<20&&p.z>UZ(.12)&&p.z<UZ(.66));
   // sons de proximité, 3 m au plus : le passant le plus proche, la mer, le TGV, une voiture, une voiture volante, le club
   let wd=1e9,wq=null;walkers.forEach(o=>{const q=o.m.position,d=Math.hypot(q.x-p.x,q.z-p.z);if(d<wd){wd=d;wq=q}});setG(L.crowd,out*near(wd)*.07,.3);if(wq)panTo(L.crowd,wq.x,wq.z);
   const ds=Math.max(0,p.x-9.8);setG(L.sea,out*near(ds)*.24*(.65+.35*Math.sin(tAcc*.5)),.6);L.sea.fl.frequency.setTargetAtTime(380+260*Math.max(0,Math.sin(tAcc*.5)),now(),.5);panTo(L.sea,8,p.z);
@@ -127,3 +134,15 @@ function playStep(s,t){
 // ---- réglages du son (Paramètres → Son) ----
 [['volMaster','master'],['volMusic','music'],['volAmb','amb'],['volSfx','sfx']].forEach(([id,k])=>{const el=document.getElementById(id);if(!el)return;el.value=AUD.vol[k];
   el.addEventListener('input',()=>{AUD.vol[k]=+el.value;audioInit();applyVolumes();saveAudio()})});
+
+// ---- le port : corne de bateau au loin, chocs de conteneurs, grincements d'amarres (seulement sur le quai, près des docks) ----
+let portT={horn:8,clank:3,creak:5};
+function portSounds(D,here){if(!here){return}for(const k in portT)portT[k]-=D;const c=AUD.ctx,t=now(),out=AUD.N.amb;
+  const env=(g,a,peak,dec)=>{g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(peak,t+a);g.gain.exponentialRampToValueAtTime(.0005,t+a+dec)};
+  if(portT.horn<=0){portT.horn=30+Math.random()*25;[98,147].forEach(f=>{const o=c.createOscillator(),g=c.createGain(),fl=c.createBiquadFilter();o.type='sawtooth';o.frequency.value=f;fl.type='lowpass';fl.frequency.value=420;
+    g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(.05,t+.5);g.gain.setValueAtTime(.05,t+2.2);g.gain.linearRampToValueAtTime(0,t+3.2);o.connect(fl);fl.connect(g);g.connect(out);o.start(t);o.stop(t+3.3)})}
+  if(portT.clank<=0){portT.clank=5+Math.random()*5;const s=c.createBufferSource();s.buffer=AUD.white;const fl=c.createBiquadFilter();fl.type='bandpass';fl.frequency.value=1600+Math.random()*900;fl.Q.value=3;const g=c.createGain();env(g,.005,.09,.35);s.connect(fl);fl.connect(g);g.connect(out);s.start(t,Math.random());s.stop(t+.5);
+    const o=c.createOscillator(),g2=c.createGain();o.frequency.value=420+Math.random()*200;env(g2,.005,.03,.9);o.connect(g2);g2.connect(out);o.start(t);o.stop(t+1)}
+  if(portT.creak<=0){portT.creak=7+Math.random()*6;const o=c.createOscillator(),fl=c.createBiquadFilter(),g=c.createGain(),l=c.createOscillator(),lg=c.createGain();o.type='sawtooth';o.frequency.value=120;l.frequency.value=7;lg.gain.value=25;l.connect(lg);lg.connect(o.frequency);
+    fl.type='bandpass';fl.frequency.value=700;fl.Q.value=4;env(g,.15,.03,.7);o.connect(fl);fl.connect(g);g.connect(out);o.start(t);l.start(t);o.stop(t+1);l.stop(t+1)}
+}

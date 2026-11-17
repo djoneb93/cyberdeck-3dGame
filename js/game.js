@@ -233,7 +233,7 @@ function frame(){
   if(holo){holo.position.y=holo.userData.baseY+Math.sin(tAcc*1.3)*.08;const hm=holo.userData.plane.material;hm.opacity=.45+Math.sin(tAcc*9)*.04+(Math.random()<.02?-.25:0);holo.userData.moving=false;}
   updateCamera(dt);
   sprites.forEach(s=>updateSprite(s,dt));
-  updateRain(dt);updateInteriors(dt);updateMoto(dt);updateAudio(dt);
+  updateRain(dt);updateInteriors(dt);updateMoto(dt);updateAudio(dt);updateMinimap(dt);
   if(started)updateLabels();
   saveT+=dt;if(started&&saveT>4){saveT=0;save()}
   if(composer)composer.render();else renderer.render(scene,camera);
@@ -279,7 +279,7 @@ $('endClose').onclick=()=>{$('ending').hidden=true;overlayOpen=false};
 function start(hotData){
   const saved=(hotData&&hotData.S)||loadSave();
   if(saved){if(saved.mapv!==5){const n=NEW_STATE();saved.px=n.px;saved.pz=n.pz;saved.ry=0;saved.roof=false;saved.mapv=5}S=Object.assign(NEW_STATE(),saved);for(const k in S.q){const q=S.q[k];if(q.ep==null){q.ep=q.won?1:0;q.wins=q.won?1:0}}}
-  setupFX();buildWorld();buildPerimeter();spawn();buildLife();buildTaxi();buildTraffic();buildInteriors();registerBenches();buildMoto();makeMarkers();makeRain();setupWeather();setupDayNight();resize();placePlayer();
+  setupFX();buildWorld();buildPerimeter();spawn();buildLife();buildTaxi();buildTraffic();buildInteriors();registerBenches();buildMoto();buildMinimap();makeMarkers();makeRain();setupWeather();setupDayNight();resize();placePlayer();
   $('loading').remove();
   if(hotData&&hotData.S&&hotData.running)begin(false);else showMenu();  try{window.claude&&window.claude.hot&&window.claude.hot.snapshot&&window.claude.hot.snapshot(()=>({S,running:started}))}catch(e){}
   frame();
@@ -309,7 +309,7 @@ function trainCam(dt){
   if(!trainRide)return false;const R=trainRide;R.t+=dt;
   if(R.phase==='ride'){const z=TRAIN_STOP()-(TRAIN_STOP()+170)*Math.pow(Math.min(1,R.t/16),2);train.position.z=z;
     camera.position.set(GX+7,9,z+14);camera.lookAt(GX,3,z-8);
-    if(z<-8&&!R.dark){R.dark=true;dreamSequence()}}
+    if(z<26&&!R.dark){R.dark=true;dreamSequence()} /* le noir tombe avant que la caméra ne voie au-delà de la ville */}
   else{camera.position.set(GX+7,9,-20);camera.lookAt(GX,3,-40)}
   return true}
 function dreamSequence(){
