@@ -162,10 +162,11 @@ function makeSheet(sp){
     g.save();g.translate(fr*32+32,64);g.scale(-1,1);g.drawImage(t,0,0);g.restore();}
   // 4e colonne : assis sur un banc, les jambes tendues devant soi (le haut du corps descend à hauteur d'assise)
   const R=(x,y,w,h,col)=>{g.fillStyle=col;g.fillRect(96+x,y,w,h)},pants=sp.pants,shoes=sp.shoes,dk=sh(pants,.72);
-  [0,64,128,192].forEach(y0=>g.drawImage(c,0,y0,32,39,96,y0+11,32,39));
-  R(11,48,10,3,pants);R(12,51,3,7,pants);R(14,51,1,7,dk);R(17,51,3,7,pants);R(17,51,1,7,dk);R(11,58,4,4,shoes);R(17,58,4,4,shoes); // de face : jambes vues de bout
-  R(13,176,15,4,pants);R(13,179,15,1,dk);R(27,173,4,7,shoes);R(27,179,4,1,sh(shoes,.55)); // de profil (vers la droite), rangée 128
-  const yL=64;g.fillStyle=pants;g.fillRect(96+4,yL+48,15,4);g.fillStyle=dk;g.fillRect(96+4,yL+51,15,1);g.fillStyle=shoes;g.fillRect(96+1,yL+45,4,7); // de profil (vers la gauche)
+  // (le buste ne descend que de 6 pixels : le personnage est assis sur le banc, ses jambes restent bien visibles)
+  [0,64,128,192].forEach(y0=>g.drawImage(c,0,y0,32,39,96,y0+6,32,39));
+  R(11,43,10,3,pants);R(12,46,3,12,pants);R(14,46,1,12,dk);R(17,46,3,12,pants);R(17,46,1,12,dk);R(11,58,4,4,shoes);R(17,58,4,4,shoes); // de face : jambes qui descendent du banc
+  R(13,171,15,4,pants);R(13,174,15,1,dk);R(27,168,4,7,shoes);R(27,174,4,1,sh(shoes,.55)); // de profil (vers la droite), rangée 128
+  const yL=64;g.fillStyle=pants;g.fillRect(96+4,yL+43,15,4);g.fillStyle=dk;g.fillRect(96+4,yL+46,15,1);g.fillStyle=shoes;g.fillRect(96+1,yL+40,4,7); // de profil (vers la gauche)
   return c;
 }
 const PXK=1.9/64;

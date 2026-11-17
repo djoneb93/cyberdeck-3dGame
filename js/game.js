@@ -293,7 +293,7 @@ if(document.readyState==='loading')addEventListener('DOMContentLoaded',ready);el
 // Chaque banc de la ville (rues et trottoirs extérieurs) devient un objet : E ou F pour s'asseoir, encore une fois (ou marcher) pour se lever.
 let seated=null;
 function sitOn(b){if(seated===b){standUp();return}target=null;pendingTalk=null;seated=b;const ud=player.userData;
-  player.position.set(b.x-b.fx*.05,0,b.z-b.fz*.05);ud.ry=Math.atan2(b.fx,b.fz);ud.moving=false;ud.sit=true}
+  player.position.set(b.x+b.fx*.12,0,b.z+b.fz*.12); /* un peu en avant : les jambes passent devant l’assise */ud.ry=Math.atan2(b.fx,b.fz);ud.moving=false;ud.sit=true}
 function standUp(){const b=seated;if(!b)return;seated=null;player.userData.sit=false;player.position.x=b.x+b.fx*.85;player.position.z=b.z+b.fz*.85}
 function registerBenches(){BENCHES.forEach((b,i)=>OBJECTS.push({id:'bench_'+i,x:b.x+b.fx*.6,z:b.z+b.fz*.6,r:1.1,get label(){return seated===b?'Se lever':'S’asseoir sur le banc'},act:()=>sitOn(b)}))}
 

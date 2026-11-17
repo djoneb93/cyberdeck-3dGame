@@ -258,7 +258,7 @@ function buildWorld(){
   const wt=new THREE.Mesh(new THREE.CylinderGeometry(.55,.55,1.2,12),mat('#4a4f58'));wt.position.set(10,HH+.9,4);homeShell.add(wt);
   // l'extérieur de l'immeuble : briques, socle de pierre, auvent, appliques, jardinières, gouttières, escalier de secours, toit-terrasse, enseigne, tag
   const brickM=photoMat('brick',3.2,2.2,.48);if(brickM)homeShell.children.forEach(m=>{if(m.material===mat(wc))m.material=brickM});
-  box(10.9,.55,.08,'#4a4650',7,.27,10.34,homeShell);box(.08,.55,8.9,'#4a4650',12.34,.27,6,homeShell);
+  box(4.35,.55,.08,'#4a4650',3.73,.27,10.34,homeShell);box(4.35,.55,.08,'#4a4650',10.28,.27,10.34,homeShell);box(.08,.55,8.9,'#4a4650',12.34,.27,6,homeShell); // socle de pierre, interrompu à la porte
   box(2.9,.08,1.05,'#20242c',7,2.98,10.88,homeShell);box(2.9,.04,.04,'#7cf29a',7,2.95,11.4,homeShell,true);[5.7,8.3].forEach(x=>box(.03,.03,1,'#5a6070',x,3.25,10.85,homeShell));
   [5.55,8.45].forEach(x=>{box(.16,.3,.14,'#14181f',x,2.15,10.42,homeShell);box(.1,.18,.04,'#ffe0a8',x,2.15,10.5,homeShell,true)});
   [3.4,10.6].forEach(x=>{box(1.7,.22,.26,'#3a2a20',x,.86,10.5,homeShell);for(let i=0;i<5;i++)box(.24,.22+Math.random()*.15,.2,['#2f7a3e','#3d9a50','#c84a7a','#e8c040'][i%4],x-.64+i*.32,1.06,10.5,homeShell)});
@@ -268,7 +268,7 @@ function buildWorld(){
   box(10.9,.5,.12,'#4a4458',7,HH+.55,10.45,homeShell);for(let i=0;i<16;i++)box(.06,.06,.06,['#ffd59a','#ff4fa3','#39e6ff'][i%3],1.9+i*.68,HH+.84,10.45,homeShell,true); // garde-corps du toit, guirlande
   for(let i=0;i<3;i++){const p=box(1.2,.05,.8,'#1e2a44',3+i*1.35,HH+.62,7.8,homeShell);p.rotation.x=-.35;box(1.1,.02,.7,'#3a5a8a',3+i*1.35,HH+.65,7.8,homeShell).rotation.x=-.35} // panneaux solaires
   [[6,8],[8.4,8.3]].forEach(([x,z])=>{box(.6,.4,.6,'#6b4a36',x,HH+.5,z,homeShell);box(.7,.6,.7,'#2f7a3e',x,HH+1,z,homeShell)});
-  box(1.9,.08,.6,'#4a4650',7,.04,10.7,homeShell);box(1.2,.02,.5,'#5a2a2a',7,.09,10.72,homeShell); // marche et paillasson
+  box(1.2,.02,.5,'#5a2a2a',7,.012,10.72,homeShell); // paillasson, au ras du sol
   sign('RÉSIDENCE ZÉRO','#7cf29a',12.62,4.7,10.1,Math.PI/2,true,false,.05,true);box(.08,2.6,.5,'#14181f',12.55,4.7,10.1,homeShell);
   { const tc=document.createElement('canvas');tc.width=128;tc.height=64;const tg=tc.getContext('2d');tg.font='bold 30px Silkscreen, monospace';tg.lineWidth=4;
     tg.strokeStyle='#1a0a2a';tg.strokeText('MOTH',10,44);const gr=tg.createLinearGradient(0,0,128,0);gr.addColorStop(0,'#ff4fa3');gr.addColorStop(1,'#39e6ff');tg.fillStyle=gr;tg.fillText('MOTH',10,44);

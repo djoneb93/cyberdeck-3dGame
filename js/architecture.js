@@ -109,6 +109,31 @@ const INTERIOR_GLSL=`
 // Le shader suit le regard depuis la caméra dans une pièce de 2,6 m de profondeur et dessine le décor selon la surface touchée.
 const SHOP_FS=`uniform vec3 uT,uB,uN;uniform vec2 uS;uniform float uTheme,uSeed,uTime;varying vec3 vW;varying vec2 vUv;
 float hs(float n){return fract(sin(n*12.9898+uSeed*78.233)*43758.5453);}
+// objets plats posés entre la vitre et le mur du fond (calque 0 près de la vitre, calque 1 plus loin) : alpha 1 si le regard les touche
+vec4 obj(float th,float L,vec2 q){
+  float y=q.y,ci,fx;
+  if(th<.5){ // bowling : boule et banquette devant, quilles prêtes derrière
+    if(L<.5){ci=floor(q.x/2.);fx=fract(q.x/2.)*2.-1.;if(length(vec2(fx-.2,y+.24))<.11)return vec4(mix(vec3(.1,.2,.6),vec3(.8,.2,.5),hs(ci)),1.);
+      if(abs(fx+.45)<.35&&y<.05)return vec4(.5,.1,.15,1.);if(abs(fx+.45)<.35&&y<.45&&fx<-.72)return vec4(.4,.08,.12,1.);}
+    else{fx=fract(q.x/.9);for(int i=0;i<3;i++){float cx=.4+float(i)*.1;if(abs(fx-cx)<.022&&y<-.06)return vec4(y<-.14&&y>-.18?vec3(.9,.1,.1):vec3(.95),1.);if(length(vec2(fx-cx,y+.03))<.026)return vec4(.95,.95,.95,1.);}}}
+  else if(th<1.5){ // banque : poteaux et cordon, clients qui attendent
+    if(L<.5){fx=fract(q.x)-.5;if(abs(fx)<.025&&y<.62)return vec4(.85,.65,.25,1.);if(abs(y-.55)<.018&&abs(fx)>.03)return vec4(.55,.05,.1,1.);}
+    else{ci=floor(q.x/1.6);fx=fract(q.x/1.6)-.5;if(hs(ci)>.4&&(length(vec2(fx,y-1.38))<.1||(abs(fx)<.16+.03*(1.2-y)&&y<1.27&&y>-.35)))return vec4(.07,.07,.09,1.);}}
+  else if(th<2.5){ // nouilles : tabourets, cuisinier en blanc
+    if(L<.5){fx=fract(q.x/.7)-.5;if(abs(fx)<.16&&abs(y-.35)<.04)return vec4(.75,.1,.1,1.);if(abs(fx)<.02&&y<.35)return vec4(.7,.72,.75,1.);}
+    else{ci=floor(q.x/3.);fx=fract(q.x/3.)-.5;if(hs(ci)>.3&&(length(vec2(fx,y-1.4))<.1||(abs(fx)<.17&&y<1.3&&y>.55)||(abs(fx)<.09&&y>1.48&&y<1.66)))return vec4(.88,.88,.85,1.);}}
+  else if(th<3.5){ // boutique : table de pulls pliés, mannequins
+    if(L<.5){ci=floor(q.x/2.4);fx=fract(q.x/2.4)-.5;if(abs(fx)<.22&&abs(y-.32)<.03)return vec4(.5,.36,.22,1.);if(abs(abs(fx)-.18)<.02&&y<.32)return vec4(.3,.22,.14,1.);
+      if(abs(fx)<.2&&y>.35&&y<.5){float k=floor(fx*10.);return vec4(vec3(hs(ci+k),hs(ci+k+3.),hs(ci+k+6.))*.7+.15,1.);}}
+    else{ci=floor(q.x/1.4);fx=fract(q.x/1.4)-.5;if(length(vec2(fx,y-1.48))<.09)return vec4(.85,.82,.78,1.);if(abs(fx)<.15-.1*(1.38-y)*.5&&y>.75&&y<1.38)return vec4(vec3(hs(ci),hs(ci+1.),hs(ci+2.))*.8+.1,1.);if(abs(abs(fx)-.05)<.02&&y<.75&&y>-.35)return vec4(.85,.82,.78,1.);}}
+  else if(th<4.5){ // électronique : table d'exposition avec ordinateurs allumés
+    if(L<.5){fx=fract(q.x/2.)-.5;if(abs(fx)<.4&&abs(y-.42)<.03)return vec4(.85,.86,.9,1.);if(abs(abs(fx)-.36)<.02&&y<.42)return vec4(.4,.42,.46,1.);
+      float lx=fract(q.x/.5)-.5;if(abs(fx)<.38&&abs(lx)<.13&&y>.46&&y<.64)return vec4(vec3(.4,.8,1.3)*(.8+.2*sin(uTime*3.+q.x)),1.);}}
+  else{ // café : tables rondes et chaises, une grande plante
+    if(L<.5){ci=floor(q.x/1.4);fx=fract(q.x/1.4)-.5;if(abs(fx)<.24&&abs(y-.42)<.025)return vec4(.25,.17,.1,1.);if(abs(fx)<.025&&y<.42)return vec4(.15,.15,.15,1.);
+      if(abs(fx-.36)<.1&&abs(y-.12)<.025)return vec4(.3,.2,.12,1.);if(abs(fx-.45)<.02&&y<.55)return vec4(.3,.2,.12,1.);}
+    else{fx=fract(q.x/2.6)-.5;if(abs(fx)<.12&&y<-.05)return vec4(.5,.3,.2,1.);if(length(vec2(fx*1.4,y-.3))<.3)return vec4(.15,.4,.18,1.);}}
+  return vec4(0.);}
 void main(){
   vec3 rd=normalize(vW-cameraPosition);vec3 d=vec3(dot(rd,uT),dot(rd,uB),max(-dot(rd,uN),.06));
   float W=uS.x,Y0=-.35,Y1=2.4,D=2.6;vec3 p=vec3(vUv.x*W,vUv.y*uS.y,0.);
@@ -140,7 +165,9 @@ void main(){
     else if(back){c=vec3(.42,.3,.2);if(h.y>1.&&h.y<1.5&&fract(h.x/.8)<.5)c=vec3(.18,.12,.08);if(abs(h.y-1.9)<.25&&fract(h.x/1.3)<.15)c=vec3(1.3,1.,.6);}
     else if(cei)c=vec3(.3,.22,.15);else c=vec3(.38,.27,.18);
     if(!back&&!cei&&h.z>.8&&h.z<1.6&&h.y<.4&&abs(fract(h.x/1.2)-.5)<.25)c*=.35;}
-  c*=1.-.45*h.z/D;
+  float hz=h.z;
+  for(int L=0;L<2;L++){float zl=L==0?.85:1.7,tl=zl/d.z;if(tl<t){vec2 q=(p+d*tl).xy;vec4 o=obj(th,float(L),q);if(o.a>.5){c=o.rgb;t=tl;hz=zl;}}}
+  c*=1.-.45*hz/D;
   float fr=pow(1.-clamp(-dot(rd,uN),0.,1.),3.);c=mix(c,vec3(.3,.36,.46),fr*.6);
   if(fract(p.x/1.2)<.025||vUv.y<.04||vUv.y>.96)c=vec3(.08,.09,.11);
   gl_FragColor=vec4(c,1.);}`;

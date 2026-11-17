@@ -3,7 +3,7 @@
 'use strict';
 
 let srnd_s=7331;const srnd=()=>{srnd_s=(srnd_s*16807)%2147483647;return (srnd_s-1)/2147483646};
-const TREE_GEO=new THREE.IcosahedronGeometry(.78,1),LEAFM={},leafMat=c=>LEAFM[c]||(LEAFM[c]=new THREE.MeshLambertMaterial({color:c,flatShading:true}));
+const TREE_GEO=new THREE.IcosahedronGeometry(.78,1),LEAFM={},leafMat=c=>LEAFM[c]||(LEAFM[c]=new THREE.MeshPhongMaterial({color:c,flatShading:true,shininess:4,specular:0x111111}));
 const FURN=[],trafficLights=[],puddles=[],BENCHES=[];let wetness=-1; // BENCHES : bancs où l’on peut s’asseoir (fx, fz : direction du regard)
 // ---------- textures du sol (tuile de 4 × 4 unités, appliquée selon la position dans le monde) ----------
 function groundTex(kind){

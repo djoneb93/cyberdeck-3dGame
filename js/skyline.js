@@ -59,7 +59,7 @@ function buildPerimeter(){
   [[9.8,-34,92,0],[92,-34,130,76],[9.8,76,130,110]].forEach(([x0,z0,x1,z1])=>{const t=gt.clone();t.needsUpdate=true;t.wrapS=t.wrapT=THREE.RepeatWrapping;const pl=new THREE.Mesh(new THREE.PlaneGeometry(x1-x0,z1-z0),new THREE.MeshLambertMaterial({map:t,color:0x8a8f9a}));t.repeat.set((x1-x0)/4,(z1-z0)/4);
     pl.rotation.x=-Math.PI/2;pl.position.set((x0+x1)/2,-.02,(z0+z1)/2);scene.add(pl)});
   // ---- les trottoirs extérieurs : arbres, lampadaires, bancs, poubelles, tous centrés sur le trottoir ----
-  const leafM=new THREE.MeshLambertMaterial({color:0x2c5a34,flatShading:true}),leafM2=new THREE.MeshLambertMaterial({color:0x3a6e3c,flatShading:true});
+  const leafM=new THREE.MeshPhongMaterial({color:0x2c5a34,flatShading:true,shininess:4,specular:0x111111}),leafM2=new THREE.MeshPhongMaterial({color:0x3a6e3c,flatShading:true,shininess:4,specular:0x111111});
   const tree=(x,z)=>{B('#4a4f58',false,x,.2,z,.9,.4,.9);B('#2a2218',false,x,.42,z,.7,.04,.7);B('#4a3524',false,x,1.2,z,.14,1.6,.14);
     const f=new THREE.Mesh(TREE_GEO,r()<.5?leafM:leafM2);f.position.set(x,2.45,z);f.scale.set(1.05,.9,1.05);f.rotation.y=r()*6;scene.add(f);FURN.push([x,z,.48])}; // un seul houppier, une seule teinte
   // dx, dz : la direction de la chaussée (la crosse du lampadaire penche vers elle, le dossier du banc lui tourne le dos)
@@ -142,7 +142,7 @@ function buildGroundDetails(free){
   props.forEach(([x,z,k,a])=>{if(k===3||k===4){const fr=faceRoad(x,z);if(fr!==null)a=fr}
     if(k===0){box(.7,.6,.7,'#6a4a2a',x,.3,z).rotation.y=a;box(.5,.45,.5,'#7a5a34',x+.1,.82,z-.05).rotation.y=a+.3;FURN.push([x,z,.5])} // caisses
     else if(k===1){box(.6,.4,.5,'#9a7a4e',x,.2,z).rotation.y=a;box(.45,.35,.4,'#a8885a',x+.35,.18,z+.3).rotation.y=a+.6;FURN.push([x+.15,z+.15,.55])} // cartons
-    else if(k===2){box(1.2,.5,.5,'#3a4048',x,.25,z).rotation.y=a;const f=new THREE.Mesh(new THREE.IcosahedronGeometry(.4,1),new THREE.MeshLambertMaterial({color:0x2f6a3a,flatShading:true}));f.position.set(x,.75,z);f.scale.set(1.4,.8,.8);f.rotation.y=a;scene.add(f);FURN.push([x,z,.65])} // bac à plantes
+    else if(k===2){box(1.2,.5,.5,'#3a4048',x,.25,z).rotation.y=a;const f=new THREE.Mesh(new THREE.IcosahedronGeometry(.4,1),new THREE.MeshPhongMaterial({color:0x2f6a3a,flatShading:true,shininess:4,specular:0x111111}));f.position.set(x,.75,z);f.scale.set(1.4,.8,.8);f.rotation.y=a;scene.add(f);FURN.push([x,z,.65])} // bac à plantes
     else if(k===3){const g=new THREE.Group();g.position.set(x,0,z);g.rotation.y=a;scene.add(g);box(.8,1.9,.6,'#1a1e28',0,.95,0,g);box(.64,1.1,.04,pick(['#39e6ff','#ff4fa3','#7dffb0']),0,1.2,.31,g,true);box(.3,.1,.05,'#ffb547',.15,.45,.31,g,true);FURN.push([x,z,.55])} // distributeur
     else if(k===4){const g=new THREE.Group();g.position.set(x,0,z);g.rotation.y=a;scene.add(g);box(1.2,.8,.7,'#7a2e22',0,.55,0,g);box(1.4,.06,.9,'#ffb547',0,1.9,0,g,true);[-.6,.6].forEach(dx=>box(.05,1.1,.05,'#2a2e36',dx,1.35,.4,g));
       [-.4,.4].forEach(dx=>{const w2=new THREE.Mesh(new THREE.CylinderGeometry(.16,.16,.06,12),mat('#15171c'));w2.rotation.x=Math.PI/2;w2.position.set(dx,.16,.36);g.add(w2)});box(.3,.25,.3,'#d0d4d8',.3,1.08,0,g);FURN.push([x,z,.75])} // chariot à nouilles
