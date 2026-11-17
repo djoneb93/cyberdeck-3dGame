@@ -201,7 +201,6 @@ function buildWorld(){
   for(let k=0;k<=8;k++)rib(GZ0+(GZ1-GZ0)*k/8,k%4===0);
   box(.12,.12,GZ1-GZ0,'#c8d4e0',GX,7.2,(GZ0+GZ1)/2);
   sign('GARE ZÉRO','#ffb547',GX,8.2,GZ1+.2,0,true,true,.14);
-  sign('QUAI 3','#ffb547',GX+GHW+.3,2.6,GZ0+4,Math.PI/2,true,false,.07,true);
   glow(GX,(GZ0+GZ1)/2,6,'#ffb547',.22);
   buildStation();
   train=buildTrain(RY,ZS);

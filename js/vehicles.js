@@ -83,10 +83,10 @@ function buildTrain(RY,ZS){
     [-1,1].forEach(s=>box(.02,.62,.5,'#2a313c',s*(T.W+.003),.66,z0+.3,g));
     const gw=new THREE.Mesh(new THREE.CylinderGeometry(.5,.5,T.GAP+.06,14),mat('#15181f'));gw.rotation.x=Math.PI/2;gw.position.set(0,.68,z1+T.GAP/2);g.add(gw);
     box(.9,.12,T.CAR*.8,'#3a414c',0,T.YT+.04,z0+T.CAR/2,g); // équipements de toit
+    box(.05,.02,T.CAR*.8-.2,'#39e6ff',0,T.YT+.11,z0+T.CAR/2,g,true); // filet lumineux, voiture par voiture
     if(k===1){[[-.3,.5],[.3,.5]].forEach(([a,b])=>{const r=box(.04,.04,.9,'#8a96a8',a,T.YT+.45,z0+1.6,g);r.rotation.x=b});box(.7,.04,.06,'#c8d0dc',0,T.YT+.82,z0+1.6,g)} // pantographe
   }
   // phares, feux, bandeau lumineux du nez
   [-1,1].forEach(s=>{box(.03,.06,.35,'#eaf6ff',s*.415,.34,-.95,g,true);box(.03,.05,.35,'#ff3b4e',s*.415,.34,-T.LEN+.95,g,true)});
-  box(.03,.03,T.LEN-1.2,'#39e6ff',0,T.YT+.005,-T.LEN/2,g,true);
   g.position.set(GX,RY+.15,ZS);return g;
 }

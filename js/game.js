@@ -220,7 +220,7 @@ function frame(){
   updateWalkers(dt);
   npcs.forEach(n=>{const d=distTo(n);let want=n.baseRy;if(d<3.2||talking===n)want=Math.atan2(player.position.x-n.mesh.position.x,player.position.z-n.mesh.position.z);
     n.mesh.userData.ry=lerpAngle(n.mesh.userData.ry,want,Math.min(1,dt*5));});
-  updateCity(dt);updateStation(dt);updateLife(dt);updateTaxi(dt);updateWeather(dt);updateDoors(dt);flyers.forEach(f=>{f.g.position.x+=f.v*dt;if(f.g.position.x>W+14)f.g.position.x=-14;if(f.g.position.x<-14)f.g.position.x=W+14;f.g.position.y+=Math.sin(tAcc*1.5+f.v)*.004});
+  updateCity(dt);updateStation(dt);updateLife(dt);updateTaxi(dt);updateTraffic(dt);updateWeather(dt);updateDoors(dt);flyers.forEach(f=>{f.g.position.x+=f.v*dt;if(f.g.position.x>W+14)f.g.position.x=-14;if(f.g.position.x<-14)f.g.position.x=W+14;f.g.position.y+=Math.sin(tAcc*1.5+f.v)*.004});
   beacons.forEach(b=>b.visible=Math.sin(tAcc*3)>-.2);updateMarkers();
   if(cat)cat.userData.body.scale.y=1+Math.sin(tAcc*2.2)*.06;
   if(holo){holo.position.y=holo.userData.baseY+Math.sin(tAcc*1.3)*.08;const hm=holo.userData.plane.material;hm.opacity=.45+Math.sin(tAcc*9)*.04+(Math.random()<.02?-.25:0);holo.userData.moving=false;}
@@ -273,7 +273,7 @@ $('endClose').onclick=()=>{$('ending').hidden=true;overlayOpen=false};
 function start(hotData){
   const saved=(hotData&&hotData.S)||loadSave();
   if(saved){if(saved.mapv!==3){const n=NEW_STATE();saved.px=n.px;saved.pz=n.pz;saved.ry=0;saved.mapv=3}S=Object.assign(NEW_STATE(),saved);for(const k in S.q){const q=S.q[k];if(q.ep==null){q.ep=q.won?1:0;q.wins=q.won?1:0}}}
-  setupFX();buildWorld();spawn();buildLife();buildTaxi();makeMarkers();makeRain();setupWeather();resize();placePlayer();
+  setupFX();buildWorld();spawn();buildLife();buildTaxi();buildTraffic();makeMarkers();makeRain();setupWeather();resize();placePlayer();
   $('loading').remove();
   const acts=$('introActs');
   if(hotData&&hotData.S&&hotData.running){begin(false);}

@@ -25,7 +25,7 @@ function buildStation(){
   const ang=Math.atan2(QUAI_Y,GZ1-.2-QUAI_END),rl=Math.hypot(QUAI_Y,GZ1-.2-QUAI_END);
   [-1,1].forEach(s=>{const r=box(.05,.05,rl,'#cfe8ff',GX-1.62+s*.62,QUAI_Y/2+.95,(GZ1-.2+QUAI_END)/2,null,true);r.rotation.x=ang;
     for(let i=0;i<=3;i++)box(.04,.95,.04,'#3a4252',GX-1.62+s*.62,st*9*i/3+.47,GZ1-.2-(GZ1-.2-QUAI_END)*i/3)});
-  sign('QUAI 3 · NOVA PRIME','#ffb547',GX-1.62,QUAI_Y+2.1,QUAI_END+.1,0,true,false,.04);
+  sign('QUAI 3','#ffb547',GX-GHW-.25,4.4,zc,-Math.PI/2,false,false,.09);box(.08,3.6,.08,'#2a3140',GX-GHW-.2,2.4,zc-1.2);box(.08,3.6,.08,'#2a3140',GX-GHW-.2,2.4,zc+1.2); // panneau sur le flanc gauche de la gare
   // tableau des départs, sur le flanc est de la halle
   const c=document.createElement('canvas');c.width=256;c.height=112;const t=new THREE.CanvasTexture(c);t.minFilter=THREE.LinearFilter;
   const bm=new THREE.Mesh(new THREE.PlaneGeometry(4.4,1.92),new THREE.MeshBasicMaterial({map:t,fog:false,polygonOffset:true,polygonOffsetFactor:-2,polygonOffsetUnits:-4}));
