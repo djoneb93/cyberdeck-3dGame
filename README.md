@@ -52,6 +52,7 @@ et partagent la même portée globale.
 - `js/weather.js` : la météo, qui change toutes les 3 heures (touche M : aperçu).
 - `js/daynight.js` : le cycle jour / nuit, avec un ciel de jour (nuages, soleil) et un ciel de nuit (étoiles, lune) ; une journée dure 24 minutes, touche N pour avancer.
 - `js/doors.js` : portes des lieux importants (portes vitrées coulissantes, vue intérieure animée).
+- `js/audio.js` : l’ambiance sonore et la musique, générées par le navigateur (pluie, orage, foule, mer, TGV, voitures, moto, club) ; volumes dans le menu pause.
 - `js/moto.js` : la moto (E ou F pour monter et descendre, 1,5 fois plus rapide qu’à pied, bouton « Moto » pour la faire revenir devant la planque).
 - `js/interiors.js` : les intérieurs (on y entre et on en sort en marchant dans la porte) : le hall de la tour des Toits (ascenseur vers le toit), l’étage de la planque (par l’escalier en colimaçon), le Bazar souterrain (par un tunnel sous la verrière), le Néon Noir, l’Arcade, le club Ondes, la laverie, le Bunker (réservé aux « visages connus ») et l’entrepôt du port.
 - `js/story.js` : dialogues du jeu et moteur des histoires des contacts (Ink).

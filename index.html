@@ -75,6 +75,10 @@
     <div class="lbl">Pause</div>
     <h2>NEO-BXL</h2>
     <div class="acts menuActs"><button type="button" class="pri" id="pResume">Reprendre</button><button type="button" id="pMenu">Menu principal</button><button type="button" id="pQuit">Quitter le jeu</button></div>
+    <div class="sound" id="soundSet"><div class="lbl">Son</div>
+      <label>Volume général <input type="range" id="volMaster" min="0" max="1" step="0.05"></label>
+      <label>Musique <input type="range" id="volMusic" min="0" max="1" step="0.05"></label>
+      <label>Ambiance <input type="range" id="volAmb" min="0" max="1" step="0.05"></label></div>
     <div class="keys">Ta partie est sauvegardée automatiquement.</div>
   </div>
 </div>
@@ -125,6 +129,7 @@
 <script src="js/skyline.js"></script>
 <script src="js/weather.js"></script>
 <script src="js/daynight.js"></script>
+<script src="js/audio.js"></script>
 <script src="js/doors.js"></script>
 <script src="js/interiors.js"></script>
 <script src="js/moto.js"></script>

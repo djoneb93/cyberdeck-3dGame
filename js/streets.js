@@ -78,13 +78,15 @@ function buildStreets(){
       const L=['#ff3b4e','#ffb547','#5dff9a'].map((c,i)=>box(.34,.17,.34,c,hx,3.08-i*.28,hz,g,true));
       trafficLights.push({axis,L});FURN.push([x,z,.2])})}));
   // câbles et lampions tendus au-dessus des avenues
-  const cm=new THREE.LineBasicMaterial({color:0x05070b});
+  const cm=new THREE.LineBasicMaterial({color:0x05070b});const cabRay=new THREE.Raycaster();
   AVE.forEach((a,ai)=>{for(let t=.15+ai*.02;t<.95;t+=.25){[['z',UX(a),UZ(t)],['x',UX(t),UZ(a)]].forEach(([ax,p,q])=>{if(nearCross(ax==='z'?p:q,ax==='z'?q:p,4))return;const y0=7+srnd()*2;
     // chaque bout cherche une accroche : on recule vers l'avenue tant qu'on est sur la chaussée ou au-dessus de l'eau.
     // Immeuble : le câble s'accroche à la façade. Trottoir ou place : un poteau. Jamais de poteau sur la route.
     const P=o=>ax==='z'?[p+o,q]:[q,p+o];
     const end=sg=>{for(let o=3.4;o>=1.8;o-=.1){const [x,z]=P(sg*o),cx=Math.floor(x),cz=Math.floor(z);if(cx<0||cz<0||cx>=W||cz>=H)continue;const tt=tile[I(cx,cz)];if(tt===2||tt===5)continue;return {o:sg*o,wall:solid[I(cx,cz)]===1}}return null};
-    const e0=end(-1),e1=end(1);if(!e0||!e1)return;
+    // une façade doit vraiment se trouver à la hauteur du câble (le dôme du club, par exemple, est trop bas) : sinon, pas de câble
+    const wallAt=(e,sg)=>{const [x,z]=P(e.o-sg*.6),dir=ax==="z"?new THREE.Vector3(sg,0,0):new THREE.Vector3(0,0,sg);cabRay.set(new THREE.Vector3(x,y0,z),dir);cabRay.far=1.6;return cabRay.intersectObjects(scene.children.filter(o=>o.isMesh&&!o.isInstancedMesh),false).length>0};
+    const e0=end(-1),e1=end(1);if(!e0||!e1)return;if((e0.wall&&!wallAt(e0,-1))||(e1.wall&&!wallAt(e1,1)))return;
     const pts=[];for(let i=0;i<=12;i++){const s=i/12,o=e0.o+(e1.o-e0.o)*s,y=y0-Math.sin(s*Math.PI)*1.1,[x,z]=P(o);pts.push(new THREE.Vector3(x,y,z))}
     scene.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts),cm));
     [[0,e0],[12,e1]].forEach(([i,e])=>{const v=pts[i];if(e.wall)sd('#2a3140',false,v.x,v.y,v.z,.16,.16,.16);

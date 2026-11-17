@@ -47,7 +47,7 @@ function updatePlayer(dt){
     ud.ry=Math.atan2(mx,mz);ud.moving=moved>sp*.2;
   }else ud.moving=false;
   const J=player.userData;if(J.jv||J.jy){J.jv=(J.jv||0)-22*dt;J.jy=Math.max(0,(J.jy||0)+J.jv*dt);if(J.jy===0)J.jv=0}
-  player.position.y=zoneY()+(J.jy||0)+(riding?.3:0); // en selle, un peu plus haut
+  player.position.y=zoneY()+(J.jy||0)+(riding?.58:0); // en selle, un peu plus haut
   S.px=player.position.x;S.pz=player.position.z;S.ry=ud.ry;
 }
 const lerp=(a,b,t)=>a+(b-a)*t;
@@ -233,7 +233,7 @@ function frame(){
   if(holo){holo.position.y=holo.userData.baseY+Math.sin(tAcc*1.3)*.08;const hm=holo.userData.plane.material;hm.opacity=.45+Math.sin(tAcc*9)*.04+(Math.random()<.02?-.25:0);holo.userData.moving=false;}
   updateCamera(dt);
   sprites.forEach(s=>updateSprite(s,dt));
-  updateRain(dt);updateInteriors(dt);updateMoto(dt);
+  updateRain(dt);updateInteriors(dt);updateMoto(dt);updateAudio(dt);
   if(started)updateLabels();
   saveT+=dt;if(started&&saveT>4){saveT=0;save()}
   if(composer)composer.render();else renderer.render(scene,camera);

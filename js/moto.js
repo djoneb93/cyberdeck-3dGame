@@ -32,11 +32,12 @@ function motoModel(){
   const ex=new THREE.Mesh(new THREE.CylinderGeometry(.05,.065,.62,12),chrome);ex.rotation.z=Math.PI/2+.12;ex.position.set(-.55,.38,.19);g.add(ex);
   [-1,1].forEach(z=>box(1.15,.025,.025,'#39e6ff',-.05,.47,z*.17,g,true)); // néon sous le carénage
   // roues : pneu, jante, enjoliveur lumineux
-  const wheels=[.74,-.74].map(x=>{const w=new THREE.Group();w.position.set(x,.32,0);g.add(w);
+  // moto planante, comme les voitures : les roues sont couchées à l’horizontale et servent de patins de sustentation
+  const wheels=[.74,-.74].map(x=>{const hd=new THREE.Group();hd.position.set(x,.2,0);hd.rotation.x=Math.PI/2;g.add(hd);const w=new THREE.Group();hd.add(w);
     w.add(new THREE.Mesh(new THREE.TorusGeometry(.26,.075,10,24),dark));const rim=new THREE.Mesh(new THREE.CylinderGeometry(.19,.19,.07,18),chrome);rim.rotation.x=Math.PI/2;w.add(rim);
     const ring=new THREE.Mesh(new THREE.TorusGeometry(.2,.012,4,24),mat('#39e6ff',true));w.add(ring);
     for(let i=0;i<5;i++){const sp=box(.03,.36,.02,'#2a2e36',0,0,0,w);sp.rotation.z=i*Math.PI/5}return w});
-  const gl=new THREE.Mesh(new THREE.PlaneGeometry(2.4,1.2),new THREE.MeshBasicMaterial({map:glowTex,color:0x39e6ff,transparent:true,opacity:.3,blending:THREE.AdditiveBlending,depthWrite:false}));gl.rotation.x=-Math.PI/2;gl.position.y=.03;g.add(gl);
+  const gl=new THREE.Mesh(new THREE.PlaneGeometry(2.4,1.2),new THREE.MeshBasicMaterial({map:glowTex,color:0x39e6ff,transparent:true,opacity:.3,blending:THREE.AdditiveBlending,depthWrite:false}));gl.rotation.x=-Math.PI/2;gl.position.y=-.25;g.add(gl);
   g.userData.wheels=wheels;return g}
 
 function buildMoto(){
@@ -74,6 +75,7 @@ function updateMoto(dt){
     moto.userData.wheels.forEach(w=>w.rotation.z-=d/.32);
     const turn=((want-moto.rotation.y+Math.PI*3)%(Math.PI*2))-Math.PI;moto.rotation.x=Math.max(-.25,Math.min(.25,turn*.8)); // on penche dans les virages
   }else{motoLast=null;moto.rotation.x=0}
+  moto.position.y=.28+Math.sin(tAcc*2.4)*.04; // elle plane
   if(btn){const far=!riding&&!zoneOf()&&Math.hypot(player.position.x-MOTO_PARK.x,player.position.z-MOTO_PARK.z)>6&&Math.hypot(player.position.x-moto.position.x,player.position.z-moto.position.z)>6;
     const show=started&&far&&$('hudL')&&!$('hudL').hidden;if(btn.hidden===show)btn.hidden=!show}
 }

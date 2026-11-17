@@ -138,3 +138,6 @@ body.glitch #c{animation:glitch .42s steps(2) 1}
 @media (prefers-reduced-motion:reduce){body.glitch #c{animation:none}.nl em,.toast{animation:none}}
 .menuActs button.warn{border-color:#ff4f6a;color:#ff8a9a;background:rgba(255,79,106,.12)}
 .menuBox .credits{margin-top:14px;font:12px/1.4 var(--f-m);color:var(--dim);letter-spacing:.04em}.menuBox .credits b{color:var(--fg);font-weight:600}
+#soundSet{margin:14px 0 6px;display:grid;gap:8px;text-align:left}
+#soundSet label{display:flex;justify-content:space-between;align-items:center;gap:12px;font:12px var(--f-m);color:var(--dim)}
+#soundSet input[type=range]{width:55%;accent-color:#39e6ff}

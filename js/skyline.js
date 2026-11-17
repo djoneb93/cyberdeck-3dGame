@@ -4,6 +4,12 @@
 // la teinte et une hauteur proche. Les fenêtres allumées montrent une pièce en profondeur (js/architecture.js).
 'use strict';
 
+// une grande antenne en treillis : trois montants, entretoises, paraboles, feu rouge clignotant au sommet
+function mast(x,y,z,H){const L=[];for(let k=0;k<3;k++){const a=k*2.09;L.push([x+Math.cos(a)*.32,z+Math.sin(a)*.32])}
+  L.forEach(([lx,lz])=>box(.06,H*.7,.06,'#5a6472',lx,y+H*.35,lz));box(.08,H,.08,'#8899aa',x,y+H/2,z);
+  for(let s=1.2;s<H*.7;s+=1.4)box(.7,.04,.7,'#4a5462',x,y+s,z);
+  if(H>8){box(.5,.5,.12,'#c8d0dc',x+.4,y+H*.5,z);box(.12,.5,.5,'#c8d0dc',x,y+H*.62,z+.4)}
+  beacons.push(box(.24,.24,.24,'#ff3b4e',x,y+H+.12,z,null,true));if(H>12)beacons.push(box(.16,.16,.16,'#ff3b4e',x,y+H*.6,z,null,true))}
 function buildPerimeter(){
   let s=4242;const r=()=>{s=(s*16807)%2147483647;return (s-1)/2147483646}; // hasard à part : la ville ne change pas
   const rp=a=>a[Math.floor(r()*a.length)];
@@ -41,7 +47,7 @@ function buildPerimeter(){
         const [cx,cz]=S.P(am,d/2);B('#2a3242',false,cx,hb+.08,cz,L.X?d+.2:w+.2,.16,L.X?w+.2:d+.2);
         for(let j=0;j<2;j++){const [ux,uz]=S.P(am+(r()-.5)*w*.6,d/2+(r()-.5)*d*.5);B('#3a4252',false,ux,(sb?h:hb)+.3,uz,.8,.5,.7)}
         if(r()<.25){const [tx,tz]=S.P(am,d*.7);const t=new THREE.Mesh(new THREE.CylinderGeometry(.6,.6,1.3,12),mat('#4a4f58'));t.position.set(tx,(sb?h:hb)+1.1,tz);scene.add(t)}
-        if(r()<.15){const [tx,tz]=S.P(am,d*.4);B('#8899aa',false,tx,(sb?h:hb)+2,tz,.08,4,.08);beacons.push(box(.2,.2,.2,'#ff3b4e',tx,(sb?h:hb)+4.1,tz,null,true))}
+        if(r()<.25){const [tx,tz]=S.P(am,d*.45);mast(tx,sb?h:hb,tz,4+r()*5)}
         // escalier de secours sur les façades de brique
         if(style==='brick'&&hb>7){for(let y=3;y<hb-1;y+=2.4){const [ex,ez]=S.P(am-w*.15,-.45);B('#2a2e36',false,ex,y,ez,L.X?.8:1.4,.06,L.X?1.4:.8)}}
         a+=w+(r()<.25?.4:0);
@@ -50,8 +56,12 @@ function buildPerimeter(){
     // seconde rangée, plus haute et plus sombre : la silhouette de la ville qui continue
     for(let b=S.a0-8;b<S.a1+8;){const w=6+Math.round(r()*6),h=24+Math.round(r()*26),o=13+r()*4,st='concrete';
       if(!(S.name==='nord'&&gapN(b,b+w))){mk(S,b+w/2,o+5,w,10,h,st,Math.floor(r()*3),S.ry);
-        if(r()<.4){const [tx,tz]=S.P(b+w/2,o+5);beacons.push(box(.24,.24,.24,'#ff3b4e',tx,h+.4,tz,null,true))}}
+        if(r()<.55){const [tx,tz]=S.P(b+w/2,o+5);mast(tx,h,tz,7+r()*11)}}
       b+=w+1+r()*2}
+    // troisième rangée, plus loin et plus haute : la ville continue au-delà, avec ses grandes antennes
+    for(let b=S.a0-14;b<S.a1+14;){const w=8+Math.round(r()*7),h=40+Math.round(r()*38),o=31+r()*7;
+      if(!(S.name==='nord'&&gapN(b,b+w))){mk(S,b+w/2,o+7,w,14,h,'concrete',Math.floor(r()*3),S.ry);if(r()<.6){const [tx,tz]=S.P(b+w/2,o+7);mast(tx,h,tz,10+r()*16)}}
+      b+=w+2+r()*3}
   });
   // le sol au-delà de la grille (trottoir et cours), sous les deux rangées
   const gt=groundTex("paving");
