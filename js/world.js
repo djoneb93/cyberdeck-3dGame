@@ -157,7 +157,7 @@ function buildWorld(){
     if(id==='bar'){portal(id,1.8,2.4);faceSign(id,P.n,P.c,3.75,0,.1);
       adScreen(x+1.2,2.6,z+p.hd+.1,0,3.2,1.8)} // panneau publicitaire, sur la façade sud
     if(id==='laundry'){portal(id,1.8,2.4); // vraie porte vitrée au milieu, une vitrine de chaque côté avec sa machine
-      [-1,1].forEach(s=>{const lw=w/2-1.4,lc=s*(1.33+lw/2);faceBox(id,lw,1.8,1.2,lc,'#0d3a46',true);faceBox(id,.85,.9,.9,lc,'#cfd8de',false,.1);faceBox(id,.5,.5,.95,lc,'#6fe8ff',true,.2)});faceSign(id,P.n,P.c,h-.7,0,.09)}
+      faceSign(id,P.n,P.c,h-.55,0,.09)} // la vitrine et ses machines sont construites dans js/landmarks.js (laundryShop)
     if(id==='lab')faceSign(id,P.n,P.c,3.05,-1.2,.08,false);
     if(id==='arcade'){portal(id,1.8,2.4);[-1,1].forEach(s=>{faceBox(id,.9,.7,1.5,s*2.05,pick(['#ff4fa3','#39e6ff','#ffb547']),true,.06)});faceSign(id,P.n,P.c,3.75,0,.1)}
     if(id==='bunker'){faceBox(id,2.6,2,1,0,'#2a2a2a',false);for(let i=0;i<6;i++)faceBox(id,.4,2,1,-1+i*.4,i%2?'#ffb547':'#15171c',false,.08);
@@ -256,6 +256,23 @@ function buildWorld(){
   [[12.5,5.4,4.4],[12.5,2.2,7.6]].forEach(([x,y,z])=>{box(.4,.6,.9,'#5a6070',x,y,z,homeShell);box(.02,.4,.4,'#2a2e36',x+.21,y,z,homeShell)});
   box(.08,2.6,.08,'#8899aa',3.5,HH+1.3,4,homeShell);beacons.push(box(.2,.2,.2,'#ff3b4e',3.5,HH+2.6,4,homeShell,true));
   const wt=new THREE.Mesh(new THREE.CylinderGeometry(.55,.55,1.2,12),mat('#4a4f58'));wt.position.set(10,HH+.9,4);homeShell.add(wt);
+  // l'extérieur de l'immeuble : briques, socle de pierre, auvent, appliques, jardinières, gouttières, escalier de secours, toit-terrasse, enseigne, tag
+  const brickM=photoMat('brick',3.2,2.2,.48);if(brickM)homeShell.children.forEach(m=>{if(m.material===mat(wc))m.material=brickM});
+  box(10.9,.55,.08,'#4a4650',7,.27,10.34,homeShell);box(.08,.55,8.9,'#4a4650',12.34,.27,6,homeShell);
+  box(2.9,.08,1.05,'#20242c',7,2.98,10.88,homeShell);box(2.9,.04,.04,'#7cf29a',7,2.95,11.4,homeShell,true);[5.7,8.3].forEach(x=>box(.03,.03,1,'#5a6070',x,3.25,10.85,homeShell));
+  [5.55,8.45].forEach(x=>{box(.16,.3,.14,'#14181f',x,2.15,10.42,homeShell);box(.1,.18,.04,'#ffe0a8',x,2.15,10.5,homeShell,true)});
+  [3.4,10.6].forEach(x=>{box(1.7,.22,.26,'#3a2a20',x,.86,10.5,homeShell);for(let i=0;i<5;i++)box(.24,.22+Math.random()*.15,.2,['#2f7a3e','#3d9a50','#c84a7a','#e8c040'][i%4],x-.64+i*.32,1.06,10.5,homeShell)});
+  [[1.72,10.36],[12.28,10.36],[12.36,1.9]].forEach(([x,z])=>{box(.1,HH,.1,'#5a6070',x,HH/2,z,homeShell);box(.18,.12,.18,'#5a6070',x,HH-.06,z,homeShell)});
+  for(const y of [3.3,6.2]){box(.6,.06,3,'#2a2e36',12.65,y,5.4,homeShell);box(.04,.04,3,'#3a4048',12.93,y+.9,5.4,homeShell);for(let z=4;z<=6.9;z+=.5)box(.03,.9,.03,'#3a4048',12.93,y+.45,z,homeShell)} // escalier de secours
+  for(let i=0;i<6;i++)box(.04,.06,.5,'#3a4048',12.65,.6+i*.5,3.95,homeShell);
+  box(10.9,.5,.12,'#4a4458',7,HH+.55,10.45,homeShell);for(let i=0;i<16;i++)box(.06,.06,.06,['#ffd59a','#ff4fa3','#39e6ff'][i%3],1.9+i*.68,HH+.84,10.45,homeShell,true); // garde-corps du toit, guirlande
+  for(let i=0;i<3;i++){const p=box(1.2,.05,.8,'#1e2a44',3+i*1.35,HH+.62,7.8,homeShell);p.rotation.x=-.35;box(1.1,.02,.7,'#3a5a8a',3+i*1.35,HH+.65,7.8,homeShell).rotation.x=-.35} // panneaux solaires
+  [[6,8],[8.4,8.3]].forEach(([x,z])=>{box(.6,.4,.6,'#6b4a36',x,HH+.5,z,homeShell);box(.7,.6,.7,'#2f7a3e',x,HH+1,z,homeShell)});
+  box(1.9,.08,.6,'#4a4650',7,.04,10.7,homeShell);box(1.2,.02,.5,'#5a2a2a',7,.09,10.72,homeShell); // marche et paillasson
+  sign('RÉSIDENCE ZÉRO','#7cf29a',12.62,4.7,10.1,Math.PI/2,true,false,.05,true);box(.08,2.6,.5,'#14181f',12.55,4.7,10.1,homeShell);
+  { const tc=document.createElement('canvas');tc.width=128;tc.height=64;const tg=tc.getContext('2d');tg.font='bold 30px Silkscreen, monospace';tg.lineWidth=4;
+    tg.strokeStyle='#1a0a2a';tg.strokeText('MOTH',10,44);const gr=tg.createLinearGradient(0,0,128,0);gr.addColorStop(0,'#ff4fa3');gr.addColorStop(1,'#39e6ff');tg.fillStyle=gr;tg.fillText('MOTH',10,44);
+    const tag=new THREE.Mesh(new THREE.PlaneGeometry(2.4,1.2),new THREE.MeshLambertMaterial({map:new THREE.CanvasTexture(tc),transparent:true,polygonOffset:true,polygonOffsetFactor:-2}));tag.position.set(1.68,1.4,6.5);tag.rotation.y=-Math.PI/2;homeShell.add(tag)} // tag sur le mur ouest
   buildHome();
   const moto=new THREE.Group();moto.position.set(10,0,10.5);scene.add(moto);
   box(.5,.5,.18,'#15171c',-.75,.25,0,moto);box(.5,.5,.18,'#15171c',.75,.25,0,moto);

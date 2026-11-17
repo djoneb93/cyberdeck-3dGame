@@ -18,8 +18,11 @@ function setupDayNight(){
   scene.traverse(o=>{
     if(o.isPointLight&&!(inLights||[]).includes(o))dnLights.push([o,o.intensity]);
     const m=o.material;if(m&&!Array.isArray(m)&&m.emissive&&m.emissiveIntensity>.2&&!dnEmis.some(e=>e[0]===m))dnEmis.push([m,m.emissiveIntensity]);
+    // néons, enseignes et écrans (matériaux qui brillent tout seuls) : on les pousse en plein jour pour qu'ils restent bien visibles
+    if(m&&!Array.isArray(m)&&m.isMeshBasicMaterial&&!m.transparent&&!m.map&&!dnNeon.some(e=>e[0]===m)&&o!==daySky)dnNeon.push([m,m.color.clone()]);
   });
 }
+const dnNeon=[];
 // ---- deux ciels : celui de la nuit (étoiles, lueur de la ville, js/world.js) et celui du jour (bleu, nuages), en fondu ----
 let daySky=null,sunSpr=null,moonSpr=null;
 function buildDaySky(){
@@ -64,12 +67,13 @@ function updateDayNight(dt){
   if(skyMesh)skyMesh.material.opacity=1-Math.max(d,gld*.5);updateSky(h,d,gld);
   if(dnStars)dnStars.material.opacity=.7*(1-Math.min(1,d*2+gld));
   // ciel et sol, soleil (ou lune)
-  hemi.intensity+=d*.8+gld*.25;hemi.color.copy(C_HEMI_N).lerp(C_HEMI_D,d);hemi.groundColor.copy(C_GND_N).lerp(C_GND_D,d);
+  hemi.intensity+=d*.45+gld*.2;hemi.color.copy(C_HEMI_N).lerp(C_HEMI_D,d);hemi.groundColor.copy(C_GND_N).lerp(C_GND_D,d);
   const a=(h-6)/12*Math.PI;moon.position.set(W/2+Math.cos(a)*-60,Math.max(8,Math.sin(a)*70),H/2+30);moon.target.position.set(W/2,0,H/2);
-  moon.color.copy(C_MOON).lerp(C_SUN,d).lerp(C_SUNSET,gld*.7);moon.intensity=.3+d*1.05+gld*.4;
+  moon.color.copy(C_MOON).lerp(C_SUN,d).lerp(C_SUNSET,gld*.7);moon.intensity=.3+d*.62+gld*.35;
   // les néons restent, mais les fenêtres et les lampes comptent moins en plein jour
   const lk=1-d*.7;dnLights.forEach(([l,b])=>l.intensity=b*lk);dnEmis.forEach(([m,b])=>m.emissiveIntensity=b*(1-d*.6));
-  if(bloom){bloom.strength=1.15-d*.6;bloom.threshold=.6+d*.25}
+  dnNeon.forEach(([m,c])=>m.color.copy(c).multiplyScalar(1+.75*d));
+  if(bloom){bloom.strength=1.15-d*.3;bloom.threshold=.6+d*.2}
 }
 function skipPhase(){const fw=p=>((p-S.hour)%24+24)%24,next=PHASES.filter(([p])=>fw(p)>.5).sort((x,y)=>fw(x[0])-fw(y[0]))[0];
   dnSkip=next[0];toast('Le temps passe… · '+next[1],'')}

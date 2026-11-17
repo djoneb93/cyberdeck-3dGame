@@ -10,9 +10,9 @@ function buildPerimeter(){
   const boxes={};const B=(c,e,x,y,z,w,h,d)=>{const k=c+(e?'!':'');(boxes[k]=boxes[k]||[]).push([x,y,z,w,h,d])};
   // un pas dans le repère de la rangée : a = le long de la rue, o = en s'éloignant de la rue (vers l'extérieur)
   const SIDES=[
-    {name:'nord',a0:17,a1:92,line:-.05,P:(a,o)=>[a,-o],ry:0,front:[0,1]},       // rue au sud de la rangée
+    {name:'nord',a0:9.8,a1:92,line:-.05,P:(a,o)=>[a,-o],ry:0,front:[0,1]},       // rue au sud de la rangée
     {name:'est',a0:-14,a1:90,line:92.05,P:(a,o)=>[92.05+o,a],ry:-Math.PI/2,front:[-1,0]},
-    {name:'sud',a0:17,a1:92,line:76.05,P:(a,o)=>[a,76.05+o],ry:Math.PI,front:[0,-1]}];
+    {name:'sud',a0:9.8,a1:92,line:76.05,P:(a,o)=>[a,76.05+o],ry:Math.PI,front:[0,-1]}];
   const DISTRICTS=[ // style, teintes de rez-de-chaussée, néon : des quartiers cohérents
     // toute la bordure partage la même matière (béton photographié) : seules changent les fenêtres et la hauteur, pour un raccord sans couture
     {st:['concrete'],sc:['#2a2a30','#1e2a30'],neon:'#ffb13b',h:[10,16]},
@@ -55,7 +55,7 @@ function buildPerimeter(){
   // le sol au-delà de la grille (trottoir et cours), sous les deux rangées
   const gt=groundTex("paving");
 
-  [[17,-34,92,0],[92,-34,130,76],[17,76,130,110]].forEach(([x0,z0,x1,z1])=>{const t=gt.clone();t.needsUpdate=true;t.wrapS=t.wrapT=THREE.RepeatWrapping;const pl=new THREE.Mesh(new THREE.PlaneGeometry(x1-x0,z1-z0),new THREE.MeshLambertMaterial({map:t,color:0x8a8f9a}));t.repeat.set((x1-x0)/4,(z1-z0)/4);
+  [[9.8,-34,92,0],[92,-34,130,76],[9.8,76,130,110]].forEach(([x0,z0,x1,z1])=>{const t=gt.clone();t.needsUpdate=true;t.wrapS=t.wrapT=THREE.RepeatWrapping;const pl=new THREE.Mesh(new THREE.PlaneGeometry(x1-x0,z1-z0),new THREE.MeshLambertMaterial({map:t,color:0x8a8f9a}));t.repeat.set((x1-x0)/4,(z1-z0)/4);
     pl.rotation.x=-Math.PI/2;pl.position.set((x0+x1)/2,-.02,(z0+z1)/2);scene.add(pl)});
   // ---- les trottoirs extérieurs : arbres, lampadaires, bancs, poubelles, tous centrés sur le trottoir ----
   const leafM=new THREE.MeshLambertMaterial({color:0x2c5a34,flatShading:true}),leafM2=new THREE.MeshLambertMaterial({color:0x3a6e3c,flatShading:true});
@@ -70,7 +70,57 @@ function buildPerimeter(){
   // le trottoir nord est étroit : seulement des lampadaires et des poubelles, pour laisser passer de chaque côté
   const wide=['tree','bench','lamp','bin'],narrow=['lamp',null,'bin',null];
   const runs=[{x0:19,x1:86,P:a=>[a,1],ax:false,d:[0,1],it:narrow,skip:a=>a>23&&a<33},{x0:3,x1:72,P:a=>[90,a],ax:true,d:[-1,0],it:wide,skip:()=>false},{x0:19,x1:86,P:a=>[a,74],ax:false,d:[0,-1],it:wide,skip:()=>false}];
+  // une place libre : pas sur la chaussée, pas dans un mur, pas collée à un autre objet ou à un lampadaire (évite que deux objets s'interpénètrent)
+  const free=(x,z,rr)=>{const t=tile[I(Math.floor(x),Math.floor(z))];if(t===2||t===5||isSolid(x,z))return false;
+    if(FURN.some(f=>Math.hypot(f[0]-x,f[1]-z)<f[2]+rr+.15))return false;if(LAMPS.some(([lx,lz])=>Math.hypot(lx+.5-x,lz+.5-z)<rr+.5))return false;return true};
   runs.forEach(R=>{let i=0;for(let a=R.x0;a<=R.x1;a+=4.6,i++){if(R.skip(a))continue;const [x,z]=R.P(a),kind=i%4,[dx,dz]=R.d;
-    const t=R.it[kind];if(t==='tree')tree(x,z);else if(t==='lamp')lamp(x,z,R.ax,dx,dz);else if(t==='bench')bench(x,z,R.ax,dx,dz);else if(t==='bin')bin(x,z)}});
+    const t=R.it[kind];if(!t||!free(x,z,t==='tree'?.5:t==='bench'?.6:.25))continue;
+    if(t==='tree')tree(x,z);else if(t==='lamp')lamp(x,z,R.ax,dx,dz);else if(t==='bench')bench(x,z,R.ax,dx,dz);else if(t==='bin')bin(x,z)}});
+  // ---- garde-corps le long du quai et des pontons : on ne tombe pas à l'eau ----
+  const pierGap=z=>PIERS.some(p=>z>p-.3&&z<p+2.3);
+  for(let z=.3;z<75.8;z+=1.2){if(pierGap(z))continue;B('#3a4048',false,9.82,.5,z,.06,1,.06);B('#5a6470',false,9.82,1,z+.6,.05,.05,1.2);B('#5a6470',false,9.82,.55,z+.6,.03,.03,1.2)}
+  PIERS.forEach(p=>{[p-.02,p+2.02].forEach(zz=>{for(let x=2.6;x<9.6;x+=1.2){B('#3a4048',false,x,.62,zz,.05,.9,.05);B('#5a6470',false,x+.6,1.06,zz,1.2,.05,.05)}});
+    B('#5a6470',false,2.05,1.06,p+1,.05,.05,2.1);for(let zz=p;zz<=p+2;zz+=1)B('#3a4048',false,2.05,.62,zz,.05,.9,.05);B('#ffb547',true,2.05,1.1,p+1,.08,.04,.4)});
+  // ---- de grands écrans publicitaires sur la bordure, tournés vers la ville : la ville vit aussi le jour ----
+  [[38,.02,0],[58,.02,0],[78,.02,0],[92.02,20,-Math.PI/2],[92.02,48,-Math.PI/2],[40,76.02,Math.PI],[66,76.02,Math.PI]].forEach(([x,z,ry],i)=>adScreen(x,6.4+(i%2)*1.1,z,ry,4.6,2.6));
   for(const k in boxes){const e=k.endsWith('!');instBoxes(boxes[k],e?k.slice(0,-1):k,e)}
+  buildGroundDetails(free);
+}
+
+// ---- petits détails au sol sur les places et les trottoirs trop vides ----
+// Des marques plates (taches d'huile, grilles, bandes podotactiles, feuilles, LED au sol) et quelques objets (caisses, cartons, bacs à plantes,
+// distributeurs, chariots à nouilles, bornes holographiques). Rien près des entrées, rien sur la chaussée, rien qui touche un autre objet.
+function buildGroundDetails(free){
+  let s=777;const r=()=>{s=(s*16807)%2147483647;return (s-1)/2147483646};
+  const decal=(draw)=>{const c=document.createElement('canvas');c.width=c.height=64;draw(c.getContext('2d'));const t=new THREE.CanvasTexture(c);return t};
+  const DEC=[
+    decal(g=>{const q=g.createRadialGradient(32,32,2,32,32,30);q.addColorStop(0,'rgba(8,8,12,.75)');q.addColorStop(.7,'rgba(20,10,30,.35)');q.addColorStop(1,'rgba(0,0,0,0)');g.fillStyle=q;g.fillRect(0,0,64,64);g.fillStyle='rgba(120,60,200,.18)';g.beginPath();g.ellipse(36,28,14,6,.4,0,7);g.fill()}), // tache d'huile irisée
+    decal(g=>{g.fillStyle='#1a1d22';g.fillRect(8,8,48,48);g.fillStyle='#050608';for(let i=0;i<8;i++)g.fillRect(12+i*5.5,12,3,40)}), // grille d'évacuation
+    decal(g=>{g.fillStyle='#b89a3a';g.fillRect(4,20,56,24);g.fillStyle='#8a7228';for(let i=0;i<7;i++)for(let j=0;j<3;j++){g.beginPath();g.arc(9+i*8,26+j*7,2,0,7);g.fill()}}), // bande podotactile
+    decal(g=>{for(let i=0;i<14;i++){g.fillStyle=['#7a4a1e','#9a6a28','#5a3a1a','#b07a30'][i%4];g.save();g.translate(8+Math.random()*48,8+Math.random()*48);g.rotate(Math.random()*6);g.beginPath();g.ellipse(0,0,4,2,0,0,7);g.fill();g.restore()}}), // feuilles mortes
+    decal(g=>{g.strokeStyle='rgba(0,0,0,.55)';g.lineWidth=1.5;g.beginPath();let x=4,y=30;g.moveTo(x,y);for(let i=0;i<8;i++){x+=7;y+=(Math.random()-.5)*12;g.lineTo(x,y)}g.stroke()}), // fissure
+    decal(g=>{g.fillStyle='rgba(0,0,0,.6)';g.fillRect(0,26,64,12);g.fillStyle='#39e6ff';g.fillRect(0,30,64,4)}), // bande LED encastrée
+    decal(g=>{g.strokeStyle='rgba(255,255,255,.55)';g.lineWidth=3;g.beginPath();g.moveTo(32,8);g.lineTo(32,50);g.moveTo(18,36);g.lineTo(32,52);g.lineTo(46,36);g.stroke()})]; // flèche peinte
+  const lists=DEC.map(()=>[]);
+  const props=[];
+  const [PX,PZ]=front("market",-1.6,1.8),keep=[[PX,PZ,2.2],[64.2,61.5,3.6],...NPC_DEF.map(n=>[n.x,n.z,1.6])]; // trémie du Bazar, place du taxi, personnages
+  for(let z=1;z<H-1;z++)for(let x=11;x<W-1;x++){const t=tile[I(x,z)];if((t!==0&&t!==1&&t!==4)||solid[I(x,z)])continue;if(nearEntrance(x,z)||keep.some(([a,b,rr])=>Math.hypot(x+.5-a,z+.5-b)<rr))continue;
+    const cx=x+.2+r()*.6,cz=z+.2+r()*.6;
+    if(r()<.07){const k=t===1?[0,1,3,4][Math.floor(r()*4)]:Math.floor(r()*DEC.length);if(k===5&&t===1)continue;lists[k].push([cx,cz,r()*6,.6+r()*.7])}
+    else if(t===0&&r()<.012){let ok=true;for(let a=-1;a<=1;a++)for(let b=-1;b<=1;b++){const tt=tile[I(x+a,z+b)];if(tt===2||solid[I(x+a,z+b)])ok=false}if(ok&&free(cx,cz,.6))props.push([cx,cz,Math.floor(r()*6),r()*6])}}
+  DEC.forEach((tx,k)=>{const L=lists[k];if(!L.length)return;const m=new THREE.InstancedMesh(new THREE.PlaneGeometry(1,1).rotateX(-Math.PI/2),new THREE.MeshBasicMaterial({map:tx,transparent:true,depthWrite:false,opacity:k===5?.9:.85,blending:k===5?THREE.AdditiveBlending:THREE.NormalBlending}),L.length);
+    const m4=new THREE.Matrix4(),q=new THREE.Quaternion(),e=new THREE.Euler(),sc=new THREE.Vector3(),p=new THREE.Vector3();
+    L.forEach(([x,z,a,s2],i)=>{e.set(0,a,0);q.setFromEuler(e);p.set(x,.017+k*.001,z);sc.set(s2,1,s2);m4.compose(p,q,sc);m.setMatrixAt(i,m4)});m.renderOrder=1;scene.add(m)});
+  // les objets : chacun bloque le passage et ne touche rien d'autre
+  props.forEach(([x,z,k,a])=>{
+    if(k===0){box(.7,.6,.7,'#6a4a2a',x,.3,z).rotation.y=a;box(.5,.45,.5,'#7a5a34',x+.1,.82,z-.05).rotation.y=a+.3;FURN.push([x,z,.5])} // caisses
+    else if(k===1){box(.6,.4,.5,'#9a7a4e',x,.2,z).rotation.y=a;box(.45,.35,.4,'#a8885a',x+.35,.18,z+.3).rotation.y=a+.6;FURN.push([x+.15,z+.15,.55])} // cartons
+    else if(k===2){box(1.2,.5,.5,'#3a4048',x,.25,z).rotation.y=a;const f=new THREE.Mesh(new THREE.IcosahedronGeometry(.4,1),new THREE.MeshLambertMaterial({color:0x2f6a3a,flatShading:true}));f.position.set(x,.75,z);f.scale.set(1.4,.8,.8);f.rotation.y=a;scene.add(f);FURN.push([x,z,.65])} // bac à plantes
+    else if(k===3){const g=new THREE.Group();g.position.set(x,0,z);g.rotation.y=a;scene.add(g);box(.8,1.9,.6,'#1a1e28',0,.95,0,g);box(.64,1.1,.04,pick(['#39e6ff','#ff4fa3','#7dffb0']),0,1.2,.31,g,true);box(.3,.1,.05,'#ffb547',.15,.45,.31,g,true);FURN.push([x,z,.55])} // distributeur
+    else if(k===4){const g=new THREE.Group();g.position.set(x,0,z);g.rotation.y=a;scene.add(g);box(1.2,.8,.7,'#7a2e22',0,.55,0,g);box(1.4,.06,.9,'#ffb547',0,1.9,0,g,true);[-.6,.6].forEach(dx=>box(.05,1.1,.05,'#2a2e36',dx,1.35,.4,g));
+      [-.4,.4].forEach(dx=>{const w2=new THREE.Mesh(new THREE.CylinderGeometry(.16,.16,.06,12),mat('#15171c'));w2.rotation.x=Math.PI/2;w2.position.set(dx,.16,.36);g.add(w2)});box(.3,.25,.3,'#d0d4d8',.3,1.08,0,g);FURN.push([x,z,.75])} // chariot à nouilles
+    else{const c=new THREE.Mesh(new THREE.CylinderGeometry(.18,.22,1.6,12),mat('#14181f'));c.position.set(x,.8,z);scene.add(c);
+      const h2=new THREE.Mesh(new THREE.CylinderGeometry(.5,.5,1.1,16,1,true),new THREE.MeshBasicMaterial({color:pick([0x39e6ff,0xff4fa3,0xb98cff]),transparent:true,opacity:.22,blending:THREE.AdditiveBlending,depthWrite:false,side:THREE.DoubleSide}));h2.position.set(x,2.2,z);scene.add(h2);
+      box(.36,.04,.36,'#39e6ff',x,1.62,z,null,true);FURN.push([x,z,.3])} // borne holographique
+  });
 }

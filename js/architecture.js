@@ -27,7 +27,7 @@ function paintFacade(style){
   const lit=(px,py,w,h,col,a)=>{g.fillStyle=col;g.fillRect(px,py,w,h);x.globalAlpha=a==null?1:a;x.fillStyle=col;x.fillRect(px,py,w,h);x.globalAlpha=1};
   const speck=(n,cols)=>{for(let i=0;i<n;i++){g.fillStyle=cols[i%cols.length];g.fillRect((arnd()*64)|0,(arnd()*128)|0,1,1)}};
   if(style==='glass'){
-    const gr=g.createLinearGradient(0,0,64,128);gr.addColorStop(0,'#123247');gr.addColorStop(.45,'#0c2232');gr.addColorStop(.55,'#1b4258');gr.addColorStop(1,'#0a1c2a');g.fillStyle=gr;g.fillRect(0,0,64,128);
+    const gr=g.createLinearGradient(0,0,64,128);gr.addColorStop(0,'#1e3e52');gr.addColorStop(.45,'#18303f');gr.addColorStop(.55,'#264c60');gr.addColorStop(1,'#162a38');g.fillStyle=gr;g.fillRect(0,0,64,128);
     for(let f=0;f<4;f++)for(let col=0;col<4;col++){const px=col*16+1,py=f*32+2;
       if(arnd()<.38){const w=8+((arnd()*6)|0),h=12+((arnd()*10)|0);lit(px+((arnd()*(14-w))|0),py+26-h,w,h,apick(arnd()<.7?WARM:COOL),.85);
         g.fillStyle='rgba(10,30,45,.55)';g.fillRect(px,py,14,28)} // reflets par-dessus l'intérieur
@@ -40,14 +40,14 @@ function paintFacade(style){
         if(arnd()<.42)lit(px,y+8,10,16,apick(WARM),.9);else{g.fillStyle='#141a24';g.fillRect(px,y+8,10,16);g.fillStyle='#22303e';g.fillRect(px+1,y+9,2,6)}
         g.fillStyle='#4a4d54';g.fillRect(px-1,y+25,12,1);if(arnd()<.3){g.fillStyle='#8a929c';g.fillRect(px+2,y+27,6,3)}}}
   }else if(style==='brick'){
-    if(!photoBase(g,'brick',null,.55)){g.fillStyle='#3e211b';g.fillRect(0,0,64,128);
+    if(!photoBase(g,'brick',null,.45)){g.fillStyle='#3e211b';g.fillRect(0,0,64,128);
     for(let y=0;y<128;y+=3)for(let bx=-(y%6?3:0);bx<64;bx+=6){g.fillStyle=apick(['#6a3428','#5e2e24','#73392b','#572a21']);g.fillRect(bx,y,5,2)}}
     for(let f=0;f<4;f++){const y=f*32;g.fillStyle='#8a7a68';g.fillRect(0,y+30,64,2);
       for(let col=0;col<4;col++){const px=col*16+4;g.fillStyle='#9a8a76';g.fillRect(px-1,y+4,10,2);g.fillStyle='#1a1014';g.fillRect(px,y+6,8,20);
         if(arnd()<.45){lit(px+1,y+7,6,18,apick(WARM),.9);g.fillStyle='rgba(40,20,10,.5)';g.fillRect(px+1,y+15,6,1);g.fillRect(px+4,y+7,1,18)}
         g.fillStyle='#7a6a58';g.fillRect(px-1,y+26,10,1)}}
   }else if(style==='metal'){
-    if(!photoBase(g,'metal',null,.6)){g.fillStyle='#22262d';g.fillRect(0,0,64,128)}
+    if(!photoBase(g,'metal',null,.42)){g.fillStyle='#2c3038';g.fillRect(0,0,64,128)}
     else for(let y=0;y<128;y+=16)g.fillRect(0,y,0,0);
     if(!TEXIMG.metal)for(let y=0;y<128;y+=16)for(let px=0;px<64;px+=16){g.fillStyle=arnd()<.5?'#262b33':'#1f232a';g.fillRect(px+1,y+1,14,14);g.fillStyle='#2e343d';g.fillRect(px+1,y+1,14,1)}
     for(let f=0;f<4;f++){const y=f*32+12;g.fillStyle='#0e1218';g.fillRect(0,y-1,64,10);
@@ -126,8 +126,10 @@ function boxMats(style,w,h,d,v){const s1=styleMat(style,d/4,h/8,v),s2=styleMat(s
 // ---------- une tour de la ville ----------
 function archTower(b,k){
   const x=UX(b.u),z=UZ(b.v),w=2*b.s*MS,h=HZF(b.h),tall=h>13,neon=b.comm?'#8fb7ff':b.neon;
-  const type=b.comm?'box':(tall?['setback','cyl','chamfer','twist','oct','setback']:['box','balcony','lshape','box','oct','chamfer','balcony'])[tall?(k*7+3)%6:(k*5+2)%7];
-  const style=b.comm?'concrete':tall?['glass','metal','glass','concrete','glass'][k%5]:['brick','concrete','resi','brick','metal','resi'][k%6];
+  const type=b.comm?'box':(tall?['setback','cyl','chamfer','cyl','oct','setback']:['box','balcony','lshape','box','oct','chamfer','balcony'])[tall?(k*7+3)%6:(k*5+2)%7];
+  // un style par quartier, pour que les voisins se ressemblent : briques à l'ouest (vieux Bruxelles), béton au centre, verre et métal à l'est
+  const zone=b.u<.38?0:b.u<.68?1:2;
+  const style=b.comm?'concrete':tall?[['concrete','brick','concrete'],['glass','concrete','glass'],['glass','metal','glass']][zone][k%3]:[['brick','resi','brick'],['concrete','resi','concrete'],['concrete','metal','concrete']][zone][k%3];
   b.type=type;b.box=['box','balcony','setback','chamfer'].includes(type);b.style=style;
   let top=h,tw=w; // sommet et largeur du dernier étage, pour les couronnements
   if(type==='box'||type==='balcony'){addMesh(new THREE.BoxGeometry(w,h,w),boxMats(style,w,h,w,k),x,h/2,z);det('#2a3242',false,x,h,z,w+.24,.18,w+.24)}

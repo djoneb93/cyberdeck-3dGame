@@ -16,8 +16,8 @@ function landmark(id,x,z,w,d,h,v,P){
     for(let i=0;i<3;i++)box(.1,.1,d+.1,'#ffb547',x+w/2+.02,.9+i*.9,z,null,true); // bandes de signalisation
     return true}
   if(id==='bunker'){ // béton brutaliste aux murs inclinés, encadrement de porte, bandes de danger, périscopes
-    const rb=w/Math.SQRT2,rt=rb*.8;const m=new THREE.Mesh(new THREE.CylinderGeometry(rt,rb,h,4,1),[facadeMat(1,w/4,h/8),roofMat,roofMat]);m.rotation.y=Math.PI/4;m.position.set(x,h/2,z);scene.add(m);camBlockers.push(m);
-    const fz=z+w/2;box(3.4,h,.7,'#3a3d44',x,h/2,fz-.45);box(3.6,.3,.9,'#2e3138',x,h+.1,fz-.45);
+    const rb=w/Math.SQRT2,rt=rb*.8;const m=new THREE.Mesh(new THREE.CylinderGeometry(rt,rb,h,4,1),[photoMat('brick',w/2,h/2,.62)||facadeMat(1,w/4,h/8),roofMat,roofMat]); // brique sombre, plus discrètem.rotation.y=Math.PI/4;m.position.set(x,h/2,z);scene.add(m);camBlockers.push(m);
+    const fz=z+w/2;box(3.4,h,.7,'#34282a',x,h/2,fz-.45);box(3.6,.3,.9,'#2e3138',x,h+.1,fz-.45);
     for(let i=0;i<12;i++)box(.3,.22,.05,i%2?'#ffb547':'#15171c',x-1.65+i*.3,.12,fz+.17);
     [[-1.2,.9],[1.4,-.6],[.2,-1.4]].forEach(([a,b])=>{box(.12,1.4,.12,'#5a6472',x+a,h+.7,z+b);box(.4,.14,.14,'#3a414c',x+a+.14,h+1.4,z+b)});
     return true}
@@ -35,7 +35,7 @@ function landmark(id,x,z,w,d,h,v,P){
     LM.chase.push(groups);
     [[-1.4],[1.4]].forEach(([o])=>box(.1,1.8,.1,'#2a3140',x+.4,h+.9,z+o));sign('COCKTAILS','#ff4fa3',x+.4,h+1.6,z,Math.PI/2,true,false,.07);
     return true}
-  if(id==='laundry'){ tower(x,z,w,d,h,v,P.c,true); // hublot géant qui tourne, sur le flanc est ; vapeur sur le toit
+  if(id==='laundry'){ laundryShop(x,z,w,d,h,P); // hublot géant qui tourne, sur le flanc est ; vapeur sur le toit
     const g=new THREE.Group();g.position.set(x+w/2+.12,2.6,z);g.rotation.y=Math.PI/2;scene.add(g);
     const ring=new THREE.Mesh(new THREE.TorusGeometry(.8,.1,8,28),mat('#cfd8de'));g.add(ring);const glass=new THREE.Mesh(new THREE.CircleGeometry(.72,28),new THREE.MeshBasicMaterial({color:0x2a6f8a}));glass.position.z=-.02;g.add(glass);
     const drum=new THREE.Group();g.add(drum);for(let i=0;i<5;i++){const b2=box(.18,.18,.02,pick(['#ff4fa3','#ffb547','#7cf29a','#e8e8e4','#39e6ff']),Math.cos(i*1.26)*.4,Math.sin(i*1.26)*.4,.01,drum,true)}
@@ -77,7 +77,7 @@ function updateLandmarks(dt){
   LM.lasers.forEach(o=>{o.l.rotation.z=Math.sin(tAcc*.9+o.k*1.6)*.9;o.l.rotation.y=tAcc*.6+o.k*Math.PI/2;o.l.material.opacity=.15+.3*kick});
   const ch=Math.floor(tAcc*6)%3;LM.chase.forEach(gs=>gs.forEach((g,i)=>g.forEach(b=>b.visible=i!==ch)));
   LM.pulse.forEach((b,i)=>b.visible=Math.sin(tAcc*2+i)>-.6);
-  if(LM.porthole)LM.porthole.rotation.z-=dt*4;
+  if(LM.porthole)LM.porthole.rotation.z-=dt*4;if(LM.spin)LM.spin.forEach(s=>s.dr.rotation.z-=dt*s.sp);
   LM.sirens.forEach((s,i)=>s.visible=Math.floor(tAcc*4+i*2)%4<2);
   LM.steam.forEach(v=>{const p=v.pos;for(let i=0;i<v.sp.length;i++){p[i*3+1]+=v.sp[i]*dt;p[i*3]+=Math.sin(tAcc+i)*.004;if(p[i*3+1]>v.y+3.5){p[i*3+1]=v.y;p[i*3]=v.x}}v.gg.attributes.position.needsUpdate=true});
   if(LM.mosaic){const M=LM.mosaic;M.k+=dt;if(M.k>.15){M.k=0;M.f++;drawMosaic(M)}}
@@ -89,3 +89,30 @@ function drawMosaic(M){const g=M.c.getContext('2d'),f=M.f;g.fillStyle='#04060c';
   for(let k=0;k<3;k++){g.fillStyle=cols[k];INV.forEach((row,yy)=>{for(let xx=0;xx<11;xx++)if(row[xx]==='1'&&(yy<6||f%2))g.fillRect(ox+k*14+xx,3+yy+(k%2)*1,1,1)})}
   g.fillStyle='#ffb547';const sx=10+Math.round(Math.sin(f*.2)*14)+14;g.fillRect(sx,27,5,2);g.fillRect(sx+2,25,1,2);if(f%6<3){g.fillStyle='#fff';g.fillRect(sx+2,14+(f%6)*3,1,2)}
   g.fillStyle='#5ce1e6';g.fillRect(0,31,48,1);M.t.needsUpdate=true}
+
+// ---- la laverie : carrelage blanc, et une vraie vitrine en renfoncement où l'on voit les machines tourner ----
+function laundryShop(x,z,w,d,h,P){
+  const c=document.createElement('canvas');c.width=c.height=64;const g=c.getContext('2d');g.fillStyle='#8e969a';g.fillRect(0,0,64,64);
+  for(let i=0;i<8;i++)for(let j=0;j<8;j++){g.fillStyle=['#a4acb0','#9ca4a8','#a0a8ac'][(i*3+j)%3];g.fillRect(i*8+1,j*8+1,7,7)}g.fillStyle='rgba(0,0,0,.06)';for(let i=0;i<20;i++)g.fillRect(Math.random()*64,Math.random()*64,1,4);
+  const tile=s=>{const t=new THREE.CanvasTexture(c);t.wrapS=t.wrapT=THREE.RepeatWrapping;t.repeat.set(s[0],s[1]);return new THREE.MeshLambertMaterial({map:t})};
+  const R=1.0,fz=z+d/2; // profondeur du renfoncement de la vitrine
+  const body=new THREE.Mesh(new THREE.BoxGeometry(w,h,d-R),[tile([d/2,h/2]),tile([d/2,h/2]),roofMat,roofMat,tile([w/2,h/2]),tile([w/2,h/2])]);body.position.set(x,h/2,z-R/2);scene.add(body);camBlockers.push(body);
+  const hb=h-2.6;box(w,hb,R,'#c4cbcf',x,2.6+hb/2,fz-R/2).material=tile([w/2,hb/2]); // bandeau au-dessus de la vitrine (porte l'enseigne)
+  box(w+.1,.12,R+.1,'#7cf29a',x,2.6,fz-R/2,null,true);box(w+.2,.16,d+.2,'#9aa4aa',x,h+.08,z);
+  [-1,1].forEach(s=>box(.32,2.6,R,'#8e969a',x+s*(w/2-.16),1.3,fz-R/2)); // piliers d'angle
+  box(w-.64,.04,R,'#5e6468',x,.02,fz-R/2);box(w-.7,.03,.06,'#8fb8a8',x,2.53,fz-R+.15,null,true);box(w-.7,.03,.06,'#8fb8a8',x,2.53,fz-.4,null,true); // sol et néons du plafond
+  // les machines, contre le fond, de chaque côté de la porte : lave-linge en bas, sèche-linge au-dessus, hublots qui tournent
+  LM.spin=LM.spin||[];
+  [-1,1].forEach(s=>{const cx=x+s*1.9;[[.45,.9],[1.4,.9]].forEach(([y,hh],k)=>{box(.86,hh-.04,.6,k?'#6e767a':'#7a8286',cx,y,fz-R+.32);
+      const hub=new THREE.Group();hub.position.set(cx,y+.02,fz-R+.63);scene.add(hub);
+      const ring=new THREE.Mesh(new THREE.TorusGeometry(.26,.035,6,18),mat('#8a969c'));hub.add(ring);const gl=new THREE.Mesh(new THREE.CircleGeometry(.24,18),new THREE.MeshBasicMaterial({color:k?0x9fd0ff:0x6fe8ff}));gl.position.z=-.01;hub.add(gl);
+      const dr=new THREE.Group();hub.add(dr);for(let i=0;i<3;i++)box(.09,.09,.01,['#ff4fa3','#ffb547','#e8e8e4'][i],Math.cos(i*2.1)*.12,Math.sin(i*2.1)*.12,.005,dr,true);LM.spin.push({dr,sp:k?2:4});
+      box(.3,.05,.02,'#7cf29a',cx-.2,y+hh/2-.12,fz-R+.63,null,true)})});
+  // un client qui attend sur un banc, un panier de linge
+  box(.9,.4,.35,'#5a6a70',x-1.9,.2,fz-.22);box(.4,.3,.3,'#e8d6b0',x+1.9,.15,fz-.25);
+  // la vitrine : grandes vitres avec reflets, montants fins
+  const glassM=new THREE.MeshPhongMaterial({color:0x8fb8c8,transparent:true,opacity:.1,specular:0x334455,shininess:60,depthWrite:false});
+  [-1,1].forEach(s=>{const gx=x+s*1.9,gw=w/2-1.5;const pane=new THREE.Mesh(new THREE.BoxGeometry(gw,2.5,.03),glassM);pane.position.set(gx,1.27,fz-.02);scene.add(pane);
+    box(.05,2.5,.06,'#8a969c',gx,1.27,fz-.02);box(gw,.05,.06,'#8a969c',gx,.05,fz-.02);box(gw,.05,.06,'#8a969c',gx,2.5,fz-.02)});
+
+}

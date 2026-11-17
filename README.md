@@ -58,3 +58,8 @@ et partagent la même portée globale.
 - `js/game.js` : déplacement, interactions, HUD, boucle de jeu, démarrage.
 - `tools/serve.ps1` : petit serveur local.
 - `.claude/launch.json` : configuration de prévisualisation pour Claude Code.
+
+## Crédits
+
+Imaginé par **Benjamin Lambot**, réalisé avec **Claude** (Anthropic).
+Textures photographiques : ambientCG (CC0), voir `assets/textures/CREDITS.md`.
