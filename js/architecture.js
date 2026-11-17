@@ -132,6 +132,9 @@ vec4 obj(float th,float L,vec2 q){
   else if(th<4.5){ // électronique : table d'exposition avec ordinateurs allumés
     if(L<.5){fx=fract(q.x/2.)-.5;if(abs(fx)<.4&&abs(y-.42)<.03)return vec4(.85,.86,.9,1.);if(abs(abs(fx)-.36)<.02&&y<.42)return vec4(.4,.42,.46,1.);
       float lx=fract(q.x/.5)-.5;if(abs(fx)<.38&&abs(lx)<.13&&y>.46&&y<.64)return vec4(vec3(.4,.8,1.3)*(.8+.2*sin(uTime*3.+q.x)),1.);}}
+  else if(th>5.5){ // appartement : canapé et lampadaire devant, plante en pot derrière
+    if(L<.5){fx=fract(q.x/2.6)-.5;if(abs(fx)<.3&&y<.12)return vec4(.35,.2,.25,1.);if(abs(fx)<.3&&y<.45&&abs(fx)>.24)return vec4(.3,.18,.22,1.);if(abs(fx+.4)<.02&&y<.9)return vec4(.2,.2,.2,1.);if(length(vec2(fx+.4,y-.95))<.08)return vec4(1.3,1.1,.7,1.);}
+    else{fx=fract(q.x/3.)-.5;if(abs(fx-.2)<.08&&y<-.1)return vec4(.5,.3,.2,1.);if(length(vec2((fx-.2)*1.3,y+.05))<.2)return vec4(.2,.45,.22,1.);}}
   else{ // café : tables rondes et chaises, une grande plante
     if(L<.5){ci=floor(q.x/1.4);fx=fract(q.x/1.4)-.5;if(abs(fx)<.24&&abs(y-.42)<.025)return vec4(.25,.17,.1,1.);if(abs(fx)<.025&&y<.42)return vec4(.15,.15,.15,1.);
       if(abs(fx-.36)<.1&&abs(y-.12)<.025)return vec4(.3,.2,.12,1.);if(abs(fx-.45)<.02&&y<.55)return vec4(.3,.2,.12,1.);}
@@ -163,6 +166,10 @@ void main(){
     else if(back){c=vec3(.08,.09,.12);vec2 g=vec2(floor(h.x/.45),floor((h.y+.35)/.42));vec2 f=vec2(fract(h.x/.45),fract((h.y+.35)/.42));
       if(f.x>.1&&f.x<.9&&f.y>.18&&f.y<.85){float k=hs(g.x*7.+g.y*13.);c=mix(vec3(.1,.6,1.2),vec3(1.2,.3,.8),k)*(.7+.3*sin(uTime*2.+k*20.));}if(f.y<.1)c=vec3(.3,.32,.36);}
     else if(cei)c=vec3(.6,.65,.75);else c=vec3(.1,.11,.14);}
+  else if(th>5.5){ // appartement : parquet, papier peint chaud, tableau, lampe (6 : allumé, 7 : éteint)
+    if(flo)c=vec3(.42,.3,.2)*(fract(h.x*3.)<.06?.75:1.);
+    else if(back){c=mix(vec3(.62,.5,.4),vec3(.45,.5,.6),hs(3.));if(mod(floor(h.x*6.),2.)==0.)c*=.93;if(abs(h.x-W*.6)<.25&&abs(h.y-1.4)<.18)c=vec3(.9,.6,.4);if(length(vec2(h.x-W*.25,h.y-1.5))<.12)c=vec3(1.4,1.2,.8);}
+    else if(cei)c=vec3(.9,.8,.65)*(1.3-length(h.xz-vec2(W*.5,1.))*.5);else c=vec3(.5,.42,.36);}
   else{ // café : bois sombre, tables et chaises en silhouette, lumière dorée
     if(flo)c=vec3(.35,.24,.15)*(fract(h.z*2.5)<.05?.7:1.);
     else if(back){c=vec3(.42,.3,.2);if(h.y>1.&&h.y<1.5&&fract(h.x/.8)<.5)c=vec3(.18,.12,.08);if(abs(h.y-1.9)<.25&&fract(h.x/1.3)<.15)c=vec3(1.3,1.,.6);}
@@ -170,6 +177,7 @@ void main(){
     if(!back&&!cei&&h.z>.8&&h.z<1.6&&h.y<.4&&abs(fract(h.x/1.2)-.5)<.25)c*=.35;}
   float hz=h.z;
   for(int L=0;L<2;L++){float zl=L==0?.85:1.7,tl=zl/d.z;if(tl<t){vec2 q=(p+d*tl).xy;vec4 o=obj(th,float(L),q);if(o.a>.5){c=o.rgb;t=tl;hz=zl;}}}
+  if(th>6.5)c=c*.2+vec3(.015,.02,.05); // appartement éteint : une pièce dans la pénombre
   c*=1.-.45*hz/D;
   float fr=pow(1.-clamp(-dot(rd,uN),0.,1.),3.);c=mix(c,vec3(.3,.36,.46),fr*.6);
   if(fract(p.x/1.2)<.025||vUv.y<.04||vUv.y>.96)c=vec3(.08,.09,.11);

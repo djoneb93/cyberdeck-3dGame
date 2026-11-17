@@ -261,7 +261,10 @@ function buildWorld(){
   sw(10.9,.3,8.9,7,HH+.15,6,'#2a2533');
   box(10.9,.12,.12,'#7cf29a',7,HH+.36,10.4,homeShell,true);box(.12,.12,8.9,'#7cf29a',12.4,HH+.36,6,homeShell,true);
   box(11,.18,.45,'#4a4458',7,3.3,10.4,homeShell);box(.45,.18,8.9,'#4a4458',12.4,3.3,6,homeShell);
-  const win=(x,y,z,w,h,side,lit)=>{const X=side==='x';box(X?.06:w+.16,h+.16,X?w+.16:.06,'#1a1620',x,y,z,homeShell);box(X?.07:w,h,X?w:.07,lit?pick(['#a87a52','#9a6e4e','#4e8494']):'#202838',X?x+.01:x,y,X?z:z+.01,homeShell,lit)};
+  // fenêtres de l'immeuble : un cadre, et derrière la vitre un appartement en profondeur (allumé ou éteint) qui bouge avec le point de vue
+  const win=(x,y,z,w,h,side,lit)=>{const X=side==='x';box(X?.06:w+.16,h+.16,X?w+.16:.06,'#1a1620',x,y,z,homeShell);
+    const m=shopWindow(X?x+.04:x,y,X?z:z+.04,w,h,X?1:0,X?0:1,lit?6:7);homeShell.add(m)};
+  { box(1.86,1.08,.06,'#1a1620',4.5,1.7,1.67,homeShell);homeShell.add(shopWindow(4.5,1.7,1.66,1.7,.92,0,-1,6)) } // côté rue, la fenêtre de la planque (celle qu'on voit de l'intérieur)
   [3.4,10.6].forEach(x=>win(x,1.5,10.32,1.5,1,'z',true));[3.4,10.6].forEach(x=>win(x,4.9,10.32,1.4,1.2,'z',x<5));
   [3.6,6,8.4].forEach(z=>{win(12.32,1.6,z,1.2,1,'x',z!==6);win(12.32,4.9,z,1.2,1.2,'x',z===8.4)});
   // balcon de l'étage, avec plantes

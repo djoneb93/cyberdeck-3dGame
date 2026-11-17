@@ -1,5 +1,7 @@
-// La moto : un modèle détaillé (carénage profilé, réservoir, selle, fourche, roues à jantes lumineuses, échappement).
-// Près d'elle, E ou F pour monter dessus : on roule 1,5 fois plus vite qu'à pied. E ou F de nouveau pour descendre.
+// La moto : une hoverbike de 2089. Monocoque profilée rouge laqué et noir carbone, roues sans moyeu (des anneaux qui tournent
+// dans leurs carénages), cœur à fusion visible sous le réservoir, bandeaux de lumière qui suivent les lignes du carénage,
+// phare en fente, double propulseur à plasma et bulle fumée. Elle plane à quelques centimètres du sol.
+// Près d'elle, E pour monter dessus : on roule deux fois plus vite qu'à pied. E de nouveau pour descendre.
 // Si on s'en éloigne, le bouton « Moto » la ramène à sa place de stationnement, devant la planque (une case réservée, rien ne la gêne).
 'use strict';
 
@@ -8,45 +10,86 @@ let moto=null,riding=false;
 
 function motoModel(){
   const g=new THREE.Group();scene.add(g);
-  // livrée peinte sur les flancs : orange, bande noire, numéro, « NEO-BXL » en cyan
-  const lc=document.createElement('canvas');lc.width=256;lc.height=96;const L=lc.getContext('2d');
-  const lg=L.createLinearGradient(0,0,0,96);lg.addColorStop(0,'#ffa25a');lg.addColorStop(1,'#d8641e');L.fillStyle=lg;L.fillRect(0,0,256,96);
-  L.fillStyle='#15171c';L.beginPath();L.moveTo(0,58);L.lineTo(256,40);L.lineTo(256,54);L.lineTo(0,72);L.fill();
-  L.fillStyle='#39e6ff';L.fillRect(0,73,256,3);L.font='bold 30px Silkscreen, monospace';L.fillStyle='#f4f4ee';L.fillText('0',150,38);L.font='bold 12px Silkscreen, monospace';L.fillStyle='#15171c';L.fillText('NEO-BXL',40,30);
-  const lt=new THREE.CanvasTexture(lc);lt.repeat.set(1/1.84,1/.6);lt.offset.set(1/1.84*1.02,-.4/.6);
-  const body=new THREE.MeshPhongMaterial({map:lt,shininess:90,specular:0x664433}),dark=new THREE.MeshPhongMaterial({color:0x1a1c22,shininess:30}),
-    chrome=new THREE.MeshPhongMaterial({color:0xb8c0c8,shininess:120,specular:0xffffff});
-  // bulle de pare-brise teintée et rétroviseurs
-  const ws=new THREE.Mesh(new THREE.PlaneGeometry(.34,.3),new THREE.MeshPhongMaterial({color:0x39e6ff,transparent:true,opacity:.35,side:THREE.DoubleSide,shininess:120,specular:0xffffff}));
-  ws.position.set(.6,1.13,0);ws.rotation.set(0,Math.PI/2,0);ws.rotateX(-.55);g.add(ws);
-  [-1,1].forEach(z=>{box(.02,.14,.02,'#2a2e36',.58,1.1,z*.27,g);box(.03,.06,.1,'#9ab4c8',.58,1.18,z*.29,g)});
-  // carénage vu de profil (extrudé sur la largeur) : arrière effilé, selle, réservoir galbé, tête de fourche
-  const s=new THREE.Shape();[[-.98,.6],[-.62,.76],[-.14,.78],[.04,.94],[.42,.99],[.64,.84],[.56,.6],[.2,.44],[-.36,.46],[-.86,.52]].forEach(([x,y],i)=>i?s.lineTo(x,y):s.moveTo(x,y));s.closePath();
-  const sh=new THREE.Mesh(new THREE.ExtrudeGeometry(s,{depth:.3,bevelEnabled:true,bevelThickness:.04,bevelSize:.04,bevelSegments:3,curveSegments:8}),body);sh.position.z=-.15;g.add(sh);
-  box(.52,.07,.3,'#14161b',-.36,.81,0,g); // selle
-  const eng=box(.38,.3,.26,'#2a2e36',-.04,.42,0,g);eng.material=dark;
-  [-1,1].forEach(z=>{const f=box(.05,.62,.05,'#b8c0c8',.7,.6,z*.11,g);f.material=chrome;f.rotation.z=.2; // fourche
-    const a=box(.7,.06,.06,'#2a2e36',-.38,.34,z*.12,g);a.rotation.z=-.08}); // bras oscillant
-  box(.06,.04,.62,'#2a2e36',.6,1.03,0,g);[-1,1].forEach(z=>box(.1,.06,.06,'#14161b',.6,1.03,z*.32,g)); // guidon et poignées
-  box(.08,.13,.22,'#eaf6ff',.8,.84,0,g,true);box(.04,.05,.24,'#ff2a3a',-.99,.62,0,g,true); // phare, feu arrière
-  const ex=new THREE.Mesh(new THREE.CylinderGeometry(.05,.065,.62,12),chrome);ex.rotation.z=Math.PI/2+.12;ex.position.set(-.55,.38,.19);g.add(ex);
-  [-1,1].forEach(z=>box(1.15,.025,.025,'#39e6ff',-.05,.47,z*.17,g,true)); // néon sous le carénage
-  // roues : pneu, jante, enjoliveur lumineux
-  // moto planante, comme les voitures : les roues sont couchées à l’horizontale et servent de patins de sustentation
-  const wheels=[.74,-.74].map(x=>{const hd=new THREE.Group();hd.position.set(x,.2,0);hd.rotation.x=Math.PI/2;g.add(hd);const w=new THREE.Group();hd.add(w);
-    w.add(new THREE.Mesh(new THREE.TorusGeometry(.26,.075,10,24),dark));const rim=new THREE.Mesh(new THREE.CylinderGeometry(.19,.19,.07,18),chrome);rim.rotation.x=Math.PI/2;w.add(rim);
-    const ring=new THREE.Mesh(new THREE.TorusGeometry(.2,.012,4,24),mat('#39e6ff',true));w.add(ring);
-    for(let i=0;i<5;i++){const sp=box(.03,.36,.02,'#2a2e36',0,0,0,w);sp.rotation.z=i*Math.PI/5}return w});
-  const gl=new THREE.Mesh(new THREE.PlaneGeometry(2.4,1.2),new THREE.MeshBasicMaterial({map:glowTex,color:0x39e6ff,transparent:true,opacity:.3,blending:THREE.AdditiveBlending,depthWrite:false}));gl.rotation.x=-Math.PI/2;gl.position.y=-.25;g.add(gl);
-  // touches cyberpunk : liserés néon le long du carénage, anneaux de sustentation sous les roues, ailerons lumineux, propulseur plasma, affichage holographique
-  [-1,1].forEach(z=>{box(.85,.02,.02,'#ff4fa3',.2,.97,z*.17,g,true);box(.5,.02,.02,'#39e6ff',-.6,.79,z*.17,g,true);
-    const fin=box(.32,.03,.16,'#39e6ff',-.88,.82,z*.2,g,true);fin.rotation.z=.5;fin.rotation.x=z*.4});
-  [.74,-.74].forEach(x=>{const r=new THREE.Mesh(new THREE.TorusGeometry(.33,.025,6,32),mat('#39e6ff',true));r.rotation.x=Math.PI/2;r.position.set(x,.08,0);g.add(r)});
-  const th=new THREE.Mesh(new THREE.CylinderGeometry(.08,.11,.16,14),mat('#ff4fa3',true));th.rotation.z=Math.PI/2;th.position.set(-1.04,.55,0);g.add(th);
-  const fl=new THREE.Sprite(new THREE.SpriteMaterial({map:glowTex,color:0xff4fa3,transparent:true,opacity:.7,blending:THREE.AdditiveBlending,depthWrite:false}));fl.scale.set(.8,.5,1);fl.position.set(-1.22,.55,0);g.add(fl);g.userData.flame=fl;
-  const hc=document.createElement('canvas');hc.width=64;hc.height=32;const hg=hc.getContext('2d');hg.strokeStyle='#39e6ff';hg.strokeRect(1,1,62,30);hg.fillStyle='#39e6ff';hg.font='bold 12px monospace';hg.fillText('NEO 88',6,14);hg.fillRect(6,20,40,4);
-  const holo=new THREE.Mesh(new THREE.PlaneGeometry(.26,.13),new THREE.MeshBasicMaterial({map:new THREE.CanvasTexture(hc),transparent:true,opacity:.75,side:THREE.DoubleSide,blending:THREE.AdditiveBlending,depthWrite:false}));holo.position.set(.52,1.2,0);holo.rotation.y=-Math.PI/2;holo.rotation.x=-.3;g.add(holo);
-  g.userData.wheels=wheels;return g}
+  const V=(x,y,z)=>new THREE.Vector3(x,y,z);
+  // ── livrée peinte, calée sur le profil du carénage (x de -1,1 à 1,0 ; y de 0,3 à 1,1) ──
+  const lc=document.createElement('canvas');lc.width=512;lc.height=224;const L=lc.getContext('2d');
+  const X=x=>(x+1.1)/2.1*512,Y=y=>(1.1-y)/.8*224;
+  let gr=L.createLinearGradient(0,0,0,224);gr.addColorStop(0,'#ff3b62');gr.addColorStop(.45,'#c3123f');gr.addColorStop(1,'#5a0720');L.fillStyle=gr;L.fillRect(0,0,512,224);
+  // partie basse en carbone noir, découpe en biseau
+  L.fillStyle='#101116';L.beginPath();L.moveTo(0,Y(.64));L.lineTo(X(-.2),Y(.6));L.lineTo(X(.3),Y(.66));L.lineTo(X(.62),Y(.6));L.lineTo(512,Y(.66));L.lineTo(512,224);L.lineTo(0,224);L.fill();
+  L.globalAlpha=.18;L.strokeStyle='#3a3d48';for(let i=-30;i<60;i++){L.beginPath();L.moveTo(i*10,224);L.lineTo(i*10+60,Y(.62));L.stroke()}L.globalAlpha=1; // tissage carbone
+  L.strokeStyle='#39e6ff';L.lineWidth=2;L.beginPath();L.moveTo(0,Y(.64)-4);L.lineTo(X(-.2),Y(.6)-4);L.lineTo(X(.3),Y(.66)-4);L.lineTo(X(.62),Y(.6)-4);L.lineTo(512,Y(.66)-4);L.stroke();
+  // reflet laqué en haut, bande noire fuyante, décors
+  gr=L.createLinearGradient(0,Y(1.02),0,Y(.84));gr.addColorStop(0,'rgba(255,255,255,.35)');gr.addColorStop(1,'rgba(255,255,255,0)');L.fillStyle=gr;L.fillRect(X(.05),Y(1.02),X(.7)-X(.05),Y(.84)-Y(1.02));
+  L.fillStyle='#101116';L.beginPath();L.moveTo(X(-1.1),Y(.78));L.lineTo(X(-.3),Y(.74));L.lineTo(X(.15),Y(.86));L.lineTo(X(.1),Y(.8));L.lineTo(X(-.32),Y(.7));L.lineTo(X(-1.1),Y(.72));L.fill();
+  L.fillStyle='#f4f4ee';L.font='bold 20px Rajdhani, sans-serif';L.fillText('NEO-BXL',X(-.86),Y(.66));
+  L.font='bold 13px JetBrains Mono, monospace';L.fillStyle='#ffd23f';L.fillText('▲ HV 880',X(.66),Y(.71));
+  L.fillStyle='#f4f4ee';L.beginPath();L.arc(X(.3),Y(.78),17,0,Math.PI*2);L.fill();L.fillStyle='#101116';L.font='bold 24px Rajdhani, sans-serif';L.fillText('77',X(.3)-12,Y(.78)+8);
+  for(let i=0;i<14;i++){L.fillStyle='#f4f4ee';L.fillRect(X(-.3)+i*4,Y(.56),i%3?2:1,10)} // code-barres
+  L.fillStyle='#ffd23f';for(let i=0;i<4;i++){L.beginPath();const x0=X(-1.02)+i*11;L.moveTo(x0,Y(.6));L.lineTo(x0+6,Y(.6));L.lineTo(x0+12,Y(.56));L.lineTo(x0+6,Y(.52));L.lineTo(x0,Y(.52));L.lineTo(x0+6,Y(.56));L.fill()} // chevrons
+  const lt=new THREE.CanvasTexture(lc);lt.repeat.set(1/2.1,1/.8);lt.offset.set(1.1/2.1,-.3/.8);
+  const paint=new THREE.MeshPhongMaterial({map:lt,shininess:110,specular:0x99707a,emissive:0x1a0208}),
+    red=new THREE.MeshPhongMaterial({color:0xc3123f,shininess:110,specular:0x99707a,emissive:0x1a0208}),
+    carbon=new THREE.MeshPhongMaterial({color:0x15161c,shininess:60,specular:0x3a3d48}),
+    metal=new THREE.MeshPhongMaterial({color:0x6f7682,shininess:120,specular:0xffffff}),
+    rubber=new THREE.MeshPhongMaterial({color:0x0c0d10,shininess:12}),
+    cyan=mat('#39e6ff',true),pink=mat('#ff3b8d',true),redL=mat('#ff1f3d',true),white=mat('#eaf6ff',true);
+  const add=(geo,m,x,y,z)=>{const o=new THREE.Mesh(geo,m);o.position.set(x||0,y||0,z||0);g.add(o);return o};
+  const bar=(a,b,t,m)=>{const d=V(b[0]-a[0],b[1]-a[1],b[2]-a[2]),o=add(new THREE.BoxGeometry(d.length(),t,t),m,(a[0]+b[0])/2,(a[1]+b[1])/2,(a[2]+b[2])/2);
+    o.quaternion.setFromUnitVectors(V(1,0,0),d.normalize());return o};
+  const tube=(pts,r,m)=>add(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts.map(p=>V(...p))),48,r,6,false),m);
+  const extr=(pts,depth,bev,m,z)=>{const s=new THREE.Shape();pts.forEach((p,i)=>p.length>2?s.quadraticCurveTo(p[0],p[1],p[2],p[3]):i?s.lineTo(p[0],p[1]):s.moveTo(p[0],p[1]));
+    return add(new THREE.ExtrudeGeometry(s,{depth,bevelEnabled:true,bevelThickness:bev,bevelSize:bev,bevelSegments:4,curveSegments:14}),m,0,0,(z||0)-depth/2)};
+  // ── monocoque vue de profil : queue effilée, creux de selle, réservoir bombé, nez plongeant ──
+  extr([[-1.08,.74],[-1.0,.8],[-.72,.86,-.46,.8],[-.14,.76],[0,.77,.12,.92],[.36,1.04,.62,.93],[.86,.83,1.0,.6],[.98,.56],[.72,.56,.52,.52],[.3,.4],[-.34,.4],[-.56,.58,-.92,.64]],.3,.05,paint);
+  extr([[-.36,.44],[.3,.44],[.24,.24],[-.24,.24]],.2,.03,carbon); // carter inférieur
+  extr([[-.5,.79],[-.12,.76],[-.1,.82],[-.3,.85,-.5,.86]],.26,.04,carbon); // selle
+  [-1,1].forEach(z=>{const p=add(new THREE.BoxGeometry(.3,.12,.02),carbon,.36,.72,z*.205);p.rotation.z=.12}); // grilles d'aération
+  for(let i=0;i<4;i++)[-1,1].forEach(z=>add(new THREE.BoxGeometry(.2,.012,.012),cyan,.36,.68+i*.03,z*.218));
+  // ── cœur à fusion sous le réservoir, cerclé d'ailettes ──
+  const core=add(new THREE.CylinderGeometry(.085,.085,.24,20),cyan,0,.3,0);core.rotation.x=Math.PI/2;
+  for(let i=-2;i<=2;i++){const r=add(new THREE.TorusGeometry(.1,.018,6,20),metal,0,.3,i*.05)}
+  const cg=add(new THREE.PlaneGeometry(.5,.5),new THREE.MeshBasicMaterial({map:glowTex,color:0x39e6ff,transparent:true,opacity:.5,blending:THREE.AdditiveBlending,depthWrite:false}),0,.3,0);cg.rotation.x=0;
+  // ── roues sans moyeu : l'anneau tourne dans son carénage, les bras le tiennent par l'intérieur ──
+  const R=.34,WY=.12;
+  const wheels=[.78,-.78].map((x,k)=>{const w=new THREE.Group();w.position.set(x,WY,0);g.add(w);
+    w.add(new THREE.Mesh(new THREE.TorusGeometry(R,.068,12,40),rubber));
+    const rim=new THREE.Mesh(new THREE.TorusGeometry(R-.07,.028,8,40),metal);w.add(rim);
+    [-1,1].forEach(z=>{const lr=new THREE.Mesh(new THREE.TorusGeometry(R-.045,.008,4,48),cyan);lr.position.z=z*.05;w.add(lr)});
+    for(let i=0;i<10;i++){const a=i/10*Math.PI*2,d=new THREE.Mesh(new THREE.BoxGeometry(.05,.012,.13),i%2?pink:cyan);d.position.set(Math.cos(a)*(R-.1),Math.sin(a)*(R-.1),0);d.rotation.z=a+Math.PI/2;w.add(d)} // repères qui tournent
+    // carénage en arc au-dessus de la roue, avec liseré
+    const a0=k?Math.PI*.38:Math.PI*.12,a1=k?Math.PI*.88:Math.PI*.62,s=new THREE.Shape();
+    s.absarc(0,0,R+.13,a0,a1,false);s.absarc(0,0,R+.08,a1,a0,true);
+    const sh=add(new THREE.ExtrudeGeometry(s,{depth:.2,bevelEnabled:true,bevelThickness:.02,bevelSize:.02,bevelSegments:2,curveSegments:24}),red,x,WY,-.1);
+    [-1,1].forEach(z=>{const e=add(new THREE.TorusGeometry(R+.135,.007,4,32,a1-a0),k?pink:cyan,x,WY,z*.125);e.rotation.z=a0});
+    return w});
+  // fourche avant inclinée et bras oscillant arrière, accrochés à la jante intérieure
+  [-1,1].forEach(z=>{bar([.62,.9,z*.13],[.66,.36,z*.13],.05,metal);bar([.66,.36,z*.13],[.78+(R-.07)*Math.cos(2.2),WY+(R-.07)*Math.sin(2.2),z*.13],.04,carbon);
+    bar([-.22,.38,z*.13],[-.78+(R-.07)*Math.cos(.95),WY+(R-.07)*Math.sin(.95),z*.13],.06,carbon);bar([-.3,.3,z*.13],[-.62,.2,z*.13],.035,metal)});
+  // ── bandeaux de lumière qui épousent le carénage ──
+  [-1,1].forEach(z=>{const Z=z*.216;
+    tube([[.99,.58,Z],[.75,.63,Z],[.4,.67,Z],[0,.62,Z],[-.4,.6,Z],[-.8,.68,Z],[-1.06,.75,Z]],.009,cyan);
+    tube([[.42,.47,Z],[.1,.43,Z],[-.3,.43,Z]],.007,pink)});
+  tube([[.97,.64,0],[.82,.84,0],[.6,.96,0],[.36,1.07,0],[.14,.96,0]],.008,cyan); // arête du réservoir
+  tube([[-.52,.88,0],[-.74,.89,0],[-1.02,.83,0]],.008,cyan);
+  // ── avant : phare en fente, feux de jour, bulle fumée, guidons bracelets, affichage holo ──
+  add(new THREE.BoxGeometry(.03,.024,.3),white,1.0,.58,0);
+  [-1,1].forEach(z=>{add(new THREE.BoxGeometry(.03,.05,.03),cyan,.96,.66,z*.12);bar([.55,.97,z*.13],[.47,.95,z*.27],.035,carbon);add(new THREE.CylinderGeometry(.022,.022,.08,10),rubber,.47,.95,z*.29).rotation.x=Math.PI/2});
+  const hl=new THREE.Sprite(new THREE.SpriteMaterial({map:glowTex,color:0xeaf6ff,transparent:true,opacity:.55,blending:THREE.AdditiveBlending,depthWrite:false}));hl.scale.set(.7,.3,1);hl.position.set(1.06,.58,0);g.add(hl);
+  const ws=add(new THREE.CylinderGeometry(.21,.21,.32,20,1,true,Math.PI/2-.95,1.9),new THREE.MeshPhongMaterial({color:0x2a3a48,transparent:true,opacity:.5,side:THREE.DoubleSide,shininess:140,specular:0xffffff}),.66,1.03,0);ws.rotation.z=-.75;
+  const hc=document.createElement('canvas');hc.width=128;hc.height=64;const hg=hc.getContext('2d');hg.strokeStyle='#39e6ff';hg.lineWidth=2;hg.strokeRect(2,2,124,60);
+  hg.fillStyle='#39e6ff';hg.font='bold 22px JetBrains Mono, monospace';hg.fillText('088',8,30);hg.font='10px JetBrains Mono, monospace';hg.fillText('KM/H  CORE 99%',8,46);for(let i=0;i<9;i++)hg.fillRect(70+i*6,26-i*2,4,4+i*2);hg.fillStyle='#ff3b8d';hg.fillRect(8,52,80,4);
+  const holo=add(new THREE.PlaneGeometry(.24,.12),new THREE.MeshBasicMaterial({map:new THREE.CanvasTexture(hc),transparent:true,opacity:.85,side:THREE.DoubleSide,blending:THREE.AdditiveBlending,depthWrite:false}),.5,1.1,0);holo.rotation.y=-Math.PI/2;holo.rotation.x=-.35;
+  // ── arrière : barre de feu, ailerons, double propulseur ──
+  add(new THREE.BoxGeometry(.03,.03,.38),redL,-1.08,.77,0);
+  [-1,1].forEach(z=>{const f=add(new THREE.BoxGeometry(.3,.12,.02),red,-.92,.9,z*.15);f.rotation.z=-.35;f.rotation.x=z*.25;add(new THREE.BoxGeometry(.26,.012,.012),redL,-.93,.95,z*.165).rotation.z=-.35});
+  const flames=[-1,1].map(z=>{const n=add(new THREE.CylinderGeometry(.06,.075,.2,16,1,true),metal,-1.0,.52,z*.11);n.rotation.z=Math.PI/2;n.material=metal;
+    add(new THREE.CircleGeometry(.055,16),pink,-1.09,.52,z*.11).rotation.y=-Math.PI/2;
+    const fl=new THREE.Sprite(new THREE.SpriteMaterial({map:glowTex,color:0xff3b8d,transparent:true,opacity:.7,blending:THREE.AdditiveBlending,depthWrite:false}));fl.scale.set(.6,.35,1);fl.position.set(-1.22,.52,z*.11);g.add(fl);return fl});
+  // ── sustentation : halo cyan sous la caisse, disques sous chaque roue ──
+  const gl=add(new THREE.PlaneGeometry(2.6,1.1),new THREE.MeshBasicMaterial({map:glowTex,color:0x39e6ff,transparent:true,opacity:.35,blending:THREE.AdditiveBlending,depthWrite:false}),0,-.26,0);gl.rotation.x=-Math.PI/2;
+  [.78,-.78].forEach(x=>{const d=add(new THREE.PlaneGeometry(.8,.5),new THREE.MeshBasicMaterial({map:glowTex,color:0xff3b8d,transparent:true,opacity:.35,blending:THREE.AdditiveBlending,depthWrite:false}),x,-.25,0);d.rotation.x=-Math.PI/2});
+  g.userData.wheels=wheels;g.userData.flames=flames;g.userData.flame=flames[0];g.userData.core=cg;return g}
 
 function buildMoto(){
   moto=motoModel();parkMoto();
@@ -80,11 +123,11 @@ function updateMoto(dt){
   if(!moto)return;const btn=$('btnMoto');
   if(riding){const ud=player.userData,want=ud.ry-Math.PI/2;moto.rotation.y=lerpAngle(moto.rotation.y,want,Math.min(1,dt*10));
     const p=player.position,d=motoLast?Math.hypot(p.x-motoLast.x,p.z-motoLast.z):0;moto.position.set(p.x,0,p.z);motoLast={x:p.x,z:p.z};
-    moto.userData.wheels.forEach(w=>w.rotation.z-=d/.32);
+    moto.userData.wheels.forEach(w=>w.rotation.z-=d/.34);
     const turn=((want-moto.rotation.y+Math.PI*3)%(Math.PI*2))-Math.PI;moto.rotation.x=Math.max(-.25,Math.min(.25,turn*.8)); // on penche dans les virages
   }else{motoLast=null;moto.rotation.x=0}
   moto.position.y=.28+Math.sin(tAcc*2.4)*.04; // elle plane
-  if(moto.userData.flame){const go=riding&&player.userData.moving;moto.userData.flame.scale.set(go?1.3+Math.random()*.3:.6,go?.6:.4,1);moto.userData.flame.material.opacity=go?.9:.45} // le propulseur s’allume quand on roule
+  {const go=riding&&player.userData.moving;(moto.userData.flames||[]).forEach(f=>{f.scale.set(go?1+Math.random()*.35:.45,go?.42:.26,1);f.material.opacity=go?.9:.4});const c=moto.userData.core;if(c)c.material.opacity=.4+Math.sin(tAcc*(go?9:3))*.15} // le propulseur s’allume quand on roule
   if(btn){const far=!riding&&!zoneOf()&&Math.hypot(player.position.x-MOTO_PARK.x,player.position.z-MOTO_PARK.z)>6&&Math.hypot(player.position.x-moto.position.x,player.position.z-moto.position.z)>6;
     const show=started&&far&&$('hudL')&&!$('hudL').hidden;if(btn.hidden===show)btn.hidden=!show}
 }
