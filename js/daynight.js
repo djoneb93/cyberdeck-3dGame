@@ -35,19 +35,21 @@ function buildDaySky(){
   const t=new THREE.CanvasTexture(c);t.wrapS=THREE.RepeatWrapping;
   daySky=new THREE.Mesh(new THREE.SphereGeometry(196,32,16),new THREE.MeshBasicMaterial({map:t,side:THREE.BackSide,fog:false,depthWrite:false,transparent:true,opacity:0}));
   daySky.position.set(W/2,0,H/2);daySky.renderOrder=-1;scene.add(daySky);
-  sunSpr=new THREE.Sprite(new THREE.SpriteMaterial({map:glowTex,color:0xfff2c8,fog:false,depthWrite:false,transparent:true,blending:THREE.AdditiveBlending}));sunSpr.scale.set(34,34,1);sunSpr.renderOrder=1;scene.add(sunSpr);
+  sunSpr=new THREE.Sprite(new THREE.SpriteMaterial({map:glowTex,color:0xfff2c8,fog:false,depthWrite:false,transparent:true,blending:THREE.AdditiveBlending}));sunSpr.scale.set(26,26,1);sunSpr.renderOrder=1;scene.add(sunSpr);
   const mc=document.createElement('canvas');mc.width=mc.height=64;const m=mc.getContext('2d');m.fillStyle='#e8ecf4';m.beginPath();m.arc(32,32,26,0,7);m.fill();
   m.fillStyle='rgba(150,160,180,.5)';[[22,24,6],[38,36,8],[28,42,4],[42,20,4]].forEach(([x,y,r])=>{m.beginPath();m.arc(x,y,r,0,7);m.fill()});
-  moonSpr=new THREE.Sprite(new THREE.SpriteMaterial({map:new THREE.CanvasTexture(mc),fog:false,depthWrite:false,transparent:true}));moonSpr.scale.set(9,9,1);moonSpr.renderOrder=2;scene.add(moonSpr);
-  moonHalo=new THREE.Sprite(new THREE.SpriteMaterial({map:glowTex,color:0xaabbe8,fog:false,depthWrite:false,transparent:true,blending:THREE.AdditiveBlending}));moonHalo.scale.set(27,27,1);moonHalo.renderOrder=1;scene.add(moonHalo); // halo de la lune
+  moonSpr=new THREE.Sprite(new THREE.SpriteMaterial({map:new THREE.CanvasTexture(mc),fog:false,depthWrite:false,transparent:true}));moonSpr.scale.set(8,8,1);moonSpr.renderOrder=2;scene.add(moonSpr);
+  moonHalo=new THREE.Sprite(new THREE.SpriteMaterial({map:glowTex,color:0xaabbe8,fog:false,depthWrite:false,transparent:true,blending:THREE.AdditiveBlending}));moonHalo.scale.set(22,22,1);moonHalo.renderOrder=1;scene.add(moonHalo); // halo de la lune
 }
 function updateSky(h,d,gld){
   if(!daySky)return;const a=(h-6)/12*Math.PI,cp=camera.position,cx=cp.x,cz=cp.z+40;
   daySky.position.set(cp.x,0,cp.z);if(skyMesh)skyMesh.position.set(cp.x,0,cp.z); // les ciels suivent la caméra : jamais coupés par la distance d’affichage
   const out=!String(zoneOf()||"").startsWith("in_");[daySky,sunSpr,moonSpr,moonHalo,skyMesh,dnStars].forEach(o=>{if(o)o.visible=out}); // dans une pièce : pas de ciel
   daySky.material.opacity=Math.max(d,gld*.75);daySky.material.color.copy(wx.sky).lerp(C_DUSK,gld*.65);daySky.rotation.y+=.0004;
-  sunSpr.position.set(cx-Math.cos(a)*80,Math.sin(a)*26+5,cz-55);sunSpr.material.opacity=Math.max(0,Math.min(1,Math.sin(a)*3+.3))*(wx.rain>.5?.25:.6);sunSpr.material.color.copy(C_SUN).lerp(C_SUNSET,gld);
-  moonSpr.position.set(cx+Math.cos(a)*80,-Math.sin(a)*26+5,cz-55);moonSpr.material.opacity=Math.max(0,Math.min(1,-Math.sin(a)*3))*(1-d);moonHalo.position.copy(moonSpr.position);moonHalo.material.opacity=moonSpr.material.opacity*.45;
+  // toujours au-dessus de la mer (à l’ouest), plus haut que la tour des Toits : ils glissent du nord au sud au fil de la journée
+  const SEA_X=-48,sy=k=>44+Math.max(0,k)*22;
+  sunSpr.position.set(SEA_X,sy(Math.sin(a)),H/2-Math.cos(a)*42);sunSpr.material.opacity=Math.min(1,d*1.4)*(wx.rain>.5?.25:.6);sunSpr.material.color.copy(C_SUN).lerp(C_SUNSET,gld);
+  moonSpr.position.set(SEA_X+2,sy(-Math.sin(a)),H/2+Math.cos(a)*42);moonSpr.material.opacity=Math.max(0,1-d*1.6);moonHalo.position.copy(moonSpr.position);moonHalo.material.opacity=moonSpr.material.opacity*.45;
 }
 // lumière du jour (0 la nuit, 1 en plein jour) et lueur dorée de l'aube et du crépuscule
 function daylight(h){return Math.max(0,Math.min(1,Math.sin((h-6)/12*Math.PI)*1.7))}
@@ -70,7 +72,7 @@ function updateDayNight(dt){
   if(dnStars)dnStars.material.opacity=.7*(1-Math.min(1,d*2+gld));
   // ciel et sol, soleil (ou lune)
   hemi.intensity+=d*.38+gld*.18;hemi.color.copy(C_HEMI_N).lerp(C_HEMI_D,d);hemi.groundColor.copy(C_GND_N).lerp(C_GND_D,d);
-  const a=(h-6)/12*Math.PI;moon.position.set(W/2+Math.cos(a)*-60,Math.max(8,Math.sin(a)*70),H/2+30);moon.target.position.set(W/2,0,H/2);
+  const a=(h-6)/12*Math.PI;moon.position.set(-48,44+Math.abs(Math.sin(a))*22,H/2-Math.cos(a)*42*(d>.3?1:-1));moon.target.position.set(W/2,0,H/2); // la lumière vient du soleil (ou de la lune), au-dessus de la mer
   moon.color.copy(C_MOON).lerp(C_SUN,d).lerp(C_SUNSET,gld*.7);moon.intensity=.3+d*.5+gld*.3;
   // les néons restent, mais les fenêtres et les lampes comptent moins en plein jour
   const lk=1-d*.7;dnLights.forEach(([l,b])=>l.intensity=b*lk);dnEmis.forEach(([m,b])=>m.emissiveIntensity=b*(1-d*.6));
