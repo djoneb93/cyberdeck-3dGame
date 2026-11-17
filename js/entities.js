@@ -62,12 +62,12 @@ function spawn(){
    [M.x-1.8,M.z+1.8,Math.PI/2,null],[M.x-1.8,M.z-1.8,Math.PI,null],[M.x+1.8,M.z+1.8,0,null],[15.6,UZ(.6),-Math.PI/2,null],[11.4,UZ(.31),Math.PI/2,null]].forEach(([x,z,ry,k])=>{
     if(isSolid(x,z))return;const m=makeChar(k?SPECS[k]:randomSpec());m.position.set(x,0,z);m.userData.ry=ry;statics.push(m)});
   // passants sur les trottoirs des avenues et sur le quai
-  const lanes=[{ax:'x',c:UZ(AVE[2])+2.3,a0:UX(-.03),a1:UX(1.03),side:1,n:6},{ax:'x',c:UZ(AVE[1])+2.3,a0:UX(-.03),a1:UX(1.03),side:1,n:5},{ax:'x',c:UZ(AVE[3])+2.3,a0:UX(-.03),a1:UX(1.03),side:1,n:5},
-    {ax:'z',c:UX(AVE[1])-2.3,a0:UZ(-.03),a1:UZ(1.03),side:-1,n:5},{ax:'z',c:UX(AVE[2])+2.3,a0:UZ(-.03),a1:UZ(1.03),side:1,n:5},{ax:'z',c:UX(AVE[3])-2.3,a0:UZ(-.03),a1:UZ(1.03),side:-1,n:4},
+  const lanes=[{ax:'x',c:UZ(AVE[2])+2.1,a0:UX(.004),a1:UX(.996),side:1,n:6},{ax:'x',c:UZ(AVE[1])+2.1,a0:UX(.004),a1:UX(.996),side:1,n:5},{ax:'x',c:UZ(AVE[3])+2.1,a0:UX(.004),a1:UX(.996),side:1,n:5},
+    {ax:'z',c:UX(AVE[1])-2.1,a0:UZ(.004),a1:UZ(.996),side:-1,n:5},{ax:'z',c:UX(AVE[2])+2.1,a0:UZ(.004),a1:UZ(.996),side:1,n:5},{ax:'z',c:UX(AVE[3])-2.1,a0:UZ(.004),a1:UZ(.996),side:-1,n:4},
     {ax:'z',c:13.6,a0:UZ(.0),a1:UZ(1),side:1,n:4}];
   lanes.forEach(L=>{for(let i=0;i<L.n;i++){let a=0;for(let t=0;t<12;t++){a=L.a0+rnd()*(L.a1-L.a0);if(!(L.ax==='x'?isSolid(a,L.c):isSolid(L.c,a)))break}
     const m=makeChar(randomSpec());if(L.ax==='x')m.position.set(a,0,L.c);else m.position.set(L.c,0,a);
-    walkers.push({m,L,v:(rnd()<.5?-1:1)*(1.1+rnd()*.8),off:0})}});
+    walkers.push({m,L,v:(L.side>0?1:-1)*(1.1+rnd()*.8),off:0}) /* trottoir à sens unique */}});
   [[ '#5a2a6a','#ff4fa3',14,UZ(AVE[1]),7],[ '#1e3a4a','#39e6ff',12,UZ(AVE[2]),-5],[ '#4a3a1a','#ffb547',10,UZ(AVE[3]),9],[ '#2a2a2a','#ff3b4e',13,UZ(AVE[0])+2,6]].forEach(([b,c,y,z,v],i)=>{
     const g=carModel(b,c,-10+i*16,y,z,v>0?0:Math.PI,false);flyers.push({g,v})});
 }
@@ -75,15 +75,37 @@ let FURN_POS=null;
 function updateWalkers(dt){
   if(!FURN_POS)FURN_POS=FURN.map(([x,z])=>({x,z})); // les passants contournent le mobilier urbain
   const obs=[player.position,...npcs.map(n=>n.mesh.position),...statics.map(s=>s.position),...FURN_POS];
-  walkers.forEach(w=>{const others=walkers.filter(o=>o!==w).map(o=>o.m.position);
-    const p=w.m.position,L=w.L,X=L.ax==='x';let block=false,want=0;const pa=X?p.x:p.z;
-    for(const o of obs.concat(others)){const da=(X?o.x:o.z)-pa,db=(X?o.z:o.x)-(L.c+w.off);if(Math.sign(da)===Math.sign(w.v)&&Math.abs(da)<1.3&&Math.abs(db)<.7){want=.8*L.side;if(Math.abs(da)<.5&&Math.abs(db)<.45)block=true}}
-    for(const [lx,lz] of LAMPS){const la=(X?lx:lz)+.5,lb=(X?lz:lx)+.5;if(Math.abs(lb-L.c)<.6&&Math.sign(la-pa)===Math.sign(w.v)&&Math.abs(la-pa)<1.2)want=.7*L.side}
+  const road=(x,z)=>{const cx=Math.floor(x),cz=Math.floor(z);return cx>=0&&cz>=0&&cx<W&&cz<H&&tile[I(cx,cz)]===2};
+  walkers.forEach(w=>{
+    const p=w.m.position,L=w.L,X=L.ax==='x',dir=Math.sign(w.v)||1,pa=X?p.x:p.z,rs=X?dir:-dir;
+    const at=(a,b)=>X?[a,b]:[b,a],onRoad=road(p.x,p.z);
+    let block=false,want=0; // chacun tient sa droite : on se croise sans se gêner
+    // obstacles (joueur, personnages, mobilier) : on s'écarte ; on ne s'arrête jamais sur la chaussée
+    for(const o of obs){const da=((X?o.x:o.z)-pa)*dir,db=(X?o.z:o.x)-(L.c+w.off);if(da>0&&da<1.3&&Math.abs(db)<.7){want=.4*L.side;if(da<.5&&Math.abs(db)<.45&&!onRoad)block=true}}
+    for(const [lx,lz] of LAMPS){const la=(X?lx:lz)+.5,lb=(X?lz:lx)+.5;if(Math.abs(lb-L.c)<.6&&(la-pa)*dir>0&&Math.abs(la-pa)<1.2)want=.35*L.side}
+    // les autres passants de la même file
+    const same=[];walkers.forEach(o=>{if(o===w)return;const q=o.m.position;same.push({a:((X?q.x:q.z)-pa)*dir,b:(X?q.z:q.x)-(L.c+w.off),opp:o.L.ax===L.ax&&Math.sign(o.v)!==dir})});
+    if(!onRoad){
+      if(same.some(o=>o.a>0&&o.a<.62&&Math.abs(o.b)<.32))block=true; // on laisse passer celui qui est juste devant
+      // avant un passage piéton : on ne s'engage que si l'autre côté est libre (on n'attend jamais sur la chaussée)
+      const [ax,az]=at(pa+dir*.7,L.c+w.off);
+      if(road(ax,az)){let span=8;for(let s=.7;s<8;s+=.25){const [bx,bz]=at(pa+dir*s,L.c+w.off);if(!road(bx,bz)){span=s;break}}
+        if(same.some(o=>o.a>0&&o.a<span+.9&&Math.abs(o.b)<.5))block=true}
+    }
     w.off=lerp(w.off,want,Math.min(1,dt*4));
-    if(block){w.st=(w.st||0)+dt;if(w.st>1.4){w.v=-w.v;w.st=0}}else w.st=0; // jamais coincé : demi-tour
-    let na=pa+(block?0:w.v*dt);const ah=na+Math.sign(w.v)*.45,bb=L.c+w.off;
-    if(na>L.a1||na<L.a0||(X?isSolid(ah,bb):isSolid(bb,ah))){w.v=-w.v;na=pa}
-    if(X){p.x=na;p.z=bb}else{p.z=na;p.x=bb}
+    // jamais d'écart jusque dans un mur : on revient vers le milieu du trottoir
+    const side=o=>{const b=L.c+o;return X?(isSolid(pa,b-.22)||isSolid(pa,b+.22)):(isSolid(b-.22,pa)||isSolid(b+.22,pa))};
+    for(let k=0;k<5&&side(w.off);k++)w.off*=.5;if(side(w.off))w.off=0;
+    if(block){w.st=(w.st||0)+dt;if(w.st>3){w.v=-w.v;w.off=-w.off;w.st=0}}else w.st=0;
+    let na=pa+(block?0:w.v*dt);const bb=L.c+w.off;
+    // boîte de collision : un mur devant ou trop près sur le côté, et l'on fait demi-tour (jamais sur la chaussée)
+    const wall=(a)=>X?(isSolid(a,bb-.2)||isSolid(a,bb+.2)):(isSolid(bb-.2,a)||isSolid(bb+.2,a));
+    if(na>L.a1||na<L.a0){ // bout de la file : on revient au début du trottoir, hors du champ de la caméra
+      const start=dir>0?L.a0:L.a1,[sx,sz]=at(start,L.c);if(!inView(new THREE.Vector3(p.x,1,p.z))&&!inView(new THREE.Vector3(sx,1,sz))&&!walkers.some(o=>o!==w&&Math.hypot((X?o.m.position.x:o.m.position.z)-start,(X?o.m.position.z:o.m.position.x)-L.c)<1)){na=start;w.off=0}else{w.v=-w.v;na=pa}}
+    else if(!onRoad&&wall(na+dir*.45)){w.v=-w.v;na=pa}
+    // garde finale : jamais posé sur une case solide (on reste en place et on revient au milieu du trottoir)
+    const [fx,fz]=at(na,bb);if(isSolid(fx,fz)){w.off=0;if(isSolid(p.x,p.z)){const [cx2,cz2]=at(pa,L.c);if(!isSolid(cx2,cz2)){p.x=cx2;p.z=cz2}}}
+    else if(X){p.x=na;p.z=bb}else{p.z=na;p.x=bb}
     w.m.userData.ry=X?(w.v>0?Math.PI/2:-Math.PI/2):(w.v>0?0:Math.PI);w.m.userData.moving=!block;
   });
 }

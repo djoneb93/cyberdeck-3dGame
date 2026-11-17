@@ -60,7 +60,7 @@ function buildStreets(){
     else if(r<.78){sd('#d8a020',false,x,.3,z,.26,.6,.26);sd('#e8b030',false,x,.64,z,.32,.08,.32);sd('#d8a020',false,x,.4,z,.42,.08,.1);FURN.push([x,z,.25])}
     else if(r<.9){[-.5,.5].forEach(o=>{const bx=x+(X?0:o),bz=z+(X?o:0);sd('#3a414c',false,bx,.35,bz,.14,.7,.14);sd('#ffb547',true,bx,.66,bz,.16,.04,.16);FURN.push([bx,bz,.15])})}
     else{sd('#20262f',false,x,.6,z,.34,1.2,.26);sd('#39e6ff',true,x+(X?.18:0),.85,z+(X?0:.18),X?.02:.2,.3,X?.2:.02);FURN.push([x,z,.3])}};
-  AVE.forEach(a=>{for(let t=.02;t<1;t+=.052){[-1,1].forEach(s=>{place(UX(a)+s*1.95,UZ(t)+srnd()*.6,'z');place(UX(t)+srnd()*.6,UZ(a)+s*1.95,'x')})}});
+  AVE.forEach(a=>{for(let t=.02;t<1;t+=.052){[-1,1].forEach(s=>{place(UX(a)+s*1.74,UZ(t)+srnd()*.6,'z');place(UX(t)+srnd()*.6,UZ(a)+s*1.74,'x')})}});
   // feux tricolores : deux par carrefour, l'un pour l'axe nord-sud, l'autre pour l'axe est-ouest
   AVE.forEach(a=>AVE.forEach(b=>{const cx=UX(a),cz=UZ(b);
     [[cx+2,cz+2,'z',-1,0],[cx-2,cz-2,'x',0,1]].forEach(([x,z,axis,dx,dz])=>{if(!onTile(x,z,1)&&!onTile(x,z,0))return;

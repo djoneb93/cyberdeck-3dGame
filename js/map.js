@@ -21,7 +21,7 @@ const PL={
   lab:{u:.9067,v:.6767,s:.07,h:.03,face:'+z'},
   club:{u:.6417,v:.1917,s:.055,h:.08,face:'-x'},
   arcade:{u:.8817,v:.20,s:.045,h:.07,face:'-x'},
-  bunker:{u:.4467,v:.6367,s:.05,h:.02,face:'-z'}
+  bunker:{u:.4167,v:.6967,s:.05,h:.05,face:'+z'}
 };
 for(const id in PL){const p=PL[id];p.x=UX(p.u);p.z=UZ(p.v);p.hw=p.hd=p.s*MS}
 PL.port={x:13.4,z:UZ(.22),hw:2.2,hd:3.4,h:.06,face:'+x'};

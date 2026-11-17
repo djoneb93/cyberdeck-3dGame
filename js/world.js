@@ -76,7 +76,7 @@ function buildWorld(){
   // tours de la ville (même disposition que la carte)
   TOWERS.forEach((b,k)=>{const w=2*b.s*MS,h=HZF(b.h);archTower(b,k);
     if(!b.comm&&b.box&&b.type!=='balcony'&&h>9&&k%2===0){const aw=Math.min(w*.62,3.4);adScreen(UX(b.u),Math.min(h*.62*.6,7)+1.5,UZ(b.v)+w/2+.08,0,aw,aw*.55)}});
-  skyBridges();flushDetails();buildStreets();
+  skyBridges();flushDetails();buildStreets();buildLandmarks();
   // tours lointaines tout autour (pas sur le fleuve ni sur le viaduc)
   for(let i=0;i<70;i++){
     const side=i%3;let x,z;const dd=6+rnd()*26;
@@ -135,7 +135,7 @@ function buildWorld(){
       faceBox(id,.6,.16,1.75,0,P.c,true,-.08);faceBox(id,.16,.6,1.75,0,P.c,true,-.08); // petite croix sur le pilier d'entrée
       const [bx,bz]=front(id,.4,-1.6);box(.3,1,.3,'#ffb547',bx-1.4,.5,bz);const arm=new THREE.Group();arm.position.set(bx-1.3,.95,bz);scene.add(arm);
       for(let i=0;i<5;i++)box(.5,.12,.1,i%2?'#ff3b4e':'#f2f2ee',.25+i*.5,0,0,arm);barriers.push(arm);
-    }else tower(x,z,w,2*p.hd,h,v,P.c,true);
+    }else if(!landmark(id,x,z,w,2*p.hd,h,v,P))tower(x,z,w,2*p.hd,h,v,P.c,true);
     if(id==='roofs'){
       // toit praticable : grande antenne en treillis, paraboles, garde-corps lumineux, cabine d'ascenseur
       box(w-.2,.05,w-.2,'#2c313d',x,h+.03,z);

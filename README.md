@@ -41,6 +41,7 @@ et partagent la même portée globale.
 - `js/map.js` : la carte (grille, avenues, lieux, tours, port, gare, planque, collisions, étapes des histoires).
 - `js/render.js` : moteur 3D, matériaux, façades, enseignes, sprites pixel des personnages.
 - `js/architecture.js` : façades réalistes (verre, béton, brique, métal, résidentiel) et formes variées des tours.
+- `js/landmarks.js` : silhouettes et animations des lieux importants (salle de concert, marché couvert, bar, arcade, laverie, entrepôt, bunker, commissariat).
 - `js/world.js` : construction du monde (sol, ciel, bâtiments, port, viaduc, immeuble de la planque).
 - `js/streets.js` : rues et sol (asphalte et dalles texturés, flaques, plaques d'égout, mobilier urbain, feux tricolores, câbles, tags).
 - `js/vehicles.js` : voitures flottantes (berline, sportive, utilitaire), taxi, rame TGV.
