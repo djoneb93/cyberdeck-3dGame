@@ -79,12 +79,16 @@ function buildStreets(){
       trafficLights.push({axis,L});FURN.push([x,z,.2])})}));
   // câbles et lampions tendus au-dessus des avenues
   const cm=new THREE.LineBasicMaterial({color:0x05070b});
-  AVE.forEach((a,ai)=>{for(let t=.15+ai*.02;t<.95;t+=.25){[['z',UX(a),UZ(t)],['x',UX(t),UZ(a)]].forEach(([ax,p,q])=>{if(nearCross(ax==='z'?p:q,ax==='z'?q:p,4))return;const pts=[],y0=7+srnd()*2;
-    for(let i=0;i<=12;i++){const s=i/12,o=-3.4+6.8*s,y=y0-Math.sin(s*Math.PI)*1.1;pts.push(ax==='z'?new THREE.Vector3(p+o,y,q):new THREE.Vector3(q,y,p+o))}
+  AVE.forEach((a,ai)=>{for(let t=.15+ai*.02;t<.95;t+=.25){[['z',UX(a),UZ(t)],['x',UX(t),UZ(a)]].forEach(([ax,p,q])=>{if(nearCross(ax==='z'?p:q,ax==='z'?q:p,4))return;const y0=7+srnd()*2;
+    // chaque bout cherche une accroche : on recule vers l'avenue tant qu'on est sur la chaussée ou au-dessus de l'eau.
+    // Immeuble : le câble s'accroche à la façade. Trottoir ou place : un poteau. Jamais de poteau sur la route.
+    const P=o=>ax==='z'?[p+o,q]:[q,p+o];
+    const end=sg=>{for(let o=3.4;o>=1.8;o-=.1){const [x,z]=P(sg*o),cx=Math.floor(x),cz=Math.floor(z);if(cx<0||cz<0||cx>=W||cz>=H)continue;const tt=tile[I(cx,cz)];if(tt===2||tt===5)continue;return {o:sg*o,wall:solid[I(cx,cz)]===1}}return null};
+    const e0=end(-1),e1=end(1);if(!e0||!e1)return;
+    const pts=[];for(let i=0;i<=12;i++){const s=i/12,o=e0.o+(e1.o-e0.o)*s,y=y0-Math.sin(s*Math.PI)*1.1,[x,z]=P(o);pts.push(new THREE.Vector3(x,y,z))}
     scene.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts),cm));
-    // chaque bout du câble est accroché : à la façade s'il y a un immeuble, sinon à un mât planté au bord du trottoir
-    [0,12].forEach(i=>{const v=pts[i];if(isSolid(v.x,v.z))sd('#2a3140',false,v.x,v.y,v.z,.16,.16,.16);
-      else{sd('#2a3140',false,v.x,v.y/2,v.z,.09,v.y,.09);sd('#3a4252',false,v.x,v.y+.05,v.z,.16,.1,.16);FURN.push([v.x,v.z,.14])}});
+    [[0,e0],[12,e1]].forEach(([i,e])=>{const v=pts[i];if(e.wall)sd('#2a3140',false,v.x,v.y,v.z,.16,.16,.16);
+      else{sd('#2a3140',false,v.x,v.y/2,v.z,.09,v.y,.09);sd('#3a4252',false,v.x,v.y+.05,v.z,.16,.1,.16);sd('#3a4252',false,v.x,.1,v.z,.26,.2,.26);FURN.push([v.x,v.z,.14])}});
     // les lampions pendent au câble par un petit cordon
     [3,6,9].forEach(i=>{const v=pts[i];sd('#0c0e12',false,v.x,v.y-.05,v.z,.02,.1,.02);sd(pick(['#ff4fa3','#ffb547','#39e6ff','#ff3b4e']),true,v.x,v.y-.24,v.z,.22,.3,.22)})})}});
   // tags sur les murs bas des immeubles en brique et en béton (façade est, au-dessus des vitrines)

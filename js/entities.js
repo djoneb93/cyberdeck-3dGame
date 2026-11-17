@@ -75,7 +75,13 @@ function updateWalkers(dt){
   const obs=[player.position,...npcs.map(n=>n.mesh.position),...statics.map(s=>s.position),...FURN_POS];
   const road=(x,z)=>{const cx=Math.floor(x),cz=Math.floor(z);return cx>=0&&cz>=0&&cx<W&&cz<H&&tile[I(cx,cz)]===2};
   walkers.forEach(w=>{
-    const p=w.m.position,L=w.L,X=L.ax==='x',dir=Math.sign(w.v)||1,pa=X?p.x:p.z,rs=X?dir:-dir;
+    const p=w.m.position,ud=w.m.userData;
+    // pause sur un banc : un passant s'assoit un moment, puis se relève et reprend son chemin
+    if(w.sitT>0){w.sitT-=dt;if(w.sitT<=0){p.set(w.back.x,0,w.back.z);ud.sit=false;w.bench.occ=null;w.bench=null;w.cool=25+Math.random()*30}return}
+    w.cool=(w.cool==null?Math.random()*20:w.cool)-dt;
+    if(w.cool<=0&&Math.random()<dt*.3){const b=BENCHES.find(b=>!b.occ&&seated!==b&&Math.hypot(b.x-p.x,b.z-p.z)<1.1);
+      if(b){b.occ=w;w.bench=b;w.back={x:p.x,z:p.z};w.sitT=6+Math.random()*12;p.set(b.x+b.fx*.12,0,b.z+b.fz*.12);ud.ry=Math.atan2(b.fx,b.fz);ud.sit=true;ud.moving=false;return}}
+    const L=w.L,X=L.ax==='x',dir=Math.sign(w.v)||1,pa=X?p.x:p.z,rs=X?dir:-dir;
     const at=(a,b)=>X?[a,b]:[b,a],onRoad=road(p.x,p.z);
     let block=false,want=0; // chacun tient sa droite : on se croise sans se gêner
     // obstacles (joueur, personnages, mobilier) : on s'écarte ; on ne s'arrête jamais sur la chaussée

@@ -44,6 +44,10 @@ function buildMoto(){
   // la place de stationnement : marquage au sol, et un « P » peint
   const P=MOTO_PARK;[[0,.62,2.6,.05],[0,-.62,2.6,.05],[1.3,0,.05,1.29],[-1.3,0,.05,1.29]].forEach(([dx,dz,w,d])=>box(w,.01,d,'#e8e8e4',P.x+dx,.014,P.z+dz));
   OBJECTS.push({id:'o_moto',get x(){return moto.position.x},get z(){return moto.position.z},r:1.5,get label(){return riding?'Descendre de la moto':'Monter sur la moto'},act:()=>riding?dismount():mount()});
+  // la borne de rappel, au bord du trottoir à côté de la place : E ou F pour faire revenir la moto, où qu'elle soit
+  const bx=P.x-2.3,bz=P.z-.1;box(.22,1.1,.18,'#1a1e28',bx,.55,bz);box(.16,.2,.02,'#39e6ff',bx,.88,bz+.1,null,true);box(.26,.06,.22,'#ff8a3d',bx,1.13,bz,null,true);FURN.push([bx,bz,.2]);
+  OBJECTS.push({id:'o_motocall',x:bx,z:bz+.5,r:1.1,label:'Borne · rappeler la moto',act:()=>{if(riding)return;
+    if(Math.hypot(moto.position.x-P.x,moto.position.z-P.z)<.5){toast('Ta moto est déjà sur sa place.','');return}recallMoto()}});
   $('btnMoto').onclick=recallMoto;$('btnUnstuck').onclick=unstuck;
 }
 function parkMoto(){const P=MOTO_PARK;moto.position.set(P.x,0,P.z);moto.rotation.set(0,P.ry,0)}

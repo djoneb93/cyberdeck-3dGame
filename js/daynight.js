@@ -35,19 +35,19 @@ function buildDaySky(){
   const t=new THREE.CanvasTexture(c);t.wrapS=THREE.RepeatWrapping;
   daySky=new THREE.Mesh(new THREE.SphereGeometry(196,32,16),new THREE.MeshBasicMaterial({map:t,side:THREE.BackSide,fog:false,depthWrite:false,transparent:true,opacity:0}));
   daySky.position.set(W/2,0,H/2);daySky.renderOrder=-1;scene.add(daySky);
-  sunSpr=new THREE.Sprite(new THREE.SpriteMaterial({map:glowTex,color:0xfff2c8,fog:false,depthWrite:false,transparent:true,blending:THREE.AdditiveBlending}));sunSpr.scale.set(60,60,1);sunSpr.renderOrder=-1;scene.add(sunSpr);
+  sunSpr=new THREE.Sprite(new THREE.SpriteMaterial({map:glowTex,color:0xfff2c8,fog:false,depthWrite:false,transparent:true,blending:THREE.AdditiveBlending}));sunSpr.scale.set(34,34,1);sunSpr.renderOrder=1;scene.add(sunSpr);
   const mc=document.createElement('canvas');mc.width=mc.height=64;const m=mc.getContext('2d');m.fillStyle='#e8ecf4';m.beginPath();m.arc(32,32,26,0,7);m.fill();
   m.fillStyle='rgba(150,160,180,.5)';[[22,24,6],[38,36,8],[28,42,4],[42,20,4]].forEach(([x,y,r])=>{m.beginPath();m.arc(x,y,r,0,7);m.fill()});
-  moonSpr=new THREE.Sprite(new THREE.SpriteMaterial({map:new THREE.CanvasTexture(mc),fog:false,depthWrite:false,transparent:true}));moonSpr.scale.set(16,16,1);moonSpr.renderOrder=-1;scene.add(moonSpr);
-  moonHalo=new THREE.Sprite(new THREE.SpriteMaterial({map:glowTex,color:0xaabbe8,fog:false,depthWrite:false,transparent:true,blending:THREE.AdditiveBlending}));moonHalo.scale.set(48,48,1);moonHalo.renderOrder=-1;scene.add(moonHalo); // halo de la lune
+  moonSpr=new THREE.Sprite(new THREE.SpriteMaterial({map:new THREE.CanvasTexture(mc),fog:false,depthWrite:false,transparent:true}));moonSpr.scale.set(9,9,1);moonSpr.renderOrder=2;scene.add(moonSpr);
+  moonHalo=new THREE.Sprite(new THREE.SpriteMaterial({map:glowTex,color:0xaabbe8,fog:false,depthWrite:false,transparent:true,blending:THREE.AdditiveBlending}));moonHalo.scale.set(27,27,1);moonHalo.renderOrder=1;scene.add(moonHalo); // halo de la lune
 }
 function updateSky(h,d,gld){
   if(!daySky)return;const a=(h-6)/12*Math.PI,cp=camera.position,cx=cp.x,cz=cp.z+40;
   daySky.position.set(cp.x,0,cp.z);if(skyMesh)skyMesh.position.set(cp.x,0,cp.z); // les ciels suivent la caméra : jamais coupés par la distance d’affichage
   const out=!String(zoneOf()||"").startsWith("in_");[daySky,sunSpr,moonSpr,moonHalo,skyMesh,dnStars].forEach(o=>{if(o)o.visible=out}); // dans une pièce : pas de ciel
   daySky.material.opacity=Math.max(d,gld*.75);daySky.material.color.copy(wx.sky).lerp(C_DUSK,gld*.65);daySky.rotation.y+=.0004;
-  sunSpr.position.set(cx-Math.cos(a)*150,Math.sin(a)*42+4,cz-60);sunSpr.material.opacity=Math.max(0,Math.min(1,Math.sin(a)*3+.3))*(wx.rain>.5?.25:.6);sunSpr.material.color.copy(C_SUN).lerp(C_SUNSET,gld);
-  moonSpr.position.set(cx+Math.cos(a)*150,-Math.sin(a)*42+4,cz-60);moonSpr.material.opacity=Math.max(0,Math.min(1,-Math.sin(a)*3))*(1-d);moonHalo.position.copy(moonSpr.position);moonHalo.material.opacity=moonSpr.material.opacity*.45;
+  sunSpr.position.set(cx-Math.cos(a)*80,Math.sin(a)*26+5,cz-55);sunSpr.material.opacity=Math.max(0,Math.min(1,Math.sin(a)*3+.3))*(wx.rain>.5?.25:.6);sunSpr.material.color.copy(C_SUN).lerp(C_SUNSET,gld);
+  moonSpr.position.set(cx+Math.cos(a)*80,-Math.sin(a)*26+5,cz-55);moonSpr.material.opacity=Math.max(0,Math.min(1,-Math.sin(a)*3))*(1-d);moonHalo.position.copy(moonSpr.position);moonHalo.material.opacity=moonSpr.material.opacity*.45;
 }
 // lumière du jour (0 la nuit, 1 en plein jour) et lueur dorée de l'aube et du crépuscule
 function daylight(h){return Math.max(0,Math.min(1,Math.sin((h-6)/12*Math.PI)*1.7))}
