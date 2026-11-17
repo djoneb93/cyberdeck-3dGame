@@ -8,7 +8,7 @@ la carte de la ville, les fiches des contacts (`dossiers.json`) et les histoires
 
 ## Jouer
 
-- En ligne : la version publiée sur claude.ai (privée pour l'instant).
+- En ligne : **https://djoneb93.github.io/cyberdeck-3dGame/** (GitHub Pages, mise à jour à chaque envoi sur `main`).
 - En local, sur Windows, sans rien installer :
 
 ```
