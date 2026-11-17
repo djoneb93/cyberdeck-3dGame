@@ -20,8 +20,8 @@ puis ouvre http://localhost:8765/.
 ## Commandes
 
 - **ZQSD** ou flèches : marcher · **clic** au sol : aller
-- **glisser** : tourner et incliner la caméra · **A / E** : pivoter · **molette** : zoom
-- **Espace** : parler, examiner, continuer · **1 2 3** : choisir une réponse · **P** : taille des pixels · **M** : aperçu de la météo suivante
+- **glisser** : tourner et incliner la caméra · **A / R** : pivoter · **molette** : zoom
+- **E** ou **F** : parler, examiner · **Espace** : sauter, continuer un dialogue · **1 2 3** : choisir une réponse · **P** : taille des pixels · **M** : aperçu de la météo suivante
 
 ## Contenu
 

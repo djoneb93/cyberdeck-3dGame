@@ -37,7 +37,7 @@ function taxiAct(){
 function fadeThen(fn){const f=$('fade');f.style.opacity=1;overlayOpen=true;setTimeout(()=>{fn();f.style.opacity=0;overlayOpen=false},380)}
 function startRide(){
   fadeThen(()=>{taxiRide=true;taxi.state='ride';taxi.u=0;player.visible=false;target=null;pendingTalk=null;taxi.stops.forEach(s=>s.done=false);
-    distT=10;pitchT=.32;toast('Visite de NEO-BXL · Espace pour descendre','mem')});
+    distT=10;pitchT=.32;toast('Visite de NEO-BXL · E pour descendre','mem')});
 }
 function endRide(){
   fadeThen(()=>{taxiRide=false;taxi.state='wait';taxi.t=0;taxi.g.position.set(TAXI_PAD.x,.45,TAXI_PAD.z);taxi.g.rotation.set(0,Math.PI/2,0);

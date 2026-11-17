@@ -5,11 +5,18 @@
 const STYLES=['glass','concrete','brick','metal','resi'];
 // textures photo CC0 (ambientCG, voir assets/textures/CREDITS.md) ; si une image manque, on garde la texture peinte
 const TEXIMG={};
-function loadTextures(){return Promise.all(['asphalt','paving','concrete','brick','corrugated','metal'].map(n=>new Promise(r=>{const i=new Image();i.onload=()=>{TEXIMG[n]=i;r()};i.onerror=()=>r();i.src='assets/textures/'+n+'.jpg'})))}
+function loadTextures(){return Promise.all(['asphalt','paving','concrete','brick','corrugated','metal'].flatMap(n=>[n,n+'_n']).map(n=>new Promise(r=>{const i=new Image();i.onload=()=>{TEXIMG[n]=i;r()};i.onerror=()=>r();i.src='assets/textures/'+n+'.jpg'})))}
 // une photo en fond de façade, assombrie pour la nuit (tuile 4 × 4 unités, répétée en hauteur)
 function photoBase(g,name,tint,dark){const ph=TEXIMG[name];if(!ph)return false;for(let y=0;y<128;y+=64)g.drawImage(ph,0,y,64,64);if(tint){g.globalAlpha=.55;g.fillStyle=tint;g.fillRect(0,0,64,128);g.globalAlpha=1}g.fillStyle='rgba(8,12,22,'+(dark||.5)+')';g.fillRect(0,0,64,128);return true}
 function photoMat(name,rx,ry,dark){const ph=TEXIMG[name];if(!ph)return null;const c=document.createElement('canvas');c.width=c.height=256;const g=c.getContext('2d');g.drawImage(ph,0,0,256,256);g.fillStyle='rgba(8,12,22,'+(dark||.45)+')';g.fillRect(0,0,256,256);
-  const t=new THREE.CanvasTexture(c);t.wrapS=t.wrapT=THREE.RepeatWrapping;t.repeat.set(rx,ry);t.minFilter=THREE.LinearMipmapLinearFilter;return new THREE.MeshLambertMaterial({map:t})}
+  const t=new THREE.CanvasTexture(c);t.wrapS=t.wrapT=THREE.RepeatWrapping;t.repeat.set(rx,ry);t.minFilter=THREE.LinearMipmapLinearFilter;const n=normalTex(name,1,rx,ry);
+  return new THREE.MeshPhongMaterial({map:t,normalMap:n,normalScale:new THREE.Vector2(1,1),shininess:24,specular:0x2a3038})}
+// relief (normal map) : la même image répétée comme la photo de couleur ; tiles=2 pour une tuile de façade (2 photos en hauteur)
+const NCACHE={};
+function normalTex(name,tiles,rx,ry){const ph=TEXIMG[name+'_n'];if(!ph)return null;const k=name+tiles;
+  if(!NCACHE[k]){const c=document.createElement('canvas');c.width=256;c.height=256*tiles;const g=c.getContext('2d');for(let i=0;i<tiles;i++)g.drawImage(ph,0,i*256,256,256);NCACHE[k]=c}
+  const t=new THREE.CanvasTexture(NCACHE[k]);t.wrapS=t.wrapT=THREE.RepeatWrapping;t.repeat.set(rx,ry);t.minFilter=THREE.LinearMipmapLinearFilter;return t}
+const STYLE_PHOTO={concrete:'concrete',brick:'brick',metal:'metal',resi:'concrete'};
 let archSeed=20891;const arnd=()=>{archSeed=(archSeed*16807)%2147483647;return (archSeed-1)/2147483646};
 const apick=a=>a[Math.floor(arnd()*a.length)];
 const WARM=['#e8b878','#d8a868','#f0c080','#c89058'],COOL=['#bfe8ff','#9fd8ff','#e8f4ff'];
@@ -61,9 +68,9 @@ function facadesOf(s){if(!FACADES){FACADES={};STYLES.forEach(st=>FACADES[st]=[0,
 function facTex(cv,rx,ry){const t=new THREE.CanvasTexture(cv);t.magFilter=THREE.NearestFilter;t.minFilter=THREE.LinearMipmapLinearFilter;t.wrapS=t.wrapT=THREE.RepeatWrapping;t.repeat.set(rx,ry);return t}
 function styleMat(style,rx,ry,variant){
   const f=facadesOf(style)[(variant||0)%3],t=facTex(f.c,rx,ry),te=facTex(f.e,rx,ry);
-  return style==='glass'?new THREE.MeshPhongMaterial({map:t,emissive:0xffffff,emissiveMap:te,emissiveIntensity:.5,specular:0x5a7a96,shininess:70})
-    :style==='metal'?new THREE.MeshPhongMaterial({map:t,emissive:0xffffff,emissiveMap:te,emissiveIntensity:.5,specular:0x3a4048,shininess:30})
-    :new THREE.MeshLambertMaterial({map:t,emissive:0xffffff,emissiveMap:te,emissiveIntensity:.48});
+  if(style==='glass')return new THREE.MeshPhongMaterial({map:t,emissive:0xffffff,emissiveMap:te,emissiveIntensity:.5,specular:0x5a7a96,shininess:70});
+  const nm=STYLE_PHOTO[style]&&TEXIMG[STYLE_PHOTO[style]]?normalTex(STYLE_PHOTO[style],2,rx,ry):null; // relief de la matière photo
+  return new THREE.MeshPhongMaterial({map:t,emissive:0xffffff,emissiveMap:te,emissiveIntensity:style==='metal'?.5:.48,normalMap:nm,normalScale:new THREE.Vector2(1.2,1.2),specular:style==='metal'?0x3a4048:0x14181e,shininess:style==='metal'?30:10});
 }
 // remplace la façade d'origine : les lieux aussi profitent des nouvelles textures
 function facadeMat(v,rx,ry){return styleMat(STYLES[v%STYLES.length],rx,ry,v)}

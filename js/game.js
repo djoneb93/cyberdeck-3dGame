@@ -8,7 +8,7 @@ function blocked(x,z){
   if(isSolid(x-R,z-R)||isSolid(x+R,z-R)||isSolid(x-R,z+R)||isSolid(x+R,z+R))return true;
   for(const n of npcs){const dx=n.mesh.position.x-x,dz=n.mesh.position.z-z;if(dx*dx+dz*dz<.36)return true}
   for(const s of statics){const dx=s.position.x-x,dz=s.position.z-z;if(dx*dx+dz*dz<.36)return true}
-  if(!zoneOf()&&FURN.some(([fx,fz,r])=>Math.hypot(x-fx,z-fz)<r+R*.6))return true; // mobilier urbain
+  if(!zoneOf()&&(player.userData.jy||0)<.55&&FURN.some(([fx,fz,r])=>Math.hypot(x-fx,z-fz)<r+R*.6))return true; // mobilier urbain (on peut sauter par-dessus)
   return false;
 }
 function distTo(o){const p=o.mesh?o.mesh.position:o;return Math.hypot(p.x-player.position.x,p.z-player.position.z)}
@@ -42,9 +42,11 @@ function updatePlayer(dt){
     if(target){if(moved<sp*.2){stuck+=dt;if(stuck>.35){target=null;pendingTalk=null;stuck=0}}else stuck=0}
     ud.ry=Math.atan2(mx,mz);ud.moving=moved>sp*.2;
   }else ud.moving=false;
-  player.position.y=zoneY();
+  const J=player.userData;if(J.jv||J.jy){J.jv=(J.jv||0)-22*dt;J.jy=Math.max(0,(J.jy||0)+J.jv*dt);if(J.jy===0)J.jv=0}
+  player.position.y=zoneY()+(J.jy||0);
   S.px=player.position.x;S.pz=player.position.z;S.ry=ud.ry;
 }
+function jump(){const J=player.userData;if(taxiRide||climb||(J.jy||0)>0)return;J.jv=7.2;J.jy=.001}
 const lerp=(a,b,t)=>a+(b-a)*t;
 function lerpAngle(a,b,t){let d=((b-a+Math.PI)%(Math.PI*2)+Math.PI*2)%(Math.PI*2)-Math.PI;return a+d*t}
 
@@ -194,7 +196,7 @@ function updateLabels(){
     const html=(questTarget(n.id)?'<em>◆</em>':'')+(S.met[n.id]?NAMES[n.id]:'???');if(n.label._h!==html){n.label.innerHTML=html;n.label._h=html}
   });
   const t=(!dlgOpen&&!overlayOpen)?nearest():null;const p=$('prompt');
-  if(t){const h='<kbd>ESPACE</kbd> · '+t.label;if(p._h!==h){p.innerHTML=h;p._h=h}p.hidden=false}else p.hidden=true;
+  if(t){const h='<kbd>E</kbd> · '+t.label;if(p._h!==h){p.innerHTML=h;p._h=h}p.hidden=false}else p.hidden=true;
 }
 $('prompt').addEventListener('click',interact);
 
@@ -222,7 +224,7 @@ function frame(){
   updateWalkers(dt);
   npcs.forEach(n=>{const d=distTo(n);let want=n.baseRy;if(d<3.2||talking===n)want=Math.atan2(player.position.x-n.mesh.position.x,player.position.z-n.mesh.position.z);
     n.mesh.userData.ry=lerpAngle(n.mesh.userData.ry,want,Math.min(1,dt*5));});
-  updateCity(dt);updateStation(dt);updateLife(dt);updateTaxi(dt);updateTraffic(dt);updateStreets(dt);updateLandmarks(dt);updateWeather(dt);updateDoors(dt);flyers.forEach(f=>{f.g.position.x+=f.v*dt;if(f.g.position.x>W+14)f.g.position.x=-14;if(f.g.position.x<-14)f.g.position.x=W+14;f.g.position.y+=Math.sin(tAcc*1.5+f.v)*.004});
+  updateCity(dt);updateStation(dt);updateLife(dt);updateTaxi(dt);updateTraffic(dt);updateStreets(dt);updateLandmarks(dt);updateWeather(dt);updateDoors(dt);updateFlyers(dt);
   beacons.forEach(b=>b.visible=Math.sin(tAcc*3)>-.2);updateMarkers();
   if(cat)cat.userData.body.scale.y=1+Math.sin(tAcc*2.2)*.06;
   if(holo){holo.position.y=holo.userData.baseY+Math.sin(tAcc*1.3)*.08;const hm=holo.userData.plane.material;hm.opacity=.45+Math.sin(tAcc*9)*.04+(Math.random()<.02?-.25:0);holo.userData.moving=false;}

@@ -18,8 +18,9 @@ function groundTex(kind){
     sp(2600,['#b8bcc6','#e6e9ee','#c4c8d0']);g.fillStyle='rgba(30,34,42,.55)';for(let i=0;i<=4;i++){g.fillRect(i*32,0,1,128);g.fillRect(0,i*32,128,1)}}
   const t=new THREE.CanvasTexture(c);t.wrapS=t.wrapT=THREE.RepeatWrapping;t.magFilter=THREE.NearestFilter;t.minFilter=THREE.LinearMipmapLinearFilter;return t;
 }
-function worldUVMaterial(map){ // la texture suit la position au sol : pas de motif identique d'une case à l'autre
-  const m=new THREE.MeshLambertMaterial({map,transparent:true,opacity:mirror?.86:1});
+function worldUVMaterial(map,kind){ // la texture suit la position au sol : pas de motif identique d'une case à l'autre
+  const nm=kind?normalTex(kind,1,1,1):null;
+  const m=new THREE.MeshPhongMaterial({map,normalMap:nm,normalScale:new THREE.Vector2(1.3,1.3),shininess:40,specular:0x2a3040,transparent:true,opacity:mirror?.86:1});
   m.onBeforeCompile=s=>{s.vertexShader=s.vertexShader.replace('#include <uv_vertex>','#include <uv_vertex>\n#ifdef USE_INSTANCING\n vUv=(modelMatrix*instanceMatrix*vec4(position,1.0)).xz*.25;\n#endif')};
   return m;
 }
@@ -29,7 +30,7 @@ function buildGround(){
   const kinds={asphalt:[],paving:[],other:[]};
   for(let z=0;z<H;z++)for(let x=0;x<W;x++){const t=tile[I(x,z)];(t===2?kinds.asphalt:(t===0||t===1||t===4)?kinds.paving:kinds.other).push([x,z,t])}
   const geo=new THREE.PlaneGeometry(1,1).rotateX(-Math.PI/2),m4=new THREE.Matrix4(),col=new THREE.Color();
-  [['asphalt',worldUVMaterial(groundTex('asphalt'))],['paving',worldUVMaterial(groundTex('paving'))],['other',new THREE.MeshLambertMaterial({transparent:true,opacity:mirror?.86:1})]].forEach(([k,mt])=>{
+  [['asphalt',worldUVMaterial(groundTex('asphalt'),'asphalt')],['paving',worldUVMaterial(groundTex('paving'),'paving')],['other',new THREE.MeshLambertMaterial({transparent:true,opacity:mirror?.86:1})]].forEach(([k,mt])=>{
     const L=kinds[k],gm=new THREE.InstancedMesh(geo,mt,L.length);
     L.forEach(([x,z,t],i)=>{m4.makeTranslation(x+.5,0,z+.5);gm.setMatrixAt(i,m4);col.set(base[t]);let j=(rnd()-.5)*.02;if(t===3&&z%2)j-=.04;col.offsetHSL(0,0,j);gm.setColorAt(i,col)});
     grp.add(gm)});
