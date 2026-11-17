@@ -14,17 +14,17 @@ const PLACE={bar:{n:'LE NÉON NOIR',c:'#ff4fa3'},market:{n:'BAZAR NÉON',c:'#f6b
 const HZF=h=>Math.max(2.4,h/.46*MS*.55);
 // Lieux de la carte, recalés dans leur pâté de maisons : jamais sur une avenue, entrée toujours tournée vers une avenue
 const PL={
-  bar:{u:.2017,v:.6317,s:.045,h:.05,face:'+x'},
+  bar:{u:.2017,v:.6317,s:.045,h:.07,face:'+x'},
   roofs:{u:.3867,v:.4467,s:.05,h:.44,face:'+z'},
   market:{u:.6527,v:.68,s:.066,h:.02,face:'-x'},
   laundry:{u:.70,v:.4567,s:.04,h:.05,face:'+z'},
   lab:{u:.9067,v:.6767,s:.07,h:.03,face:'+z'},
   club:{u:.6417,v:.1917,s:.055,h:.08,face:'-x'},
-  arcade:{u:.8817,v:.20,s:.045,h:.06,face:'-x'},
+  arcade:{u:.8817,v:.20,s:.045,h:.07,face:'-x'},
   bunker:{u:.4467,v:.6367,s:.05,h:.02,face:'-z'}
 };
 for(const id in PL){const p=PL[id];p.x=UX(p.u);p.z=UZ(p.v);p.hw=p.hd=p.s*MS}
-PL.port={x:13.4,z:UZ(.22),hw:2.2,hd:3.4,h:.03,face:'+x'};
+PL.port={x:13.4,z:UZ(.22),hw:2.2,hd:3.4,h:.06,face:'+x'};
 function front(id,off,lat){const p=PL[id];off=off==null?1.3:off;lat=lat||0;
   return p.face==='+x'?[p.x+p.hw+off,p.z+lat]:p.face==='-x'?[p.x-p.hw-off,p.z-lat]:p.face==='+z'?[p.x+lat,p.z+p.hd+off]:[p.x-lat,p.z-p.hd-off]}
 const FP=(id,off,lat)=>{const [x,z]=front(id,off,lat);return {x,z}};
@@ -92,6 +92,13 @@ PILLARS.forEach(z=>{if(z>=0)solid[I(Math.floor(GX),Math.floor(z))]=1});
 for(let k=0;k<=8;k+=2){const z=Math.floor(GZ0+(GZ1-GZ0)*k/8);solid[I(Math.floor(GX-GHW),z)]=1;solid[I(Math.floor(GX+GHW),z)]=1}
 fill(solid,Math.floor(GX),Math.floor(GZ0),Math.floor(GX),Math.floor(GZ1),1);
 fill(solid,Math.floor(GX-2.3),Math.floor(GZ1-3.4),Math.floor(GX-1.1),Math.floor(GZ1-.2),1); // escalier du quai ouest
+// niveaux où l'on peut monter : le toit de la tour Zéro, le quai ouest de la gare (par l'escalier)
+const QUAI_Y=2.71,QUAI_END=GZ1-3.75;
+const ZONES={roof:{x:ROOF.x,z:ROOF.z,hw:ROOF.hw-.5,hd:ROOF.hd-.5,y:ROOF.y,blocks:ROOF_BLOCK},
+  quai:{x:GX-1.62,z:(GZ0-.6+QUAI_END)/2,hw:.52,hd:(QUAI_END-GZ0+.6)/2-.25,y:QUAI_Y,blocks:[]}};
+const zoneOf=()=>S.roof===true?'roof':(S.roof||null);
+const zoneY=()=>{const z=zoneOf();return z?ZONES[z].y:0};
+const itemZone=o=>o.zone||(o.roof?'roof':null);
 [[GX+GHW+.6,GZ0+2],[GX+GHW+.6,GZ0+3],[GX+GHW+.24,(GZ0-.6+GZ1)/2+2],[GX+GHW+.24,(GZ0-.6+GZ1)/2-2],[GX+GHW+1.8,GZ1-.6]].forEach(([x,z])=>{solid[I(Math.floor(x),Math.floor(z))]=1}); // distributeurs, piliers du tableau
 fill(solid,Math.floor(GX+GHW+2.3),Math.floor(GZ1-1.9),Math.floor(GX+GHW+4.5),Math.floor(GZ1-.3),1); // kiosque
 solid[I(Math.floor(UX(AVE[2])+2.3),Math.floor(UZ(.93)))]=1;solid[I(Math.floor(UX(AVE[2])+2.3),Math.floor(UZ(.93)-.7))]=1; // station de taxis

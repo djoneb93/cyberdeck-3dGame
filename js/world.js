@@ -44,7 +44,7 @@ function drawAd(a){const g=a.c.getContext('2d'),[txt,fg,bg]=ADS[a.i%ADS.length],
 const FACE_RY={'+x':Math.PI/2,'-x':-Math.PI/2,'+z':0,'-z':Math.PI};
 // panneau posé à plat sur la façade d'entrée d'un lieu (w : largeur le long de la façade)
 function faceBox(id,w,h,y,lat,color,emis,out){const [x,z]=front(id,out==null?.03:out,lat||0),X=PL[id].face[1]==='x';return box(X?.1:w,h,X?w:.1,color,x,y,z,null,emis)}
-function faceSign(id,text,c,y,lat,k,light){const [x,z]=front(id,.08,lat||0);sign(text,c,x,y,z,FACE_RY[PL[id].face],false,light!==false,k)}
+function faceSign(id,text,c,y,lat,k,light){const [x,z]=front(id,.08,lat||0),p=PL[id],fw=2*(p.face[1]==='x'?p.hd:p.hw)-2*Math.abs(lat||0)-.5;sign(text,c,x,y,z,FACE_RY[p.face],false,light!==false,k,false,fw)}
 function buildWorld(){
   // sol de la ville : dalles légèrement transparentes posées sur un miroir → sol mouillé qui reflète les néons
   const n=W*H;const gm=new THREE.InstancedMesh(new THREE.PlaneGeometry(1,1).rotateX(-Math.PI/2),new THREE.MeshLambertMaterial({transparent:true,opacity:mirror?.86:1}),n);
@@ -159,17 +159,17 @@ function buildWorld(){
       box(2.4,.3,2.4,'#2a3140',x-1.6,h+.15,z+1.6);box(2,.06,2,'#39e6ff',x-1.6,h+.33,z+1.6,null,true);
       holo=makeChar(SPECS.lou,{holo:true,scale:5});holo.position.set(x-1.6,h+.35,z+1.6);holo.userData.ry=0;holo.userData.baseY=h+.35;
       holoLight=new THREE.PointLight(0xff4fa3,3,22,1.4);holoLight.position.set(x-1.6,h+5,z+4);scene.add(holoLight);
-      faceBox(id,1.6,2.4,1.2,0,'#0d2a33',true);
-      faceSign(id,'LOU NÉON · CE SOIR AU CLUB ONDES','#ff4fa3',4.4,.5,.05,false);faceSign(id,P.n,P.c,3,0,.07);
+      portal(id,1.8,2.5);
+      faceSign(id,'LOU NÉON · CE SOIR AU CLUB ONDES','#ff4fa3',5.1,0,.05,false);faceSign(id,P.n,P.c,3.95,0,.07);
     }
-    if(id==='bar'){faceBox(id,3,2.2,1.1,0,'#3a1430',true);faceBox(id,3.2,.12,2.3,0,P.c,true,.06);faceSign(id,P.n,P.c,3.3,0,.1);
+    if(id==='bar'){portal(id,1.8,2.4);faceSign(id,P.n,P.c,3.75,0,.1);
       adScreen(x+1.2,2.6,z+p.hd+.1,0,3.2,1.8)} // panneau publicitaire, sur la façade sud
     if(id==='laundry'){faceBox(id,w-1,1.8,1.2,0,'#0d3a46',true);for(let i=0;i<4;i++){faceBox(id,.9,.9,.9,-2.1+i*1.4,'#cfd8de',false,.1);faceBox(id,.5,.5,.95,-2.1+i*1.4,'#6fe8ff',true,.2)}faceSign(id,P.n,P.c,h-.7,0,.09)}
     if(id==='lab')faceSign(id,P.n,P.c,3.05,-1.2,.08,false);
-    if(id==='arcade'){faceBox(id,w-1.4,2,1.1,0,'#08222a',true);for(let i=0;i<3;i++)faceBox(id,.8,.6,1.4,-1.3+i*1.3,pick(['#ff4fa3','#39e6ff','#ffb547']),true,.06);faceSign(id,P.n,P.c,h-.8,0,.1)}
+    if(id==='arcade'){portal(id,1.8,2.4);[-1,1].forEach(s=>{faceBox(id,.9,.7,1.5,s*2.05,pick(['#ff4fa3','#39e6ff','#ffb547']),true,.06)});faceSign(id,P.n,P.c,3.75,0,.1)}
     if(id==='bunker'){faceBox(id,2.6,2,1,0,'#2a2a2a',false);for(let i=0;i<6;i++)faceBox(id,.4,2,1,-1+i*.4,i%2?'#ffb547':'#15171c',false,.08);
       hazards.push(box(.5,.3,.5,'#ff2e3e',x,h+.3,z,null,true));faceSign(id,P.n,P.c,2.5,0,.07)}
-    if(id==='port'){faceBox(id,3,2.2,1.1,0,'#1a2430',false);faceSign(id,P.n,P.c,h+.6,0,.08)}
+    if(id==='port'){portal(id,2.2,2.6);faceSign(id,P.n,P.c,h+.6,0,.08)}
   }
 
   // ===== le port : quai, pontons, grue, conteneurs, bateaux =====

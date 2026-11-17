@@ -40,7 +40,10 @@ const OBJECTS=[
   {id:'o_arcade',...FP('arcade',1.3,-1.8),r:1.2,label:'Regarder · Arcade Pixel',dyn:()=>AMB.arcade},
   {id:'o_port',...FP('port',1.3,0),r:1.4,label:'Regarder · Port fluvial',dyn:()=>AMB.port},
   {id:'o_bunker',...FP('bunker',1.3,-1.8),r:1.2,label:'Regarder · Bunker Zéro',dyn:()=>AMB.bunker+' Pour l’instant, la porte blindée reste fermée pour toi.'},
-  {id:'o_up',...FP('roofs',1.1,-1.4),r:1.2,label:'Entrer · monter sur le toit',act:()=>goRoof(true)},
+  {id:'o_stairs_up',x:GX-1.62,z:GZ1+.6,r:1.2,label:'Monter sur le quai',act:()=>climbStairs(true)},
+  {id:'o_stairs_down',x:GX-1.62,z:QUAI_END-.3,r:1,zone:'quai',label:'Descendre l’escalier',act:()=>climbStairs(false)},
+  {id:'o_tgv',x:GX-1.2,z:(GZ0+QUAI_END)/2,r:1.3,zone:'quai',label:'Regarder le TGV',dyn:()=>Math.abs(train.position.z-(GZ1-.6))<.5?'Le TGV est à quai. Portes fermées : réservé aux voyageurs munis d’un billet pour Nova Prime. Un jour, peut-être.':'La voie est vide. Le prochain TGV arrive du haut de la ville, par le viaduc.'},
+  {id:'o_up',...FP('roofs',1.2,0),r:1.2,label:'Entrer · monter sur le toit',act:()=>goRoof(true)},
   {id:'o_down',x:ROOF.x+1.9,z:ROOF.z-.5,r:1.1,roof:true,label:'Ascenseur · redescendre',act:()=>goRoof(false)},
   {id:'o_antenna',x:ROOF.x+.2,z:ROOF.z+.9,r:1.2,roof:true,label:'Regarder l’antenne',dyn:()=>'La grande antenne de la tour Zéro. Tout en haut, le feu rouge clignote pour les voitures volantes. D’ici, on capte tout le Net de la ville.'+(S.met.mira?' Mira dit que c’est ici qu’elle écoute la ville, la nuit.':'')},
   {id:'o_view',x:ROOF.x+ROOF.hw-.9,z:ROOF.z+ROOF.hd-.9,r:1.3,roof:true,label:'Regarder la ville',dyn:()=>AMB.roofs},
@@ -95,10 +98,19 @@ function updateCity(dt){
   if(homeShell){const lx=player.position.x-HX,lz=player.position.z-HZ;homeShell.visible=!(lx>1.8&&lx<12.2&&lz>1.8&&lz<9.9)}
   // voitures du périphérique : tournent autour de la ville, dans les deux sens ; elles s'arrêtent devant toi
   const xa=UX(-.024),xb=UX(1.024),za=UZ(-.024),zb=UZ(1.024),sx=xb-xa,sz=zb-za,per=2*(sx+sz);
+  const md=d=>((d%per)+per)%per;
   ringCars.forEach(c=>{const o=c.dir?-.9:.9;
-    const pt=d=>{d=((d%per)+per)%per;if(d<sx)return [xa+d,za-o,0];d-=sx;if(d<sz)return [xb+o,za+d,-Math.PI/2];d-=sz;if(d<sx)return [xb-d,zb+o,Math.PI];d-=sx;return [xa-o,zb-d,Math.PI/2]};
-    const nd=c.d+(c.dir?-1:1)*c.sp*dt*1.2,[nx,nz]=pt(nd+(c.dir?-2:2));
-    if(Math.hypot(nx-player.position.x,nz-player.position.z)>1.4)c.d=nd;
+    const pt=d=>{d=md(d);if(d<sx)return [xa+d,za-o,0];d-=sx;if(d<sz)return [xb+o,za+d,-Math.PI/2];d-=sz;if(d<sx)return [xb-d,zb+o,Math.PI];d-=sx;return [xa-o,zb-d,Math.PI/2]};
+    // la voiture devant, dans le même sens : on garde ses distances, on ralentit derrière elle
+    let gap=1e9,ahead=null;ringCars.forEach(e=>{if(e===c||e.dir!==c.dir)return;const g=c.dir?md(c.d-e.d):md(e.d-c.d);if(g<gap){gap=g;ahead=e}});
+    let want=c.sp*1.2;if(gap<9)want=Math.min(want,Math.max(0,(gap-4)/5)*c.sp*1.2+(ahead?Math.min(ahead.v||0,want)*.3:0));if(gap<4.2)want=0;
+    const [nx,nz]=pt(c.d+(c.dir?-2.2:2.2));if(Math.hypot(nx-player.position.x,nz-player.position.z)<1.6)want=0;
+    c.v=(c.v||0)+(want-(c.v||0))*Math.min(1,dt*2.5);c.d+=(c.dir?-1:1)*c.v*dt;
+    // une voiture coincée réapparaît plus loin, seulement quand la caméra ne la voit pas
+    c.stk=(c.v<.2)?(c.stk||0)+dt:0;
+    if(c.stk>6){c.g.updateMatrixWorld();const f=new THREE.Frustum().setFromProjectionMatrix(new THREE.Matrix4().multiplyMatrices(camera.projectionMatrix,camera.matrixWorldInverse));
+      if(!f.containsPoint(c.g.position)){const ds=ringCars.filter(e=>e.dir===c.dir&&e!==c).map(e=>md(e.d)).sort((a,b)=>a-b);let best=0,bg=0;
+        ds.forEach((d,i)=>{const n=i<ds.length-1?ds[i+1]:ds[0]+per,g=n-d;if(g>bg){bg=g;best=d+g/2}});c.d=md(best);c.stk=0;c.v=c.sp}}
     const [x,z,r]=pt(c.d);c.g.position.set(x,.32+Math.sin(tAcc*3+c.d)*.04,z);c.g.rotation.y=r+(c.dir?Math.PI:0)});
 }/* ===================== CAMÉRA / ENTRÉES ===================== */
 let yaw=0,yawT=0,pitch=.36,pitchT=.36,dist=7.5,distT=7.5,camD=7.5;
@@ -140,9 +152,9 @@ const ray=new THREE.Raycaster(),ndc=new THREE.Vector2();
 function clickAt(cx,cy){
   ndc.set(cx/innerWidth*2-1,-(cy/innerHeight)*2+1);ray.setFromCamera(ndc,camera);
   const hits=ray.intersectObjects(npcs.map(n=>n.mesh.userData.hit));
-  if(hits.length&&!S.roof){const n=npcs.find(n=>n.mesh.userData.hit===hits[0].object);
+  if(hits.length&&!zoneOf()){const n=npcs.find(n=>n.mesh.userData.hit===hits[0].object);
     if(distTo(n)<1.9){talkTo(n);return}
     target={x:n.mesh.position.x,z:n.mesh.position.z};pendingTalk=n;return}
-  const d=ray.ray.direction,o=ray.ray.origin;if(d.y>=0)return;const t=((S.roof?ROOF.y:0)-o.y)/d.y;
+  const d=ray.ray.direction,o=ray.ray.origin;if(d.y>=0)return;const t=(zoneY()-o.y)/d.y;
   target={x:o.x+d.x*t,z:o.z+d.z*t};pendingTalk=null;
 }

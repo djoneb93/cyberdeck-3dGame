@@ -173,7 +173,7 @@ function makeMarkers(){
 }
 function updateMarkers(){
   Q_ORDER.forEach(id=>{const m=markers[id];if(!m)return;const q=S.q[id];
-    if(started&&q&&q.active&&q.b<3){const s=SPOTS[id][q.b];m.position.set(s.x,s.roof?ROOF.y:0,s.z);m.visible=true;
+    if(started&&q&&q.active&&q.b<3){const s=SPOTS[id][q.b];m.position.set(s.x,itemZone(s)?ZONES[itemZone(s)].y:0,s.z);m.visible=true;
       m.userData.gem.rotation.y=tAcc*2;m.userData.gem.position.y=1.7+Math.sin(tAcc*2.5)*.12;const k=1+Math.sin(tAcc*3)*.12;m.userData.ring.scale.set(k,k,k)}
     else m.visible=false});
 }

@@ -59,8 +59,8 @@ function signTexture(text,color,vertical){
 const glowTex=(()=>{const c=document.createElement('canvas');c.width=c.height=32;const g=c.getContext('2d');const gr=g.createRadialGradient(16,16,0,16,16,16);gr.addColorStop(0,'rgba(255,255,255,1)');gr.addColorStop(.4,'rgba(255,255,255,.35)');gr.addColorStop(1,'rgba(255,255,255,0)');g.fillStyle=gr;g.fillRect(0,0,32,32);return new THREE.CanvasTexture(c)})();
 const shadowTex=(()=>{const c=document.createElement('canvas');c.width=c.height=16;const g=c.getContext('2d');const gr=g.createRadialGradient(8,8,0,8,8,8);gr.addColorStop(0,'rgba(0,0,0,.75)');gr.addColorStop(1,'rgba(0,0,0,0)');g.fillStyle=gr;g.fillRect(0,0,16,16);return new THREE.CanvasTexture(c)})();
 function glow(x,z,r,color,op){const m=new THREE.Mesh(new THREE.PlaneGeometry(r*2,r*2),new THREE.MeshBasicMaterial({map:glowTex,color,transparent:true,opacity:op||.5,blending:THREE.AdditiveBlending,depthWrite:false}));m.rotation.x=-Math.PI/2;m.position.set(x,.04,z);scene.add(m);return m}
-function sign(text,color,x,y,z,ry,both,light,k,vertical){
-  const s=signTexture(text,color,vertical);k=k||.085;const w=s.w*k,h=s.h*k;
+function sign(text,color,x,y,z,ry,both,light,k,vertical,maxW){
+  const s=signTexture(text,color,vertical);k=k||.085;if(maxW&&s.w*k>maxW)k=maxW/s.w;const w=s.w*k,h=s.h*k;
   // l'enseigne est montée sur un caisson sombre, et dessinée « par-dessus » : aucune texture ne peut la traverser
   const back=box(w+.08,h+.08,both?.06:.05,'#07090e',x,y,z);back.rotation.y=ry;
   const sm=new THREE.MeshBasicMaterial({map:s.tex,fog:false,polygonOffset:true,polygonOffsetFactor:-2,polygonOffsetUnits:-4});

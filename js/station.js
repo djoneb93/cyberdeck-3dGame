@@ -6,12 +6,13 @@ const DESTS=[['NOVA PRIME','QUAI 3'],['ROUILLEBOURG','QUAI 4'],['RING 14 · BADL
 function buildStation(){
   const PY=2.6,z0=GZ0-.6,z1=GZ1,zc=(z0+z1)/2,L=z1-z0;
   // quais surélevés de part et d'autre de la voie, bord de sécurité jaune, éclairage sous le quai
-  [-1,1].forEach(s=>{const xc=GX+s*1.68;
+  [-1,1].forEach(s=>{const xc=GX+s*1.68,ze=s<0?QUAI_END:z1,L=ze-z0,zc=(z0+ze)/2;
     box(1.55,.22,L,'#3a414c',xc,PY,zc);box(1.5,.02,L,'#4a525e',xc,PY+.12,zc);
     box(.12,.03,L,'#ffcf3a',GX+s*.98,PY+.13,zc,null,true);
     box(.04,.04,L,'#cfe8ff',xc,PY-.13,zc,null,true);
-    for(let z=z0+1;z<z1-.5;z+=2.4){box(.06,1.1,.06,'#2a3140',xc+s*.5,PY+.66,z);box(.5,.3,.04,'#14181f',xc+s*.5,PY+1.3,z);box(.44,.22,.05,'#7cf29a',xc+s*.5,PY+1.3,z,null,true)} // écrans de quai
-    for(let z=z0+2;z<z1-1;z+=3.2){box(.9,.1,.3,'#4a3526',xc+s*.35,PY+.42,z);box(.9,.3,.05,'#4a3526',xc+s*.5,PY+.6,z)} // bancs
+    for(let z=z0+1;z<ze-.5;z+=2.4){box(.06,1.1,.06,'#2a3140',xc+s*.5,PY+.66,z);box(.5,.3,.04,'#14181f',xc+s*.5,PY+1.3,z);box(.44,.22,.05,'#7cf29a',xc+s*.5,PY+1.3,z,null,true)} // écrans de quai
+    if(s<0){for(let z=z0+1;z<ze-.5;z+=2.4)ZONES.quai.blocks.push([xc+s*.5,z,.08,.08]);for(let z=z0+2;z<ze-1;z+=3.2)ZONES.quai.blocks.push([xc+s*.52,z,.18,.48])}
+    for(let z=z0+2;z<ze-1;z+=3.2){box(.32,.08,.9,'#4a3526',xc+s*.5,PY+.42,z);box(.05,.32,.9,'#4a3526',xc+s*.66,PY+.6,z);[-.4,.4].forEach(o=>box(.28,.3,.05,'#2a3140',xc+s*.5,PY+.26,z+o))} // bancs
   });
   // verrière courbe entre les arceaux
   const glass=new THREE.Mesh(new THREE.CylinderGeometry(1,1,L,28,1,true,Math.PI/2,Math.PI),new THREE.MeshBasicMaterial({color:0x6fdcff,transparent:true,opacity:.1,side:THREE.DoubleSide,depthWrite:false,fog:false}));
@@ -19,8 +20,12 @@ function buildStation(){
   // suspensions lumineuses sous la verrière
   for(let z=z0+1;z<z1;z+=1.6){box(.03,.6,.03,'#2a3140',GX,6.6,z);box(.5,.08,.5,'#ffe9b0',GX,6.25,z,null,true)}
   // escalier vers le quai ouest (au sud de la halle)
-  for(let i=0;i<9;i++)box(1.2,.29,.4,'#3a414c',GX-1.68,.145+i*.29,GZ1-.4-i*.38);
-  box(.04,.05,3.4,'#ffcf3a',GX-1.08,1.9,GZ1-1.9,null,true);
+  const st=QUAI_Y/9,sd=(GZ1-.2-QUAI_END)/9;
+  for(let i=0;i<9;i++){const zz=GZ1-.2-(i+.5)*sd;box(1.2,st,sd,'#3a414c',GX-1.62,st*(i+.5),zz);box(1.2,(i+1)*st,sd,'#262b34',GX-1.62,(i+1)*st/2-.001,zz);box(1.18,.025,.05,'#ffcf3a',GX-1.62,st*(i+1)+.01,zz+sd/2-.03,null,true)}
+  const ang=Math.atan2(QUAI_Y,GZ1-.2-QUAI_END),rl=Math.hypot(QUAI_Y,GZ1-.2-QUAI_END);
+  [-1,1].forEach(s=>{const r=box(.05,.05,rl,'#cfe8ff',GX-1.62+s*.62,QUAI_Y/2+.95,(GZ1-.2+QUAI_END)/2,null,true);r.rotation.x=ang;
+    for(let i=0;i<=3;i++)box(.04,.95,.04,'#3a4252',GX-1.62+s*.62,st*9*i/3+.47,GZ1-.2-(GZ1-.2-QUAI_END)*i/3)});
+  sign('QUAI 3 · NOVA PRIME','#ffb547',GX-1.62,QUAI_Y+2.1,QUAI_END+.1,0,true,false,.04);
   // tableau des départs, sur le flanc est de la halle
   const c=document.createElement('canvas');c.width=256;c.height=112;const t=new THREE.CanvasTexture(c);t.minFilter=THREE.LinearFilter;
   const bm=new THREE.Mesh(new THREE.PlaneGeometry(4.4,1.92),new THREE.MeshBasicMaterial({map:t,fog:false,polygonOffset:true,polygonOffsetFactor:-2,polygonOffsetUnits:-4}));
@@ -38,7 +43,7 @@ function buildStation(){
   sign('NOUILLES ZÉRO','#ffb547',GX+GHW+3.4,2.65,GZ1-.25,0,false,false,.05);
   box(.7,1.7,.6,'#1e3a4a',GX+GHW+1.8,.85,GZ1-.6);box(.5,1.1,.05,'#7dffb0',GX+GHW+1.8,1,GZ1-.28,null,true); // distributeur de boissons
   // voyageurs qui attendent sur les quais (décor)
-  [[-1,z0+2.4,Math.PI/2],[-1,z0+5.6,Math.PI/2],[1,z0+3.6,-Math.PI/2],[1,z0+7.2,-Math.PI/2],[1,z0+1.2,Math.PI]].forEach(([s,z,ry])=>{const m=makeChar(randomSpec());m.position.set(GX+s*1.9,PY+.12,z);m.userData.ry=ry});
+  [[-1,z0+1.3,Math.PI/2],[-1,z0+3.5,Math.PI/2],[1,z0+3.6,-Math.PI/2],[1,z0+7.2,-Math.PI/2],[1,z0+1.2,Math.PI]].forEach(([s,z,ry])=>{const m=makeChar(randomSpec());const px=GX+s*(s<0?2.2:1.9);m.position.set(px,PY+.12,z);m.userData.ry=ry;if(s<0)ZONES.quai.blocks.push([px,z,.14,.2])});
   // balises lumineuses le long du viaduc, jusqu'à l'horizon
   const bl=[];for(let z=-140;z<GZ0;z+=2.4)bl.push([GX-.78,2.78,z,.08,.06,.08],[GX+.78,2.78,z,.08,.06,.08]);instBoxes(bl,'#ff4fa3',true);
 }

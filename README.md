@@ -46,6 +46,7 @@ et partagent la même portée globale.
 - `js/life.js` : la ville vivante (enseignes verticales, liserés néon, projecteurs, drones, vapeur, fenêtres).
 - `js/taxi.js` : le taxi volant et sa visite commentée de la ville.
 - `js/weather.js` : la météo, qui change toutes les 3 heures (touche M : aperçu).
+- `js/doors.js` : portes des lieux importants (portes vitrées coulissantes, vue intérieure animée).
 - `js/story.js` : dialogues du jeu et moteur des histoires des contacts (Ink).
 - `js/entities.js` : personnages, objets à examiner, passants, voitures, marqueurs.
 - `js/game.js` : déplacement, interactions, HUD, boucle de jeu, démarrage.

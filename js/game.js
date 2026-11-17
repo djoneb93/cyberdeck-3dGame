@@ -4,7 +4,7 @@
 /* ===================== DÉPLACEMENT ===================== */
 const R=.27;
 function blocked(x,z){
-  if(S.roof){if(Math.abs(x-ROOF.x)>ROOF.hw-.5||Math.abs(z-ROOF.z)>ROOF.hd-.5)return true;return ROOF_BLOCK.some(([cx,cz,hx,hz])=>Math.abs(x-cx)<hx+R&&Math.abs(z-cz)<hz+R)}
+  const zo=zoneOf();if(zo){const Z=ZONES[zo];if(Math.abs(x-Z.x)>Z.hw||Math.abs(z-Z.z)>Z.hd)return true;return Z.blocks.some(([cx,cz,hx,hz])=>Math.abs(x-cx)<hx+R&&Math.abs(z-cz)<hz+R)}
   if(isSolid(x-R,z-R)||isSolid(x+R,z-R)||isSolid(x-R,z+R)||isSolid(x+R,z+R))return true;
   for(const n of npcs){const dx=n.mesh.position.x-x,dz=n.mesh.position.z-z;if(dx*dx+dz*dz<.36)return true}
   for(const s of statics){const dx=s.position.x-x,dz=s.position.z-z;if(dx*dx+dz*dz<.36)return true}
@@ -12,8 +12,16 @@ function blocked(x,z){
 }
 function distTo(o){const p=o.mesh?o.mesh.position:o;return Math.hypot(p.x-player.position.x,p.z-player.position.z)}
 
+// montée / descente d'escalier : le personnage suit les marches
+let climb=null;
+function climbStairs(up){if(climb)return;const a={x:GX-1.62,y:0,z:GZ1+.5},b={x:GX-1.62,y:QUAI_Y,z:QUAI_END-.35};
+  climb={from:up?a:b,to:up?b:a,t:0,up};overlayOpen=true;target=null;pendingTalk=null}
 function updatePlayer(dt){
   if(taxiRide)return; // dans le taxi : c'est lui qui te déplace
+  if(climb){const c=climb,ud=player.userData;c.t=Math.min(1,c.t+dt/1.6);const e=c.t;
+    player.position.set(c.from.x+(c.to.x-c.from.x)*e,c.from.y+(c.to.y-c.from.y)*Math.min(1,Math.max(0,(e-.08)/.84)),c.from.z+(c.to.z-c.from.z)*e);
+    ud.ry=Math.atan2(c.to.x-c.from.x,c.to.z-c.from.z);ud.moving=true;
+    if(c.t>=1){S.roof=c.up?'quai':false;climb=null;overlayOpen=false;ud.moving=false;S.px=player.position.x;S.pz=player.position.z}return}
   let mx=0,mz=0;
   if(!dlgOpen&&!overlayOpen){
     const f=(keys.KeyW||keys.ArrowUp?1:0)-(keys.KeyS||keys.ArrowDown?1:0);
@@ -33,7 +41,7 @@ function updatePlayer(dt){
     if(target){if(moved<sp*.2){stuck+=dt;if(stuck>.35){target=null;pendingTalk=null;stuck=0}}else stuck=0}
     ud.ry=Math.atan2(mx,mz);ud.moving=moved>sp*.2;
   }else ud.moving=false;
-  player.position.y=S.roof?ROOF.y:0;
+  player.position.y=zoneY();
   S.px=player.position.x;S.pz=player.position.z;S.ry=ud.ry;
 }
 const lerp=(a,b,t)=>a+(b-a)*t;
@@ -43,15 +51,15 @@ function lerpAngle(a,b,t){let d=((b-a+Math.PI)%(Math.PI*2)+Math.PI*2)%(Math.PI*2
 function nearest(){
   if(taxiRide)return {kind:'taxi',label:'Descendre du taxi'};
   let best=null,bd=1e9;
-  npcs.forEach(n=>{const d=S.roof?99:distTo(n);if(d<1.9&&d<bd){bd=d;best={kind:'npc',n,label:'Parler à '+(S.met[n.id]?NAMES[n.id]:'???')}}});
-  for(const id in S.q){const q=S.q[id];if(!q.active||q.b>=3)continue;const s=SPOTS[id][q.b];if(!!s.roof!==!!S.roof)continue;const d=distTo(s);if(d<1.5&&d<bd+.6){bd=d-.6;best={kind:'spot',id,label:'Enquêter · '+spotLab(id,q.b)}}}
-  OBJECTS.forEach(o=>{if(!!o.roof!==!!S.roof)return;const d=distTo(o);if(d<o.r&&d<bd-.4){bd=d;best={kind:'obj',o,label:o.label}}});
+  npcs.forEach(n=>{const d=zoneOf()?99:distTo(n);if(d<1.9&&d<bd){bd=d;best={kind:'npc',n,label:'Parler à '+(S.met[n.id]?NAMES[n.id]:'???')}}});
+  for(const id in S.q){const q=S.q[id];if(!q.active||q.b>=3)continue;const s=SPOTS[id][q.b];if(itemZone(s)!==zoneOf())continue;const d=distTo(s);if(d<1.5&&d<bd+.6){bd=d-.6;best={kind:'spot',id,label:'Enquêter · '+spotLab(id,q.b)}}}
+  OBJECTS.forEach(o=>{if(itemZone(o)!==zoneOf())return;const d=distTo(o);if(d<o.r&&d<bd-.4){bd=d;best={kind:'obj',o,label:o.label}}});
   return best;
 }
 function interact(){const t=nearest();if(!t)return;if(t.kind==='taxi'){endRide();return}if(t.kind==='npc')talkTo(t.n);else if(t.kind==='spot')openDlg(beatDlg(t.id));else if(t.o.act)t.o.act();else openDlg(t.o.dyn?{n1:{s:'nar',t:t.o.dyn()}}:t.o.id)}
 // monter sur le toit / redescendre : fondu au noir, puis on réapparaît de l'autre côté de la porte
 function goRoof(up){const f=$('fade');f.style.opacity=1;overlayOpen=true;target=null;pendingTalk=null;
-  setTimeout(()=>{S.roof=up;const p=up?{x:ROOF.x+1.9,z:ROOF.z-.45}:FP('roofs',1.6,0);player.position.set(p.x,up?ROOF.y:0,p.z);player.userData.ry=up?0:0;
+  setTimeout(()=>{S.roof=up?'roof':false;const p=up?{x:ROOF.x+1.9,z:ROOF.z-.45}:FP('roofs',1.6,0);player.position.set(p.x,up?ROOF.y:0,p.z);player.userData.ry=up?0:0;
     focus.set(p.x,player.position.y+1.5,p.z);save();f.style.opacity=0;overlayOpen=false;toast(up?'Toit de la tour Zéro':'Rue · Toits de Zone Zéro','')},380)}
 function talkTo(n){
   let id=n.id;talking=n;
@@ -212,7 +220,7 @@ function frame(){
   updateWalkers(dt);
   npcs.forEach(n=>{const d=distTo(n);let want=n.baseRy;if(d<3.2||talking===n)want=Math.atan2(player.position.x-n.mesh.position.x,player.position.z-n.mesh.position.z);
     n.mesh.userData.ry=lerpAngle(n.mesh.userData.ry,want,Math.min(1,dt*5));});
-  updateCity(dt);updateStation(dt);updateLife(dt);updateTaxi(dt);updateWeather(dt);flyers.forEach(f=>{f.g.position.x+=f.v*dt;if(f.g.position.x>W+14)f.g.position.x=-14;if(f.g.position.x<-14)f.g.position.x=W+14;f.g.position.y+=Math.sin(tAcc*1.5+f.v)*.004});
+  updateCity(dt);updateStation(dt);updateLife(dt);updateTaxi(dt);updateWeather(dt);updateDoors(dt);flyers.forEach(f=>{f.g.position.x+=f.v*dt;if(f.g.position.x>W+14)f.g.position.x=-14;if(f.g.position.x<-14)f.g.position.x=W+14;f.g.position.y+=Math.sin(tAcc*1.5+f.v)*.004});
   beacons.forEach(b=>b.visible=Math.sin(tAcc*3)>-.2);updateMarkers();
   if(cat)cat.userData.body.scale.y=1+Math.sin(tAcc*2.2)*.06;
   if(holo){holo.position.y=holo.userData.baseY+Math.sin(tAcc*1.3)*.08;const hm=holo.userData.plane.material;hm.opacity=.45+Math.sin(tAcc*9)*.04+(Math.random()<.02?-.25:0);holo.userData.moving=false;}
@@ -242,7 +250,7 @@ function setupFX(){
     }
   }catch(e){composer=null}
 }
-function placePlayer(){const y0=S.roof?ROOF.y:0;player.position.set(S.px,y0,S.pz);player.userData.ry=S.ry||0;focus.set(S.px,y0+1.5,S.pz);yaw=yawT=0}
+function placePlayer(){const y0=zoneY();player.position.set(S.px,y0,S.pz);player.userData.ry=S.ry||0;focus.set(S.px,y0+1.5,S.pz);yaw=yawT=0}
 function begin(fresh){
   if(fresh){S=NEW_STATE();save()}
   placePlayer();drawBoard();

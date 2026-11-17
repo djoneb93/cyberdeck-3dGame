@@ -26,6 +26,9 @@ function buildTaxi(){
   taxi={g,curve,len,state:'wait',u:0,t:0,stops:STOPS.map(([id,txt])=>({p:pos(id),txt,done:false})),from:null};
   OBJECTS.push({id:'o_taxi',x:TAXI_STAND.x,z:TAXI_STAND.z+.3,r:1.6,label:'Taxi',act:taxiAct});
 }
+// le point libre le plus proche (le personnage ne réapparaît jamais dans un mur)
+function freeNear(x,z){const ok=(a,b)=>![[0,0],[.3,0],[-.3,0],[0,.3],[0,-.3]].some(([dx,dz])=>isSolid(a+dx,b+dz));
+  for(let r=0;r<6;r+=.25)for(let k=0;k<24;k++){const a=x+Math.cos(k/24*Math.PI*2)*r,b=z+Math.sin(k/24*Math.PI*2)*r;if(ok(a,b))return [a,b]}return [x,z]}
 function taxiAct(){
   if(!taxi)return;
   if(taxi.state==='wait')startRide();
@@ -38,7 +41,7 @@ function startRide(){
 }
 function endRide(){
   fadeThen(()=>{taxiRide=false;taxi.state='wait';taxi.t=0;taxi.g.position.set(TAXI_PAD.x,.45,TAXI_PAD.z);taxi.g.rotation.set(0,Math.PI/2,0);
-    player.visible=true;player.position.set(TAXI_STAND.x+.2,0,TAXI_STAND.z+1.2);S.px=player.position.x;S.pz=player.position.z;S.roof=false;save()});
+    player.visible=true;const sp=freeNear(TAXI_PAD.x-1.4,TAXI_PAD.z+1.6);player.position.set(sp[0],0,sp[1]);player.userData.ry=Math.PI;S.px=player.position.x;S.pz=player.position.z;S.roof=false;save()});
 }
 function placeOnCurve(u){
   const c=taxi.curve,p=c.getPointAt(Math.min(1,u)),tg=c.getTangentAt(Math.min(1,u));
