@@ -114,7 +114,7 @@ function closeDlg(){dlgOpen=false;$('dlg').hidden=true;$('help').hidden=false;$(
   if(S.flags.chapter1&&!S.flags.endShown){S.flags.endShown=true;save();showEnding(1)}
   else if(S.flags.chapter2&&!S.flags.end2Shown){S.flags.end2Shown=true;save();showEnding(2)}
   updateHUD();}
-function typeTick(dt){if(!dlgOpen||shown>=full.length)return;shown=Math.min(full.length,shown+dt*70);$('dlgText').textContent=full.slice(0,Math.floor(shown));if(shown>=full.length)renderChoices()}
+function typeTick(dt){if(!dlgOpen||shown>=full.length)return;const before=Math.floor(shown/3);shown=Math.min(full.length,shown+dt*70);if(Math.floor(shown/3)>before&&node&&typeof talkBlip==="function")talkBlip(node.s); /* petit son de voix toutes les 3 lettres */$('dlgText').textContent=full.slice(0,Math.floor(shown));if(shown>=full.length)renderChoices()}
 
 function vfx(k){if(k!=='glitch')return;const b=document.body;b.classList.remove('glitch');void b.offsetWidth;b.classList.add('glitch');setTimeout(()=>b.classList.remove('glitch'),450)}
 function applyFx(fx){

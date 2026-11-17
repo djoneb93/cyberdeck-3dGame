@@ -52,7 +52,7 @@ function showMenu(){
   if(saved&&saved.flags&&saved.flags.woke)mk('Continuer',()=>begin(false),true);
   // pas de confirm() : les fenêtres du navigateur sont bloquées dans la page publiée. On confirme par un second clic.
   mk('Nouvelle partie',e=>{const b=e.currentTarget;if(saved&&saved.flags&&saved.flags.woke&&!b.dataset.sure){b.dataset.sure='1';b.textContent='Confirmer : effacer la partie et recommencer';b.classList.add('warn');return}begin(true)},!(saved&&saved.flags&&saved.flags.woke));
-  mk('Commandes',()=>{$('menuKeys').hidden=!$('menuKeys').hidden});
+  mk('Paramètres',()=>openSettings());
   mk('Quitter',quitGame);
   $('intro').hidden=false;
 }
@@ -63,7 +63,13 @@ $('pMenu').onclick=()=>{save();togglePause(false);showMenu()};
 $('pQuit').onclick=()=>{togglePause(false);quitGame()};
 $('qBack').onclick=()=>{$('quit').hidden=true;showMenu()};
 addEventListener('keydown',e=>{
+  if(e.code==='Escape'&&!$('settings').hidden){$('settings').hidden=true;return} // Échap ferme d'abord les paramètres
   if(cine&&cine.mode==='wake'&&['Space','Enter','Escape'].includes(e.code)){e.preventDefault();skipWake();return}
   if(e.code!=='Escape'||!started||dlgOpen||!$('fiche').hidden||!$('ending').hidden||taxiRide||climb)return;
   e.preventDefault();togglePause($('pause').hidden);
 });
+// ---- paramètres : deux onglets, Commandes et Son (ouverts depuis le menu principal ou la pause) ----
+function openSettings(tab){$('settings').hidden=false;setTab(tab||'keys')}
+function setTab(t){$('setKeys').hidden=t!=='keys';$('soundSet').hidden=t!=='sound';$('tabKeys').classList.toggle('on',t==='keys');$('tabSound').classList.toggle('on',t==='sound')}
+$('tabKeys').onclick=()=>setTab('keys');$('tabSound').onclick=()=>setTab('sound');$('setClose').onclick=()=>{$('settings').hidden=true};
+$('pSettings').onclick=()=>openSettings();

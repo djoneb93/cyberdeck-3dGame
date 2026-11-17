@@ -24,7 +24,7 @@ const OBJECTS=[
     ?'Dans le miroir de la penderie, tu tournes la tête. La cicatrice derrière ton oreille. « Retiré proprement », a dit le Doc.'
     :'Dans le miroir de la penderie, un visage plus maigre que dans ton souvenir. Derrière ton oreille, une cicatrice que tu ne connais pas.'},
   {id:'o_sofa',x:3.9,z:8,r:1.1,label:'Examiner le canapé',dyn:()=>'Une couverture pliée, un oreiller creusé. Quelqu’un a dormi ici pendant que tu étais inconscient.'+(S.met.mira?' Mira, sans doute.':'')},
-  {id:'o_kitchen',x:10,z:5,r:1.2,label:'Écouter la radio',dyn:()=>'La radio grésille. « …ce soir au Club Ondes, Lou Néon aux platines. Et rappel de Kurogane Sécurité : tout rassemblement après minuit en Zone Zéro sera dispersé. »'},
+  {id:'o_kitchen',x:10,z:5,r:1.2,get label(){return S.radio?'Éteindre la radio':'Allumer la radio'},act:()=>{S.radio=!S.radio;save();toast(S.radio?'La radio s’allume : de la synthwave, comme toujours.':'La radio se tait.','')},dyn0:()=>'La radio grésille. « …ce soir au Club Ondes, Lou Néon aux platines. Et rappel de Kurogane Sécurité : tout rassemblement après minuit en Zone Zéro sera dispersé. »'},
   {id:'o_fridge',x:10,z:6.5,r:1.1,label:'Ouvrir le frigo',dyn:()=>'Presque vide. Une boîte de nouilles, une canette d’Ondes Cola, et une barquette de frites froides datée d’avant-hier. Mira fait les courses, apparemment.'},
   {id:'o_safe',x:10,z:7.5,r:1.1,label:'Examiner le coffre',dyn:()=>'Un coffre-fort mural. Code à quatre chiffres. Tu poses les doigts sur le clavier… et rien ne vient. Ce que tu y as caché, tu l’as caché aussi à toi-même.'},
   {id:'o_cat',x:4,z:5.6,r:1.3,label:'Caresser le chat',dyn:()=>{const first=!S.flags.cat;S.flags.cat=true;save();

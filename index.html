@@ -74,12 +74,22 @@
   <div class="card panel cut">
     <div class="lbl">Pause</div>
     <h2>NEO-BXL</h2>
-    <div class="acts menuActs"><button type="button" class="pri" id="pResume">Reprendre</button><button type="button" id="pMenu">Menu principal</button><button type="button" id="pQuit">Quitter le jeu</button></div>
-    <div class="sound" id="soundSet"><div class="lbl">Son</div>
+    <div class="acts menuActs"><button type="button" class="pri" id="pResume">Reprendre</button><button type="button" id="pSettings">Paramètres</button><button type="button" id="pMenu">Menu principal</button><button type="button" id="pQuit">Quitter le jeu</button></div>
+    <div class="keys">Ta partie est sauvegardée automatiquement.</div>
+  </div>
+</div>
+
+<div id="settings" class="ov" hidden>
+  <div class="card panel cut">
+    <div class="lbl">Paramètres</div>
+    <div class="tabs"><button type="button" id="tabKeys" class="on">Commandes</button><button type="button" id="tabSound">Son</button></div>
+    <div id="setKeys" class="keys"><b>ZQSD</b> ou flèches : marcher · <b>clic / tap</b> au sol : se déplacer<br><b>glisser</b> : tourner et incliner la caméra · <b>A / R</b> : pivoter · <b>molette</b> ou <b>+ −</b> : zoom<br><b>E</b> ou <b>F</b> : parler, examiner, s’asseoir, monter sur la moto, continuer un dialogue · <b>1 2 3</b> : choisir une réponse<br><b>M</b> : météo · <b>N</b> : jour / nuit · <b>P</b> : taille des pixels · <b>Échap</b> : pause<br>On entre dans les lieux en marchant dans leur porte.</div>
+    <div class="sound" id="soundSet" hidden>
       <label>Volume général <input type="range" id="volMaster" min="0" max="1" step="0.05"></label>
       <label>Musique <input type="range" id="volMusic" min="0" max="1" step="0.05"></label>
-      <label>Ambiance <input type="range" id="volAmb" min="0" max="1" step="0.05"></label></div>
-    <div class="keys">Ta partie est sauvegardée automatiquement.</div>
+      <label>Ambiance <input type="range" id="volAmb" min="0" max="1" step="0.05"></label>
+      <label>Effets et dialogues <input type="range" id="volSfx" min="0" max="1" step="0.05"></label></div>
+    <div class="acts"><button type="button" class="pri" id="setClose">Fermer</button></div>
   </div>
 </div>
 

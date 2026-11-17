@@ -141,3 +141,8 @@ body.glitch #c{animation:glitch .42s steps(2) 1}
 #soundSet{margin:14px 0 6px;display:grid;gap:8px;text-align:left}
 #soundSet label{display:flex;justify-content:space-between;align-items:center;gap:12px;font:12px var(--f-m);color:var(--dim)}
 #soundSet input[type=range]{width:55%;accent-color:#39e6ff}
+#settings{z-index:40}
+#settings .tabs{display:flex;gap:8px;margin:10px 0 12px}
+#settings .tabs button{flex:1}
+#settings .tabs button.on{border-color:#39e6ff;color:#39e6ff;background:rgba(57,230,255,.1)}
+#setKeys{text-align:left;line-height:1.7}

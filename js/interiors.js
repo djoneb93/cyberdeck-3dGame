@@ -162,8 +162,13 @@ const IN_DEF={
     wall:canvasMat(64,64,(g,W,H)=>{g.fillStyle='#120a1e';g.fillRect(0,0,W,H);for(let y=0;y<H;y+=8)for(let x=(y/8)%2*8;x<W;x+=16){g.fillStyle='#1a1028';g.fillRect(x,y,8,8)}},6,3),
     build(R){const w=R.w,d=R.d;
       // piste de danse lumineuse
-      R.tiles=[];for(let i=0;i<6;i++)for(let j=0;j<5;j++){const m=new THREE.Mesh(boxGeo,new THREE.MeshBasicMaterial({color:0x000000}));m.scale.set(.92,.04,.92);m.position.set(-2.75+i*1.1,.02,-1.4+j*1.1);R.g.add(m);R.tiles.push({m,i,j})}
-      R.anims.push({k:0,f:t=>R.tiles.forEach(({m,i,j})=>{const v=Math.sin(t*3+i*.9+j*1.3)+Math.sin(t*1.7-i*.6);m.material.color.setHSL(((i+j)*.07+t*.05)%1,.9,Math.max(.05,v*.25))})});
+      // piste de danse : une seule plaque peinte (dalles de verre, joints sombres, vagues de couleur), posée au ras du sol, sans dalle noire ni scintillement
+      const fc=document.createElement('canvas');fc.width=192;fc.height=160;const fg=fc.getContext('2d'),ft=new THREE.CanvasTexture(fc);
+      const floor=new THREE.Mesh(new THREE.PlaneGeometry(6.6,5.5),new THREE.MeshBasicMaterial({map:ft,fog:false}));floor.rotation.x=-Math.PI/2;floor.position.set(0,.012,.8);R.g.add(floor);
+      R.B(6.8,.04,.1,'#b98cff',0,.02,.8-2.8,true);R.B(6.8,.04,.1,'#b98cff',0,.02,.8+2.8,true);R.B(.1,.04,5.7,'#b98cff',-3.4,.02,.8,true);R.B(.1,.04,5.7,'#b98cff',3.4,.02,.8,true); // cadre lumineux
+      R.anims.push({k:0,f:t=>{fg.fillStyle='#07060c';fg.fillRect(0,0,192,160);for(let i=0;i<6;i++)for(let j=0;j<5;j++){const v=.5+.25*Math.sin(t*3+i*.9+j*1.3)+.25*Math.sin(t*1.7-i*.6);
+        const hue=((i+j)*25+t*20)%360;const gr=fg.createRadialGradient(i*32+16,j*32+16,2,i*32+16,j*32+16,20);gr.addColorStop(0,'hsl('+hue+',95%,'+(30+v*35)+'%)');gr.addColorStop(1,'hsl('+hue+',90%,'+(12+v*16)+'%)');
+        fg.fillStyle=gr;fg.fillRect(i*32+2,j*32+2,28,28)}ft.needsUpdate=true}});
       // cabine du DJ, enceintes, boule à facettes, lasers
       R.S(3.2,1.1,.9,'#1a1028',0,.55,-d/2+1.4);R.B(3.2,.08,.95,'#b98cff',0,1.12,-d/2+1.4,true);R.B(3,.7,.05,'#39e6ff',0,.55,-d/2+1.87,true);
       R.B(.5,.06,.4,'#e8e8e4',-.7,1.18,-d/2+1.3);R.B(.5,.06,.4,'#e8e8e4',.7,1.18,-d/2+1.3);
