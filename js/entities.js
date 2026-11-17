@@ -40,9 +40,9 @@ const OBJECTS=[
   {id:'o_arcade',...FP('arcade',1.3,-1.8),r:1.2,label:'Regarder · Arcade Pixel',dyn:()=>AMB.arcade},
   {id:'o_port',...FP('port',1.3,-2.4),r:1.4,label:'Regarder · Port fluvial',dyn:()=>AMB.port},
   {id:'o_bunker',...FP('bunker',1.3,-1.8),r:1.2,label:'Regarder · Bunker Zéro',dyn:()=>AMB.bunker},
-  {id:'o_stairs_up',x:GX-1.62,z:GZ1+.6,r:1.2,label:'Monter sur le quai',act:()=>climbStairs(true)},
-  {id:'o_stairs_down',x:GX-1.62,z:QUAI_END-.3,r:1,zone:'quai',label:'Descendre l’escalier',act:()=>climbStairs(false)},
-  {id:'o_tgv',x:GX-1.2,z:(GZ0+QUAI_END)/2,r:1.3,zone:'quai',label:'Regarder le TGV',dyn:()=>Math.abs(train.position.z-(GZ1-.6))<.5?'Le TGV est à quai. Portes fermées : réservé aux voyageurs munis d’un billet. Le tableau des départs annonce plusieurs destinations. Un jour, peut-être.':'La voie est vide. Le prochain TGV arrive du haut de la ville, par le viaduc.'},
+  // (l'escalier du quai se prend en marchant dedans : voir checkDoors dans js/interiors.js)
+  {id:'o_tgv',x:GX-1.2,z:(GZ0+QUAI_END)/2,r:1.6,zone:'quai',get label(){return trainAtQuai()?'Monter dans le TGV':'Regarder la voie'},
+    act:()=>{if(trainAtQuai())boardTrain();else openDlg({n1:{s:'nar',t:'La voie est vide. Le prochain TGV arrive du haut de la ville, par le viaduc.'}})}},
   {id:'o_down',x:ROOF.x+1.9,z:ROOF.z-.5,r:1.1,roof:true,label:'Ascenseur · redescendre',act:()=>goRoof(false)},
   {id:'o_antenna',x:ROOF.x+.2,z:ROOF.z+.9,r:1.2,roof:true,label:'Regarder l’antenne',dyn:()=>'La grande antenne de la tour Zéro. Tout en haut, le feu rouge clignote pour les voitures volantes. D’ici, on capte tout le Net de la ville.'+(S.met.mira?' Mira dit que c’est ici qu’elle écoute la ville, la nuit.':'')},
   {id:'o_view',x:ROOF.x+ROOF.hw-.9,z:ROOF.z+ROOF.hd-.9,r:1.3,roof:true,label:'Regarder la ville',dyn:()=>AMB.roofs},
@@ -110,9 +110,9 @@ function updateWalkers(dt){
 }
 function updateCity(dt){
   // rame de la gare Zéro : arrive de loin par le viaduc, s'arrête à quai, puis repart au loin derrière la ville
-  if(train){const cyc=40,s0=(tAcc%cyc)/cyc,ease=x=>x*x*(3-2*x),STOP=GZ1-.6,FAR=-140;
+  if(train&&!trainRide){const cyc=40,s0=(tAcc%cyc)/cyc,ease=x=>x*x*(3-2*x),STOP=GZ1-.6,FAR=-140;
     train.position.z=s0<.35?FAR+(STOP-FAR)*ease(s0/.35):s0<.6?STOP:STOP-(STOP-FAR+30)*Math.pow((s0-.6)/.4,2)}
-  clubBeams.forEach(b=>{b.g.rotation.z=Math.sin(tAcc*1.3+b.k*2)*.6;b.g.rotation.x=Math.cos(tAcc*.9+b.k)*.25});
+  clubBeams.forEach(b=>{b.g.visible=clubOpen();b.g.rotation.z=Math.sin(tAcc*1.3+b.k*2)*.6;b.g.rotation.x=Math.cos(tAcc*.9+b.k)*.25});
   hazards.forEach(h=>h.visible=Math.sin(tAcc*4)>0);
   boats.forEach(b=>{b.g.position.y=Math.sin(tAcc*1.1+b.ph)*.06;b.g.rotation.z=Math.sin(tAcc*.8+b.ph)*.025;
     if(b.mv){b.g.position.z+=b.mv*dt;if(b.g.position.z>H+70)b.g.position.z=-70;if(b.g.position.z<-70)b.g.position.z=H+70}});

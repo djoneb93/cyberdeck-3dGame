@@ -156,17 +156,23 @@ function drawFigure(g,sp,dir,fr,ox,oy){
   }
 }
 function makeSheet(sp){
-  const c=document.createElement('canvas');c.width=96;c.height=256;const g=c.getContext('2d');
+  const c=document.createElement('canvas');c.width=128;c.height=256;const g=c.getContext('2d');
   for(let fr=0;fr<3;fr++){drawFigure(g,sp,0,fr,fr*32,0);drawFigure(g,sp,3,fr,fr*32,192);drawFigure(g,sp,2,fr,fr*32,128);
     const t=document.createElement('canvas');t.width=32;t.height=64;drawFigure(t.getContext('2d'),sp,2,fr,0,0);
     g.save();g.translate(fr*32+32,64);g.scale(-1,1);g.drawImage(t,0,0);g.restore();}
+  // 4e colonne : assis sur un banc, les jambes tendues devant soi (le haut du corps descend à hauteur d'assise)
+  const R=(x,y,w,h,col)=>{g.fillStyle=col;g.fillRect(96+x,y,w,h)},pants=sp.pants,shoes=sp.shoes,dk=sh(pants,.72);
+  [0,64,128,192].forEach(y0=>g.drawImage(c,0,y0,32,39,96,y0+11,32,39));
+  R(11,48,10,3,pants);R(12,51,3,7,pants);R(14,51,1,7,dk);R(17,51,3,7,pants);R(17,51,1,7,dk);R(11,58,4,4,shoes);R(17,58,4,4,shoes); // de face : jambes vues de bout
+  R(13,176,15,4,pants);R(13,179,15,1,dk);R(27,173,4,7,shoes);R(27,179,4,1,sh(shoes,.55)); // de profil (vers la droite), rangée 128
+  const yL=64;g.fillStyle=pants;g.fillRect(96+4,yL+48,15,4);g.fillStyle=dk;g.fillRect(96+4,yL+51,15,1);g.fillStyle=shoes;g.fillRect(96+1,yL+45,4,7); // de profil (vers la gauche)
   return c;
 }
 const PXK=1.9/64;
 const sprites=[];
 function makeChar(sp,opts){
   opts=opts||{};
-  const root=new THREE.Group();const tex=nearestTex(makeSheet(sp));tex.repeat.set(1/3,1/4);tex.offset.set(0,.75);
+  const root=new THREE.Group();const tex=nearestTex(makeSheet(sp));tex.repeat.set(1/4,1/4);tex.offset.set(0,.75);
   const m=opts.holo?new THREE.MeshBasicMaterial({map:tex,transparent:true,opacity:.55,color:0xa8f0ff,blending:THREE.AdditiveBlending,depthWrite:false,side:THREE.DoubleSide})
     :new THREE.MeshLambertMaterial({map:tex,alphaTest:.5,side:THREE.DoubleSide,emissive:0xffffff,emissiveMap:tex,emissiveIntensity:.13});
   const s=(sp.scale||1)*(opts.scale||1);
@@ -184,9 +190,8 @@ function updateSprite(c,dt){
   let rel=((ca-ud.ry+Math.PI)%(Math.PI*2)+Math.PI*2)%(Math.PI*2)-Math.PI;
   const a=Math.abs(rel);const dir=a<Math.PI/4?0:a>Math.PI*3/4?3:(rel>0?1:2);
   let fr=0;if(ud.moving&&!ud.sit){ud.phase+=dt*8;fr=[1,0,2,0][Math.floor(ud.phase)%4]}
-  // assis : on ne montre que le haut du personnage (les jambes sont cachées par le banc), posé plus bas
-  const k=ud.sit?.76:1;if(ud._k!==k){if(!ud.h0)ud.h0=ud.plane.position.y*2;ud._k=k;ud.plane.scale.y=k;ud.plane.position.y=ud.h0*k/2;ud.tex.repeat.y=k/4}
-  ud.tex.offset.set(fr/3,1-(dir+1)/4+(1-k)/4);
+  if(ud.sit)fr=3; // assis : 4e colonne de la planche (assis, jambes tendues)
+  ud.tex.offset.set(fr/4,1-(dir+1)/4);
 }
 
 const SKINS=['#f1c7a5','#d9b08c','#c99a7a','#a8754f','#7a4e32','#5a3a28'];

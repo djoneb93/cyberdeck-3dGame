@@ -43,7 +43,9 @@ const onTile=(x,z,t)=>{const cx=Math.floor(x),cz=Math.floor(z);return cx>=0&&cz>
 function buildStreets(){
   // plaques d'égout et grilles d'évacuation le long des trottoirs
   const holes=[],rims=[];
-  AVE.forEach(a=>{for(let t=.08;t<.98;t+=.14){[[UX(a)+(srnd()<.5?.8:-.8),UZ(t)],[UX(t),UZ(a)+(srnd()<.5?.8:-.8)]].forEach(([x,z])=>{if(onTile(x,z,2)&&!nearCross(x,z,2.8)){holes.push([x,.012,z]);rims.push([x,.008,z])}})}
+  // jamais une plaque sous une flèche peinte (les flèches sont à 5 m des carrefours, voir plus bas)
+  const nearArrow=(x,z)=>AVE.some(a=>AVE.some(b=>{const cx=UX(a),cz=UZ(b);return [[cx-.8,cz-5],[cx+.8,cz+5],[cx-5,cz+.8],[cx+5,cz-.8]].some(([ax,az])=>Math.hypot(ax-x,az-z)<1.5)}));
+  AVE.forEach(a=>{for(let t=.08;t<.98;t+=.14){[[UX(a)+(srnd()<.5?.8:-.8),UZ(t)],[UX(t),UZ(a)+(srnd()<.5?.8:-.8)]].forEach(([x,z])=>{if(onTile(x,z,2)&&!nearCross(x,z,2.8)&&!nearArrow(x,z)){holes.push([x,.012,z]);rims.push([x,.008,z])}})}
     for(let t=.05;t<.98;t+=.09)[[UX(a)+1.45,UZ(t),.2,.7],[UX(a)-1.45,UZ(t)+1.3,.2,.7],[UX(t),UZ(a)+1.45,.7,.2],[UX(t)+1.3,UZ(a)-1.45,.7,.2]].forEach(([x,z,w,d])=>{if(onTile(x,z,2)&&!nearCross(x,z,2.6)){sd('#0c0f14',false,x,.012,z,w,.02,d);for(let i=-1;i<=1;i++)sd('#2a3038',false,x+(w<d?0:i*.2),.016,z+(w<d?i*.2:0),w<d?.18:.04,.01,w<d?.04:.18)}})});
   instDisc(rims,.5,.012,'#3a414c');instDisc(holes,.42,.014,'#1a1e25');
   // flèches au sol avant chaque carrefour, dans le sens de la voie (on roule à droite)
@@ -59,7 +61,8 @@ function buildStreets(){
     if(r<.32){sd('#2a313c',false,x,.42,z,.46,.84,.46);sd('#3a4252',false,x,.87,z,.5,.06,.5);sd('#7dffb0',true,x+(X?.24:0),.7,z+(X?0:.24),X?.02:.12,.06,X?.12:.02);FURN.push([x,z,.32])}
     else if(r<.46){sd('#4a3526',false,x,.42,z,X?.38:1.4,.08,X?1.4:.38);sd('#4a3526',false,x+(X?.17:0),.66,z+(X?0:.17),X?.05:1.4,.34,X?1.4:.05);sd('#2a3140',false,x,.2,z,X?.3:1.2,.38,X?1.2:.3);FURN.push([x,z,.6]);BENCHES.push({x,z,fx:X?-1:0,fz:X?0:-1})}
     else if(r<.68){sd('#2a2f38',false,x,.25,z,.9,.5,.9);sd(pick(['#39e6ff','#ff4fa3','#7dffb0']),true,x,.51,z,.92,.04,.92);sd('#3a2a20',false,x,1.2,z,.12,1.5,.12);
-      [[0,2.1,0,1.1],[.25,2.5,.15,.8],[-.2,2.6,-.1,.7]].forEach(([dx,y,dz,s])=>sd(pick(['#1f4a32','#2a5a3a','#244a3e','#3a2a4a']),false,x+dx,y,z+dz,s,s*.8,s));FURN.push([x,z,.55])}
+      const fol=pick([['#1f4a32','#2a5a3a'],['#244a3e','#2c5a46'],['#2a5a3a','#356a42']]); // une seule teinte de feuillage par arbre (plus de mauve qui perce le vert)
+      [[0,2.1,0,1.1,0],[.25,2.5,.15,.8,1],[-.2,2.6,-.1,.7,1]].forEach(([dx,y,dz,s,k])=>sd(fol[k],false,x+dx,y,z+dz,s,s*.8,s));FURN.push([x,z,.55])}
     else if(r<.78){sd('#d8a020',false,x,.3,z,.26,.6,.26);sd('#e8b030',false,x,.64,z,.32,.08,.32);sd('#d8a020',false,x,.4,z,.42,.08,.1);FURN.push([x,z,.25])}
     else if(r<.9){[-.5,.5].forEach(o=>{const bx=x+(X?0:o),bz=z+(X?o:0);sd('#3a414c',false,bx,.35,bz,.14,.7,.14);sd('#ffb547',true,bx,.66,bz,.16,.04,.16);FURN.push([bx,bz,.15])})}
     else{sd('#20262f',false,x,.6,z,.34,1.2,.26);sd('#39e6ff',true,x+(X?.18:0),.85,z+(X?0:.18),X?.02:.2,.3,X?.2:.02);FURN.push([x,z,.3])}};

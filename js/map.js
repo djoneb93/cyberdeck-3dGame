@@ -17,7 +17,7 @@ const PL={
   bar:{u:.2017,v:.6317,s:.045,h:.07,face:'+x'},
   roofs:{u:.3867,v:.4467,s:.05,h:.44,face:'+z'},
   market:{u:.6527,v:.68,s:.066,h:.02,face:'-x'},
-  laundry:{u:.70,v:.4567,s:.04,h:.05,face:'+z'},
+  laundry:{u:.70,v:.438,s:.04,h:.05,face:'+z'},
   lab:{u:.9067,v:.6767,s:.07,h:.03,face:'+z'},
   club:{u:.6417,v:.1917,s:.055,h:.08,face:'-x'},
   arcade:{u:.8817,v:.20,s:.045,h:.07,face:'-x'},
@@ -82,6 +82,9 @@ for(const id in PL){const p=PL[id];if(id==='comm')continue;
     fill(tile,Math.floor(p.x-p.hw),Math.floor(p.z-p.hd),Math.floor(p.x+p.hw),Math.floor(p.z+p.hd),4);continue}
   if(id==='club'){const k=p.hw*.78;solidCells(p.x-k,p.z-k,p.x+k,p.z+k);const [vx,vz]=front('club',-.5);solidCells(vx-.9,vz-1.6,vx+.9,vz+1.6);continue}
   solidCells(p.x-p.hw,p.z-p.hd,p.x+p.hw,p.z+p.hd)}
+// petits bâtiments voisins : une pharmacie à côté de la laverie, un cybercafé à côté de l'Arcade (alignés sur la façade du lieu)
+const ANNEX=[{x0:59.4,z0:32.3,x1:62.7,z1:35.3,h:3.4,face:'+z',n:'PHARMACIE',c:'#7cf29a',cross:true},{x0:74.7,z0:11.5,x1:77.9,z1:14.4,h:3.6,face:'-x',n:'CYBERCAFÉ',c:'#5ce1e6'}];
+ANNEX.forEach(a=>solidCells(a.x0,a.z0,a.x1,a.z1));
 // port : grue et conteneurs sur le quai
 const CRANE=[10.6,UZ(.4)],CONT=[12.2,UZ(.44),16.2,UZ(.56)];
 solid[I(Math.floor(CRANE[0]),Math.floor(CRANE[1]))]=1;solidCells(CONT[0],CONT[1],CONT[2],CONT[3]);

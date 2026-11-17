@@ -25,39 +25,41 @@ function paintFacade(style){
   const c=document.createElement('canvas'),e=document.createElement('canvas');c.width=e.width=128;c.height=e.height=256; // double résolution
   const g=c.getContext('2d'),x=e.getContext('2d');g.scale(2,2);x.scale(2,2);x.fillStyle='#000';x.fillRect(0,0,64,128);
   const lit=(px,py,w,h,col,a)=>{g.fillStyle=col;g.fillRect(px,py,w,h);x.globalAlpha=a==null?1:a;x.fillStyle=col;x.fillRect(px,py,w,h);x.globalAlpha=1};
+  // fenêtre éteinte : une lueur très faible dans la carte d'émission, pour que le shader y dessine quand même une pièce, dans la pénombre
+  const dim=(px,py,w,h)=>{x.fillStyle='#222c40';x.fillRect(px,py,w,h)};
   const speck=(n,cols)=>{for(let i=0;i<n;i++){g.fillStyle=cols[i%cols.length];g.fillRect((arnd()*64)|0,(arnd()*128)|0,1,1)}};
   if(style==='glass'){
     const gr=g.createLinearGradient(0,0,64,128);gr.addColorStop(0,'#1e3e52');gr.addColorStop(.45,'#18303f');gr.addColorStop(.55,'#264c60');gr.addColorStop(1,'#162a38');g.fillStyle=gr;g.fillRect(0,0,64,128);
     for(let f=0;f<4;f++)for(let col=0;col<4;col++){const px=col*16+1,py=f*32+2;
       if(arnd()<.38){const w=8+((arnd()*6)|0),h=12+((arnd()*10)|0);lit(px+((arnd()*(14-w))|0),py+26-h,w,h,apick(arnd()<.7?WARM:COOL),.85);
-        g.fillStyle='rgba(10,30,45,.55)';g.fillRect(px,py,14,28)} // reflets par-dessus l'intérieur
+        g.fillStyle='rgba(10,30,45,.55)';g.fillRect(px,py,14,28)}else dim(px+2,py+4,10,22) // reflets par-dessus l'intérieur ; sinon une pièce dans la pénombre
       g.fillStyle='rgba(160,220,255,.08)';g.fillRect(px,py,3,28)}
     g.fillStyle='#0a141c';for(let i=0;i<=4;i++)g.fillRect(i*16,0,1,128);for(let f=0;f<4;f++){g.fillStyle='#07101a';g.fillRect(0,f*32+30,64,2);g.fillStyle='#2a4a5e';g.fillRect(0,f*32+29,64,1)}
   }else if(style==='concrete'){
     if(!photoBase(g,'concrete',null,.45)){g.fillStyle='#3a3d44';g.fillRect(0,0,64,128);speck(900,['#34373e','#42454c','#2e3138','#474a51'])}
     for(let f=0;f<4;f++){const y=f*32;g.fillStyle='#2c2f35';g.fillRect(0,y+30,64,2);
       for(let col=0;col<4;col++){const px=col*16+3;g.fillStyle='#1d2026';g.fillRect(px-1,y+7,12,18);
-        if(arnd()<.42)lit(px,y+8,10,16,apick(WARM),.9);else{g.fillStyle='#141a24';g.fillRect(px,y+8,10,16);g.fillStyle='#22303e';g.fillRect(px+1,y+9,2,6)}
+        if(arnd()<.5)lit(px,y+8,10,16,apick(WARM),.9);else{g.fillStyle='#141a24';g.fillRect(px,y+8,10,16);g.fillStyle='#22303e';g.fillRect(px+1,y+9,2,6);dim(px,y+8,10,16)}
         g.fillStyle='#4a4d54';g.fillRect(px-1,y+25,12,1);if(arnd()<.3){g.fillStyle='#8a929c';g.fillRect(px+2,y+27,6,3)}}}
   }else if(style==='brick'){
     if(!photoBase(g,'brick',null,.45)){g.fillStyle='#3e211b';g.fillRect(0,0,64,128);
     for(let y=0;y<128;y+=3)for(let bx=-(y%6?3:0);bx<64;bx+=6){g.fillStyle=apick(['#6a3428','#5e2e24','#73392b','#572a21']);g.fillRect(bx,y,5,2)}}
     for(let f=0;f<4;f++){const y=f*32;g.fillStyle='#8a7a68';g.fillRect(0,y+30,64,2);
       for(let col=0;col<4;col++){const px=col*16+4;g.fillStyle='#9a8a76';g.fillRect(px-1,y+4,10,2);g.fillStyle='#1a1014';g.fillRect(px,y+6,8,20);
-        if(arnd()<.45){lit(px+1,y+7,6,18,apick(WARM),.9);g.fillStyle='rgba(40,20,10,.5)';g.fillRect(px+1,y+15,6,1);g.fillRect(px+4,y+7,1,18)}
+        if(arnd()<.5){lit(px+1,y+7,6,18,apick(WARM),.9);g.fillStyle='rgba(40,20,10,.5)';g.fillRect(px+1,y+15,6,1);g.fillRect(px+4,y+7,1,18)}else dim(px+1,y+7,6,18)
         g.fillStyle='#7a6a58';g.fillRect(px-1,y+26,10,1)}}
   }else if(style==='metal'){
     if(!photoBase(g,'metal',null,.42)){g.fillStyle='#2c3038';g.fillRect(0,0,64,128)}
     else for(let y=0;y<128;y+=16)g.fillRect(0,y,0,0);
     if(!TEXIMG.metal)for(let y=0;y<128;y+=16)for(let px=0;px<64;px+=16){g.fillStyle=arnd()<.5?'#262b33':'#1f232a';g.fillRect(px+1,y+1,14,14);g.fillStyle='#2e343d';g.fillRect(px+1,y+1,14,1)}
     for(let f=0;f<4;f++){const y=f*32+12;g.fillStyle='#0e1218';g.fillRect(0,y-1,64,10);
-      for(let s=0;s<8;s++){if(arnd()<.5)lit(s*8+1,y,6,8,apick(['#7af3ff','#ff8ac8','#e8f4ff','#ffd9a0']),.8);else{g.fillStyle='#141c26';g.fillRect(s*8+1,y,6,8)}}}
+      for(let s=0;s<8;s++){if(arnd()<.5)lit(s*8+1,y,6,8,apick(['#7af3ff','#ff8ac8','#e8f4ff','#ffd9a0']),.8);else{g.fillStyle='#141c26';g.fillRect(s*8+1,y,6,8);dim(s*8+1,y,6,8)}}}
   }else{ // résidentiel : enduit délavé, petites fenêtres à stores
     const tint=apick(['#4c4252','#435257','#55493e','#3f4856']);if(!photoBase(g,'concrete',tint,.35)){g.fillStyle=tint;g.fillRect(0,0,64,128)}speck(600,['rgba(0,0,0,.18)','rgba(255,255,255,.06)']);
     for(let f=0;f<4;f++){const y=f*32;g.fillStyle='rgba(0,0,0,.25)';g.fillRect(0,y+30,64,2);
       for(let col=0;col<4;col++){const px=col*16+3;g.fillStyle='#1e1a22';g.fillRect(px-1,y+9,11,15);
         if(arnd()<.5){lit(px,y+10,9,13,apick(WARM.concat(['#ff9ab8','#9dffb0'])),.85);g.fillStyle='rgba(0,0,0,.35)';for(let k=0;k<4;k++)g.fillRect(px,y+11+k*3,9,1)}
-        else{g.fillStyle='#161420';g.fillRect(px,y+10,9,13)}}}
+        else{g.fillStyle='#161420';g.fillRect(px,y+10,9,13);dim(px,y+10,9,13)}}}
   }
   // salissures : coulures sous les fenêtres, pied de façade plus sombre
   for(let i=0;i<10;i++){const sx=(arnd()*64)|0;g.fillStyle='rgba(0,0,0,.12)';g.fillRect(sx,(arnd()*96)|0,1,10+((arnd()*24)|0))}

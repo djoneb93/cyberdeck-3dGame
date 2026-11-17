@@ -51,7 +51,7 @@ function landmark(id,x,z,w,d,h,v,P){
   return false;
 }
 // après la construction : marché couvert, salle de concert, gyrophares du commissariat
-function buildLandmarks(){
+function buildLandmarks(){buildAnnexes();
   // Bazar Néon : charpente métallique, verrière en deux pans, guirlandes de lampions
   const M=PL.market,a=M.hw+.15;
   [[-a,-a],[a,-a],[-a,a],[a,a]].forEach(([dx,dz])=>{box(.22,4.6,.22,'#3a414c',M.x+dx,2.3,M.z+dz);solid[I(Math.floor(M.x+dx),Math.floor(M.z+dz))]=1});
@@ -73,7 +73,9 @@ function buildLandmarks(){
 }
 function updateLandmarks(dt){
   const beat=(tAcc*128/60)%1,kick=Math.pow(1-beat,3);
-  LM.eq.forEach(e=>{const s=.35+Math.abs(Math.sin(tAcc*3.1+e.ph))*1.4*(.5+kick);e.b.scale.y=s;e.b.position.y=s/2});
+  const open=clubOpen(); // le club Ondes ne vit que la nuit : égaliseurs figés et lasers éteints le jour
+  LM.eq.forEach(e=>{const s=open?.35+Math.abs(Math.sin(tAcc*3.1+e.ph))*1.4*(.5+kick):.3;e.b.scale.y=s;e.b.position.y=s/2});
+  LM.lasers.forEach(o=>o.l.visible=open);
   LM.lasers.forEach(o=>{o.l.rotation.z=Math.sin(tAcc*.9+o.k*1.6)*.9;o.l.rotation.y=tAcc*.6+o.k*Math.PI/2;o.l.material.opacity=.15+.3*kick});
   const ch=Math.floor(tAcc*6)%3;LM.chase.forEach(gs=>gs.forEach((g,i)=>g.forEach(b=>b.visible=i!==ch)));
   LM.pulse.forEach((b,i)=>b.visible=Math.sin(tAcc*2+i)>-.6);
@@ -116,3 +118,22 @@ function laundryShop(x,z,w,d,h,P){
     box(.05,2.5,.06,'#8a969c',gx,1.27,fz-.02);box(gw,.05,.06,'#8a969c',gx,.05,fz-.02);box(gw,.05,.06,'#8a969c',gx,2.5,fz-.02)});
 
 }
+
+// ---- petits bâtiments voisins (pharmacie, cybercafé) : un étage d'habitation, une boutique au rez-de-chaussée ----
+function buildAnnexes(){
+  ANNEX.forEach(a=>{const w=a.x1-a.x0,d=a.z1-a.z0,x=(a.x0+a.x1)/2,z=(a.z0+a.z1)/2,h=a.h,X=a.face[1]==='x',fw=X?d:w;
+    addMesh(new THREE.BoxGeometry(w,h,d),boxMats('resi',w,h,d,1),x,h/2,z);box(w+.2,.16,d+.2,'#2a3242',x,h+.08,z);
+    const ry=FACE_RY[a.face],g=new THREE.Group();g.position.set(a.face==='-x'?a.x0:a.face==='+x'?a.x1:x,0,a.face==='+z'?a.z1:a.face==='-z'?a.z0:z);g.rotation.y=ry;scene.add(g);
+    // vitrine éclairée (une pièce en profondeur peinte), porte vitrée, auvent lumineux, enseigne
+    const c=document.createElement('canvas');c.width=96;c.height=48;const q=c.getContext('2d');const gr=q.createLinearGradient(0,0,0,48);gr.addColorStop(0,'#1a2a30');gr.addColorStop(1,'#0c1418');q.fillStyle=gr;q.fillRect(0,0,96,48);
+    q.fillStyle='rgba(255,255,255,.08)';q.fillRect(20,8,56,30);for(let i=0;i<6;i++){q.fillStyle=['#ffb547','#7cf29a','#39e6ff','#ff4fa3'][i%4];q.fillRect(24+i*9,14,6,4);q.fillRect(24+i*9,24,6,4)}
+    q.fillStyle='#e8fff4';q.fillRect(10,2,76,2);q.fillStyle='rgba(0,0,0,.5)';q.fillRect(0,40,96,8);
+    const win=new THREE.Mesh(new THREE.PlaneGeometry(fw-1.6,1.6),new THREE.MeshBasicMaterial({map:new THREE.CanvasTexture(c)}));win.position.set(-.5,1.15,.03);g.add(win);
+    box(.9,2.1,.05,'#0c1418',fw/2-.9,1.05,.03,g);box(.04,2.1,.07,a.c,fw/2-1.35,1.05,.04,g,true);box(.04,2.1,.07,a.c,fw/2-.45,1.05,.04,g,true);
+    box(fw+.2,.08,.9,'#1d2430',0,2.35,.45,g);box(fw+.2,.04,.04,a.c,0,2.32,.9,g,true);
+    g.updateMatrixWorld(true);const sp=g.localToWorld(new THREE.Vector3(0,2.85,.06));sign(a.n,a.c,sp.x,sp.y,sp.z,ry,false,false,.045,false,fw-.4);
+    if(a.cross){const cp=g.localToWorld(new THREE.Vector3(-fw/2+.4,2.85,.3));const cr=new THREE.Group();cr.position.copy(cp);cr.rotation.y=ry;scene.add(cr);box(.5,.16,.08,a.c,0,0,0,cr,true);box(.16,.5,.08,a.c,0,0,0,cr,true);LM.pulse.push(cr)}
+  });
+}
+// heures d'ouverture du club Ondes : de 20 h à 5 h
+function clubOpen(){const h=S.hour;return !(h>=0)||h>=20||h<5}

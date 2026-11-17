@@ -127,7 +127,7 @@ function buildGroundDetails(free){
     decal(g=>{g.strokeStyle='rgba(255,255,255,.55)';g.lineWidth=3;g.beginPath();g.moveTo(32,8);g.lineTo(32,50);g.moveTo(18,36);g.lineTo(32,52);g.lineTo(46,36);g.stroke()})]; // flèche peinte
   const lists=DEC.map(()=>[]);
   const props=[];
-  const [PX,PZ]=front("market",-1.6,1.8),keep=[[PX,PZ,2.2],[64.2,61.5,3.6],...NPC_DEF.map(n=>[n.x,n.z,1.6])]; // trémie du Bazar, place du taxi, personnages
+  const PX=MKT_PIT.x,PZ=MKT_PIT.z,keep=[[PX,PZ,2.2],[64.2,61.5,3.6],...NPC_DEF.map(n=>[n.x,n.z,1.6])]; // trémie du Bazar, place du taxi, personnages
   for(let z=1;z<H-1;z++)for(let x=11;x<W-1;x++){const t=tile[I(x,z)];if((t!==0&&t!==1&&t!==4)||solid[I(x,z)])continue;if(nearEntrance(x,z)||keep.some(([a,b,rr])=>Math.hypot(x+.5-a,z+.5-b)<rr))continue;
     const cx=x+.2+r()*.6,cz=z+.2+r()*.6;
     if(r()<.07){const k=t===1?[0,1,3,4][Math.floor(r()*4)]:Math.floor(r()*DEC.length);if(k===5&&t===1)continue;lists[k].push([cx,cz,r()*6,.6+r()*.7])}
@@ -136,7 +136,9 @@ function buildGroundDetails(free){
     const m4=new THREE.Matrix4(),q=new THREE.Quaternion(),e=new THREE.Euler(),sc=new THREE.Vector3(),p=new THREE.Vector3();
     L.forEach(([x,z,a,s2],i)=>{e.set(0,a,0);q.setFromEuler(e);p.set(x,.017+k*.001,z);sc.set(s2,1,s2);m4.compose(p,q,sc);m.setMatrixAt(i,m4)});m.renderOrder=1;scene.add(m)});
   // les objets : chacun bloque le passage et ne touche rien d'autre
-  props.forEach(([x,z,k,a])=>{
+  // les distributeurs et les chariots se tournent vers la rue la plus proche (on peut s’en servir depuis le trottoir)
+  const faceRoad=(x,z)=>{let best=null,bd=99;[[0,1],[1,0],[0,-1],[-1,0]].forEach(([dx,dz])=>{for(let s=1;s<8;s++){const t=tile[I(Math.floor(x+dx*s),Math.floor(z+dz*s))];if(solid[I(Math.floor(x+dx*s),Math.floor(z+dz*s))])break;if(t===1||t===2){if(s<bd){bd=s;best=Math.atan2(dx,dz)}break}}});return best}
+  props.forEach(([x,z,k,a])=>{if(k===3||k===4){const fr=faceRoad(x,z);if(fr!==null)a=fr}
     if(k===0){box(.7,.6,.7,'#6a4a2a',x,.3,z).rotation.y=a;box(.5,.45,.5,'#7a5a34',x+.1,.82,z-.05).rotation.y=a+.3;FURN.push([x,z,.5])} // caisses
     else if(k===1){box(.6,.4,.5,'#9a7a4e',x,.2,z).rotation.y=a;box(.45,.35,.4,'#a8885a',x+.35,.18,z+.3).rotation.y=a+.6;FURN.push([x+.15,z+.15,.55])} // cartons
     else if(k===2){box(1.2,.5,.5,'#3a4048',x,.25,z).rotation.y=a;const f=new THREE.Mesh(new THREE.IcosahedronGeometry(.4,1),new THREE.MeshLambertMaterial({color:0x2f6a3a,flatShading:true}));f.position.set(x,.75,z);f.scale.set(1.4,.8,.8);f.rotation.y=a;scene.add(f);FURN.push([x,z,.65])} // bac à plantes

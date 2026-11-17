@@ -208,7 +208,7 @@ $('prompt').addEventListener('click',interact);
 const clock=new THREE.Clock();let tAcc=0,saveT=0;
 const camDir=new THREE.Vector3();
 function updateCamera(dt){
-  if(cineCam(dt))return; // menu principal ou cinématique : la caméra est pilotée
+  if(cineCam(dt)||trainCam(dt))return; // menu principal, cinématique ou voyage en TGV : la caméra est pilotée
   yaw=lerp(yaw,yawT,Math.min(1,dt*8));pitch=lerp(pitch,pitchT,Math.min(1,dt*8));dist=lerp(dist,distT,Math.min(1,dt*8));
   focus.x=lerp(focus.x,player.position.x,Math.min(1,dt*7));focus.z=lerp(focus.z,player.position.z,Math.min(1,dt*7));focus.y=lerp(focus.y,player.position.y+1.5,Math.min(1,dt*5));
   camDir.set(Math.sin(yaw)*Math.cos(pitch),Math.sin(pitch),Math.cos(yaw)*Math.cos(pitch));
@@ -296,3 +296,28 @@ function sitOn(b){if(seated===b){standUp();return}target=null;pendingTalk=null;s
   player.position.set(b.x-b.fx*.05,0,b.z-b.fz*.05);ud.ry=Math.atan2(b.fx,b.fz);ud.moving=false;ud.sit=true}
 function standUp(){const b=seated;if(!b)return;seated=null;player.userData.sit=false;player.position.x=b.x+b.fx*.85;player.position.z=b.z+b.fz*.85}
 function registerBenches(){BENCHES.forEach((b,i)=>OBJECTS.push({id:'bench_'+i,x:b.x+b.fx*.6,z:b.z+b.fz*.6,r:1.1,get label(){return seated===b?'Se lever':'S’asseoir sur le banc'},act:()=>sitOn(b)}))}
+
+/* ===================== LE TGV : MONTER À BORD ===================== */
+// Quand la rame est à quai, on peut monter (E ou F). La caméra suit le train qui quitte la ville ; dans le tunnel,
+// tout devient noir : on s'endort, une voix dit que la ville ne nous laissera pas partir, et on se réveille dans sa planque.
+let trainRide=null;
+const TRAIN_STOP=()=>GZ1-.6;
+function trainAtQuai(){return train&&Math.abs(train.position.z-TRAIN_STOP())<.5&&!trainRide}
+function boardTrain(){if(!trainAtQuai())return;fadeThen(()=>{trainRide={t:0,phase:'ride'};player.visible=false;target=null;pendingTalk=null;toast('Tu montes à bord. Les portes se referment.','')})}
+function trainCam(dt){
+  if(!trainRide)return false;const R=trainRide;R.t+=dt;
+  if(R.phase==='ride'){const z=TRAIN_STOP()-(TRAIN_STOP()+170)*Math.pow(Math.min(1,R.t/16),2);train.position.z=z;
+    camera.position.set(GX+7,9,z+14);camera.lookAt(GX,3,z-8);
+    if(z<-8&&!R.dark){R.dark=true;dreamSequence()}}
+  else{camera.position.set(GX+7,9,-20);camera.lookAt(GX,3,-40)}
+  return true}
+function dreamSequence(){
+  const d=document.createElement('div');d.style.cssText='position:fixed;inset:0;z-index:30;background:#000;display:grid;place-items:center;opacity:0;transition:opacity 1.2s;font:16px/1.6 var(--f-m,monospace);color:#cfe8ff;text-align:center;padding:0 24px';
+  document.body.appendChild(d);overlayOpen=true;requestAnimationFrame(()=>d.style.opacity=1);
+  const lines=['Le roulis du train te berce. Dans le noir du tunnel, tes paupières se ferment…','Une voix sans visage, tout près de ton oreille : « Tu ne quitteras pas NEO-BXL. Pas encore. »','Quelque chose te retient dans cette ville.'];
+  let i=0;const next=()=>{if(i<lines.length){d.textContent=lines[i++];setTimeout(next,3400);return}
+    // réveil dans la planque
+    trainRide=null;S.roof=false;const n=NEW_STATE();player.position.set(n.px,0,n.pz);player.userData.ry=0;player.visible=true;focus.set(n.px,1.5,n.pz);yaw=yawT=0;save();
+    d.style.opacity=0;setTimeout(()=>{d.remove();overlayOpen=false;toast('Tu te réveilles dans ta planque, le cœur battant.','mem')},1300)};
+  setTimeout(next,1200);
+}
