@@ -7,8 +7,8 @@ const NPC_DEF=[
   {id:'mira',x:6.5+HX,z:7.3+HZ,ry:Math.PI},
   {id:'vasko',x:GX+GHW+1.3,z:(GZ0+GZ1)/2,ry:-Math.PI/2},
   {id:'doc',x:STALLS[7][0],z:STALLS[7][1]+1.5,ry:0},
-  {id:'okoro',...FP('laundry',1.3,0),ry:0},
-  {id:'lou',...FP('club',1.4,0),ry:-Math.PI/2}];
+  {id:'okoro',...FP('laundry',.85,0),ry:0},
+  {id:'lou',...FP('club',.85,0),ry:-Math.PI/2}];
 const OBJECTS=[
   {id:'o_terminal',x:9.5,z:3.7,r:1.3,label:'Examiner le terminal'},
   {id:'o_bed',x:4,z:4.3,r:1.4,label:'Examiner le lit'},
@@ -57,8 +57,8 @@ function spawn(){
     const el=document.createElement('div');el.className='nl';el.style.color=COLORS[d.id];$('labels').appendChild(el);
     npcs.push({...d,mesh:m,baseRy:d.ry,label:el})});
   // patrouille Kurogane au carrefour, curieux au pied des Toits, clients du Bazar, dockers
-  const R1=FP('roofs',3.6,3),R2=FP('roofs',4,-3.2),R3=FP('roofs',2.6,3.8),M=PL.market;
-  [[UX(AVE[2])-1.7,UZ(AVE[1])-2.4,0,'guard'],[UX(AVE[2])+1.7,UZ(AVE[1])+2.4,Math.PI,'guard'],[R1.x,R1.z,Math.PI/2,null],[R2.x,R2.z,Math.PI/2,null],[R3.x,R3.z,Math.PI*.7,null],
+  const R1=FP('roofs',.8,2.9),R2=FP('roofs',.8,-2.9),R3=FP('roofs',.7,4),M=PL.market;
+  [[UX(AVE[2])+2.45,UZ(AVE[1])-2.45,0,'guard'],[UX(AVE[2])-2.45,UZ(AVE[1])+2.45,Math.PI,'guard'],[R1.x,R1.z,Math.PI/2,null],[R2.x,R2.z,Math.PI/2,null],[R3.x,R3.z,Math.PI*.7,null],
    [M.x-1.8,M.z+1.8,Math.PI/2,null],[M.x-1.8,M.z-1.8,Math.PI,null],[M.x+1.8,M.z+1.8,0,null],[15.6,UZ(.6),-Math.PI/2,null],[11.4,UZ(.31),Math.PI/2,null]].forEach(([x,z,ry,k])=>{
     if(isSolid(x,z))return;const m=makeChar(k?SPECS[k]:randomSpec());m.position.set(x,0,z);m.userData.ry=ry;statics.push(m)});
   // passants sur les trottoirs des avenues et sur le quai

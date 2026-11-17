@@ -3,13 +3,20 @@
 'use strict';
 
 const STYLES=['glass','concrete','brick','metal','resi'];
+// textures photo CC0 (ambientCG, voir assets/textures/CREDITS.md) ; si une image manque, on garde la texture peinte
+const TEXIMG={};
+function loadTextures(){return Promise.all(['asphalt','paving','concrete','brick','corrugated','metal'].map(n=>new Promise(r=>{const i=new Image();i.onload=()=>{TEXIMG[n]=i;r()};i.onerror=()=>r();i.src='assets/textures/'+n+'.jpg'})))}
+// une photo en fond de façade, assombrie pour la nuit (tuile 4 × 4 unités, répétée en hauteur)
+function photoBase(g,name,tint,dark){const ph=TEXIMG[name];if(!ph)return false;for(let y=0;y<128;y+=64)g.drawImage(ph,0,y,64,64);if(tint){g.globalAlpha=.55;g.fillStyle=tint;g.fillRect(0,0,64,128);g.globalAlpha=1}g.fillStyle='rgba(8,12,22,'+(dark||.5)+')';g.fillRect(0,0,64,128);return true}
+function photoMat(name,rx,ry,dark){const ph=TEXIMG[name];if(!ph)return null;const c=document.createElement('canvas');c.width=c.height=256;const g=c.getContext('2d');g.drawImage(ph,0,0,256,256);g.fillStyle='rgba(8,12,22,'+(dark||.45)+')';g.fillRect(0,0,256,256);
+  const t=new THREE.CanvasTexture(c);t.wrapS=t.wrapT=THREE.RepeatWrapping;t.repeat.set(rx,ry);t.minFilter=THREE.LinearMipmapLinearFilter;return new THREE.MeshLambertMaterial({map:t})}
 let archSeed=20891;const arnd=()=>{archSeed=(archSeed*16807)%2147483647;return (archSeed-1)/2147483646};
 const apick=a=>a[Math.floor(arnd()*a.length)];
 const WARM=['#e8b878','#d8a868','#f0c080','#c89058'],COOL=['#bfe8ff','#9fd8ff','#e8f4ff'];
 // Une tuile de façade = 4 unités de large × 8 de haut = 4 étages de 2 unités (64 × 128 pixels).
 function paintFacade(style){
-  const c=document.createElement('canvas'),e=document.createElement('canvas');c.width=e.width=64;c.height=e.height=128;
-  const g=c.getContext('2d'),x=e.getContext('2d');x.fillStyle='#000';x.fillRect(0,0,64,128);
+  const c=document.createElement('canvas'),e=document.createElement('canvas');c.width=e.width=128;c.height=e.height=256; // double résolution
+  const g=c.getContext('2d'),x=e.getContext('2d');g.scale(2,2);x.scale(2,2);x.fillStyle='#000';x.fillRect(0,0,64,128);
   const lit=(px,py,w,h,col,a)=>{g.fillStyle=col;g.fillRect(px,py,w,h);x.globalAlpha=a==null?1:a;x.fillStyle=col;x.fillRect(px,py,w,h);x.globalAlpha=1};
   const speck=(n,cols)=>{for(let i=0;i<n;i++){g.fillStyle=cols[i%cols.length];g.fillRect((arnd()*64)|0,(arnd()*128)|0,1,1)}};
   if(style==='glass'){
@@ -20,25 +27,26 @@ function paintFacade(style){
       g.fillStyle='rgba(160,220,255,.08)';g.fillRect(px,py,3,28)}
     g.fillStyle='#0a141c';for(let i=0;i<=4;i++)g.fillRect(i*16,0,1,128);for(let f=0;f<4;f++){g.fillStyle='#07101a';g.fillRect(0,f*32+30,64,2);g.fillStyle='#2a4a5e';g.fillRect(0,f*32+29,64,1)}
   }else if(style==='concrete'){
-    g.fillStyle='#3a3d44';g.fillRect(0,0,64,128);speck(900,['#34373e','#42454c','#2e3138','#474a51']);
+    if(!photoBase(g,'concrete',null,.45)){g.fillStyle='#3a3d44';g.fillRect(0,0,64,128);speck(900,['#34373e','#42454c','#2e3138','#474a51'])}
     for(let f=0;f<4;f++){const y=f*32;g.fillStyle='#2c2f35';g.fillRect(0,y+30,64,2);
       for(let col=0;col<4;col++){const px=col*16+3;g.fillStyle='#1d2026';g.fillRect(px-1,y+7,12,18);
         if(arnd()<.42)lit(px,y+8,10,16,apick(WARM),.9);else{g.fillStyle='#141a24';g.fillRect(px,y+8,10,16);g.fillStyle='#22303e';g.fillRect(px+1,y+9,2,6)}
         g.fillStyle='#4a4d54';g.fillRect(px-1,y+25,12,1);if(arnd()<.3){g.fillStyle='#8a929c';g.fillRect(px+2,y+27,6,3)}}}
   }else if(style==='brick'){
-    g.fillStyle='#3e211b';g.fillRect(0,0,64,128);
-    for(let y=0;y<128;y+=3)for(let bx=-(y%6?3:0);bx<64;bx+=6){g.fillStyle=apick(['#6a3428','#5e2e24','#73392b','#572a21']);g.fillRect(bx,y,5,2)}
+    if(!photoBase(g,'brick',null,.55)){g.fillStyle='#3e211b';g.fillRect(0,0,64,128);
+    for(let y=0;y<128;y+=3)for(let bx=-(y%6?3:0);bx<64;bx+=6){g.fillStyle=apick(['#6a3428','#5e2e24','#73392b','#572a21']);g.fillRect(bx,y,5,2)}}
     for(let f=0;f<4;f++){const y=f*32;g.fillStyle='#8a7a68';g.fillRect(0,y+30,64,2);
       for(let col=0;col<4;col++){const px=col*16+4;g.fillStyle='#9a8a76';g.fillRect(px-1,y+4,10,2);g.fillStyle='#1a1014';g.fillRect(px,y+6,8,20);
         if(arnd()<.45){lit(px+1,y+7,6,18,apick(WARM),.9);g.fillStyle='rgba(40,20,10,.5)';g.fillRect(px+1,y+15,6,1);g.fillRect(px+4,y+7,1,18)}
         g.fillStyle='#7a6a58';g.fillRect(px-1,y+26,10,1)}}
   }else if(style==='metal'){
-    g.fillStyle='#22262d';g.fillRect(0,0,64,128);
-    for(let y=0;y<128;y+=16)for(let px=0;px<64;px+=16){g.fillStyle=arnd()<.5?'#262b33':'#1f232a';g.fillRect(px+1,y+1,14,14);g.fillStyle='#2e343d';g.fillRect(px+1,y+1,14,1)}
+    if(!photoBase(g,'metal',null,.6)){g.fillStyle='#22262d';g.fillRect(0,0,64,128)}
+    else for(let y=0;y<128;y+=16)g.fillRect(0,y,0,0);
+    if(!TEXIMG.metal)for(let y=0;y<128;y+=16)for(let px=0;px<64;px+=16){g.fillStyle=arnd()<.5?'#262b33':'#1f232a';g.fillRect(px+1,y+1,14,14);g.fillStyle='#2e343d';g.fillRect(px+1,y+1,14,1)}
     for(let f=0;f<4;f++){const y=f*32+12;g.fillStyle='#0e1218';g.fillRect(0,y-1,64,10);
       for(let s=0;s<8;s++){if(arnd()<.5)lit(s*8+1,y,6,8,apick(['#7af3ff','#ff8ac8','#e8f4ff','#ffd9a0']),.8);else{g.fillStyle='#141c26';g.fillRect(s*8+1,y,6,8)}}}
   }else{ // résidentiel : enduit délavé, petites fenêtres à stores
-    g.fillStyle=apick(['#4c4252','#435257','#55493e','#3f4856']);g.fillRect(0,0,64,128);speck(600,['rgba(0,0,0,.18)','rgba(255,255,255,.06)']);
+    const tint=apick(['#4c4252','#435257','#55493e','#3f4856']);if(!photoBase(g,'concrete',tint,.35)){g.fillStyle=tint;g.fillRect(0,0,64,128)}speck(600,['rgba(0,0,0,.18)','rgba(255,255,255,.06)']);
     for(let f=0;f<4;f++){const y=f*32;g.fillStyle='rgba(0,0,0,.25)';g.fillRect(0,y+30,64,2);
       for(let col=0;col<4;col++){const px=col*16+3;g.fillStyle='#1e1a22';g.fillRect(px-1,y+9,11,15);
         if(arnd()<.5){lit(px,y+10,9,13,apick(WARM.concat(['#ff9ab8','#9dffb0'])),.85);g.fillStyle='rgba(0,0,0,.35)';for(let k=0;k<4;k++)g.fillRect(px,y+11+k*3,9,1)}
@@ -48,10 +56,11 @@ function paintFacade(style){
   for(let i=0;i<10;i++){const sx=(arnd()*64)|0;g.fillStyle='rgba(0,0,0,.12)';g.fillRect(sx,(arnd()*96)|0,1,10+((arnd()*24)|0))}
   return {c,e};
 }
-const FACADES={};STYLES.forEach(s=>FACADES[s]=[0,1,2].map(()=>paintFacade(s)));
+let FACADES=null; // peintes au premier usage, une fois les photos chargées
+function facadesOf(s){if(!FACADES){FACADES={};STYLES.forEach(st=>FACADES[st]=[0,1,2].map(()=>paintFacade(st)))}return FACADES[s]}
 function facTex(cv,rx,ry){const t=new THREE.CanvasTexture(cv);t.magFilter=THREE.NearestFilter;t.minFilter=THREE.LinearMipmapLinearFilter;t.wrapS=t.wrapT=THREE.RepeatWrapping;t.repeat.set(rx,ry);return t}
 function styleMat(style,rx,ry,variant){
-  const f=FACADES[style][(variant||0)%3],t=facTex(f.c,rx,ry),te=facTex(f.e,rx,ry);
+  const f=facadesOf(style)[(variant||0)%3],t=facTex(f.c,rx,ry),te=facTex(f.e,rx,ry);
   return style==='glass'?new THREE.MeshPhongMaterial({map:t,emissive:0xffffff,emissiveMap:te,emissiveIntensity:.5,specular:0x5a7a96,shininess:70})
     :style==='metal'?new THREE.MeshPhongMaterial({map:t,emissive:0xffffff,emissiveMap:te,emissiveIntensity:.5,specular:0x3a4048,shininess:30})
     :new THREE.MeshLambertMaterial({map:t,emissive:0xffffff,emissiveMap:te,emissiveIntensity:.48});

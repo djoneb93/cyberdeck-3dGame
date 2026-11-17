@@ -282,4 +282,5 @@ function start(hotData){
 const boot=()=>{try{if(window.claude&&window.claude.hot&&window.claude.hot.ready)window.claude.hot.ready(start);else start(window.claude&&window.claude.hot&&window.claude.hot.data||{})}catch(e){console.error('Démarrage :',e)}};
 const fontWait=(document.fonts&&document.fonts.load)?Promise.race([document.fonts.load('8px Silkscreen'),new Promise(r=>setTimeout(r,1500))]):Promise.resolve();
 // on attend que tous les scripts soient chargés (le menu est dans intro.js, chargé après ce fichier)
-if(document.readyState==='loading')addEventListener('DOMContentLoaded',()=>fontWait.then(boot,boot));else fontWait.then(boot,boot);
+const ready=()=>Promise.all([fontWait,loadTextures()]).then(boot,boot);
+if(document.readyState==='loading')addEventListener('DOMContentLoaded',ready);else ready();

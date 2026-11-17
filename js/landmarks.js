@@ -8,10 +8,10 @@ const LM={eq:[],chase:[],mosaic:null,porthole:null,pulse:[],lasers:[],sirens:[],
 function landmark(id,x,z,w,d,h,v,P){
   const p=PL[id];
   if(id==='port'){ // entrepôt : socle en tôle, toit en dents de scie avec verrières
-    const hb=3.4,mats=[facadeMat(3,d/4,hb/8),facadeMat(3,d/4,hb/8),roofMat,roofMat,facadeMat(3,w/4,hb/8),facadeMat(3,w/4,hb/8)];
+    const hb=3.4,cs=k=>photoMat('corrugated',k/3,hb/3,.5)||facadeMat(3,k/4,hb/8),mats=[cs(d),cs(d),roofMat,roofMat,cs(w),cs(w)];
     const m=new THREE.Mesh(new THREE.BoxGeometry(w,hb,d),mats);m.position.set(x,hb/2,z);scene.add(m);camBlockers.push(m);
     const n=4,tz=d/n,tri=new THREE.Shape();tri.moveTo(0,0);tri.lineTo(tz,0);tri.lineTo(tz,1.2);tri.closePath();
-    for(let i=0;i<n;i++){const g=new THREE.ExtrudeGeometry(tri,{depth:w,bevelEnabled:false});g.rotateY(-Math.PI/2);const t=new THREE.Mesh(g,mat('#3a414c'));t.position.set(x+w/2,hb,z-d/2+i*tz);scene.add(t);
+    for(let i=0;i<n;i++){const g=new THREE.ExtrudeGeometry(tri,{depth:w,bevelEnabled:false});g.rotateY(-Math.PI/2);const t=new THREE.Mesh(g,photoMat('corrugated',w/3,1,.55)||mat('#3a414c'));t.position.set(x+w/2,hb,z-d/2+i*tz);scene.add(t);
       const gl=box(w-.1,1.12,.04,'#9fd8ff',x,hb+.58,z-d/2+(i+1)*tz-.03,null,true);gl.material=new THREE.MeshBasicMaterial({color:0x6fb8d8,transparent:true,opacity:.55})}
     for(let i=0;i<3;i++)box(.1,.1,d+.1,'#ffb547',x+w/2+.02,.9+i*.9,z,null,true); // bandes de signalisation
     return true}

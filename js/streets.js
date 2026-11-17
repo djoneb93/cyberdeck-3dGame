@@ -6,6 +6,8 @@ let srnd_s=7331;const srnd=()=>{srnd_s=(srnd_s*16807)%2147483647;return (srnd_s-
 const FURN=[],trafficLights=[],puddles=[];
 // ---------- textures du sol (tuile de 4 × 4 unités, appliquée selon la position dans le monde) ----------
 function groundTex(kind){
+  const ph=TEXIMG[kind==='asphalt'?'asphalt':'paving'];if(ph){const c=document.createElement('canvas');c.width=c.height=256;const g=c.getContext('2d');g.drawImage(ph,0,0,256,256);g.fillStyle='rgba(255,255,255,.18)';g.fillRect(0,0,256,256);
+    const t=new THREE.CanvasTexture(c);t.wrapS=t.wrapT=THREE.RepeatWrapping;t.minFilter=THREE.LinearMipmapLinearFilter;return t}
   const c=document.createElement('canvas');c.width=c.height=128;const g=c.getContext('2d');
   const sp=(n,cols,s)=>{for(let i=0;i<n;i++){g.fillStyle=cols[i%cols.length];g.fillRect((srnd()*128)|0,(srnd()*128)|0,s||1,s||1)}};
   if(kind==='asphalt'){g.fillStyle='#d6d9e0';g.fillRect(0,0,128,128);sp(5200,['#c4c8d0','#e2e5ea','#b8bcc6','#cfd3da']);
