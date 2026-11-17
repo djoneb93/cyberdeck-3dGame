@@ -66,11 +66,48 @@ function paintFacade(style){
 let FACADES=null; // peintes au premier usage, une fois les photos chargées
 function facadesOf(s){if(!FACADES){FACADES={};STYLES.forEach(st=>FACADES[st]=[0,1,2].map(()=>paintFacade(st)))}return FACADES[s]}
 function facTex(cv,rx,ry){const t=new THREE.CanvasTexture(cv);t.magFilter=THREE.NearestFilter;t.minFilter=THREE.LinearMipmapLinearFilter;t.wrapS=t.wrapT=THREE.RepeatWrapping;t.repeat.set(rx,ry);return t}
+// Fenêtres en profondeur (« interior mapping ») : derrière chaque fenêtre allumée, le shader dessine une petite pièce
+// en perspective (mur du fond, sol, plafond éclairé, murs de côté, un meuble, un écran ou un tableau) qui bouge avec le point de vue.
+// Une case de fenêtre fait 1 × 2 unités (la texture de façade fait 4 colonnes × 4 étages pour 4 × 8 unités).
+const INTERIOR_GLSL=`
+#include <emissivemap_fragment>
+#if defined(USE_EMISSIVEMAP)
+{
+  float lum=max(totalEmissiveRadiance.r,max(totalEmissiveRadiance.g,totalEmissiveRadiance.b));
+  if(lum>0.015){
+    vec3 pos=-vViewPosition;vec3 N=normalize(vNormal);
+    vec3 dp1=dFdx(pos),dp2=dFdy(pos);vec2 du1=dFdx(vUv),du2=dFdy(vUv);
+    vec3 p2=cross(dp2,N),p1=cross(N,dp1);vec3 T=normalize(p2*du1.x+p1*du2.x+1e-6),B=normalize(p2*du1.y+p1*du2.y+1e-6);
+    vec3 rd=normalize(pos);vec3 d=vec3(dot(rd,T),dot(rd,B),max(-dot(rd,N),.06));
+    vec2 cl=vUv*4.;vec2 id=floor(cl);vec2 f=fract(cl);
+    vec3 p=vec3(f.x,f.y*2.,0.),sz=vec3(1.,2.,1.25);
+    vec3 t3=vec3(d.x>0.?(sz.x-p.x)/d.x:-p.x/d.x, d.y>0.?(sz.y-p.y)/d.y:-p.y/d.y, sz.z/d.z);
+    float t=min(t3.x,min(t3.y,t3.z));vec3 h=p+d*t;
+    float hs=fract(sin(dot(id,vec2(12.9898,78.233)))*43758.5453),hs2=fract(hs*17.31);
+    vec3 c;
+    if(t==t3.z){
+      c=mix(vec3(.8,.7,.58),vec3(.55,.62,.78),hs)*(.75+.35*h.y/sz.y);
+      if(hs2>.5&&mod(floor(h.x*9.),2.)==0.)c*=.88;
+      if(h.y<.78&&abs(h.x-.3-hs*.4)<.3)c=vec3(.12,.09,.1);
+      if(hs2>.72&&(length(vec2(h.x-.62,h.y-1.32))<.1||(abs(h.x-.62)<.13&&h.y<1.2&&h.y>.55)))c=vec3(.04,.03,.05);
+      if(abs(h.x-.72+hs2*.4)<.13&&abs(h.y-1.25)<.11)c=hs>.55?vec3(.3,1.1,1.4):vec3(1.1,.6,.35);
+      if(hs2<.3&&abs(h.y-1.05)<.025)c*=.35;
+    }else if(t==t3.y)c=d.y<0.?vec3(.2,.14,.1):vec3(1.,.95,.85)*(1.5-length(h.xz-vec2(.5,.6))*1.1);
+    else c=vec3(.36,.33,.31)*(1.-.4*h.z/sz.z);
+    float sh=1.-.5*h.z/sz.z;
+    totalEmissiveRadiance=c*sh*(totalEmissiveRadiance/lum)*lum*1.6;
+  }
+}
+#endif`;
+function interiorShader(s){s.fragmentShader=s.fragmentShader.replace('#include <emissivemap_fragment>',INTERIOR_GLSL)}
+const MATC={};
 function styleMat(style,rx,ry,variant){
-  const f=facadesOf(style)[(variant||0)%3],t=facTex(f.c,rx,ry),te=facTex(f.e,rx,ry);
-  if(style==='glass')return new THREE.MeshPhongMaterial({map:t,emissive:0xffffff,emissiveMap:te,emissiveIntensity:.5,specular:0x5a7a96,shininess:70});
-  const nm=STYLE_PHOTO[style]&&TEXIMG[STYLE_PHOTO[style]]?normalTex(STYLE_PHOTO[style],2,rx,ry):null; // relief de la matière photo
-  return new THREE.MeshPhongMaterial({map:t,emissive:0xffffff,emissiveMap:te,emissiveIntensity:style==='metal'?.5:.48,normalMap:nm,normalScale:new THREE.Vector2(1.2,1.2),specular:style==='metal'?0x3a4048:0x14181e,shininess:style==='metal'?30:10});
+  const key=style+'|'+((variant||0)%3)+'|'+rx.toFixed(2)+'|'+ry.toFixed(2);if(MATC[key])return MATC[key]; // façades identiques : un seul matériau
+  const f=facadesOf(style)[(variant||0)%3],t=facTex(f.c,rx,ry),te=facTex(f.e,rx,ry);let m;
+  if(style==='glass')m=new THREE.MeshPhongMaterial({map:t,emissive:0xffffff,emissiveMap:te,emissiveIntensity:.5,specular:0x5a7a96,shininess:70});
+  else{const nm=STYLE_PHOTO[style]&&TEXIMG[STYLE_PHOTO[style]]?normalTex(STYLE_PHOTO[style],2,rx,ry):null; // relief de la matière photo
+    m=new THREE.MeshPhongMaterial({map:t,emissive:0xffffff,emissiveMap:te,emissiveIntensity:style==='metal'?.5:.48,normalMap:nm,normalScale:new THREE.Vector2(1.2,1.2),specular:style==='metal'?0x3a4048:0x14181e,shininess:style==='metal'?30:10})}
+  m.extensions={derivatives:true};m.onBeforeCompile=interiorShader;return MATC[key]=m;
 }
 // remplace la façade d'origine : les lieux aussi profitent des nouvelles textures
 function facadeMat(v,rx,ry){return styleMat(STYLES[v%STYLES.length],rx,ry,v)}

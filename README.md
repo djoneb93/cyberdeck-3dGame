@@ -40,9 +40,10 @@ et partagent la même portée globale.
 - `js/core.js` : état de la partie, sauvegarde, noms et couleurs des personnages.
 - `js/map.js` : la carte (grille, avenues, lieux, tours, port, gare, planque, collisions, étapes des histoires).
 - `js/render.js` : moteur 3D, matériaux, façades, enseignes, sprites pixel des personnages.
-- `js/architecture.js` : façades réalistes (verre, béton, brique, métal, résidentiel) et formes variées des tours.
+- `js/architecture.js` : façades réalistes (verre, béton, brique, métal, résidentiel), formes variées des tours, et fenêtres allumées qui montrent une pièce en profondeur (shader « interior mapping »).
 - `js/landmarks.js` : silhouettes et animations des lieux importants (salle de concert, marché couvert, bar, arcade, laverie, entrepôt, bunker, commissariat).
 - `js/world.js` : construction du monde (sol, ciel, bâtiments, port, viaduc, immeuble de la planque).
+- `js/skyline.js` : les immeubles qui ferment la ville au nord, à l’est et au sud (le côté du port reste ouvert), par quartiers de style proche.
 - `js/streets.js` : rues et sol (asphalte et dalles texturés, flaques, plaques d'égout, mobilier urbain, feux tricolores, câbles, tags).
 - `js/vehicles.js` : voitures flottantes (berline, sportive, utilitaire), taxi, rame TGV.
 - `js/station.js` : la gare Zéro en détail (quais, verrière, tableau des départs, horloge, kiosque).
@@ -51,7 +52,7 @@ et partagent la même portée globale.
 - `js/weather.js` : la météo, qui change toutes les 3 heures (touche M : aperçu).
 - `js/daynight.js` : le cycle jour / nuit, avec un ciel de jour (nuages, soleil) et un ciel de nuit (étoiles, lune) ; une journée dure 24 minutes, touche N pour avancer.
 - `js/doors.js` : portes des lieux importants (portes vitrées coulissantes, vue intérieure animée).
-- `js/interiors.js` : les intérieurs (on y entre et on en sort en marchant dans la porte) : l’étage de la planque (par l’escalier en colimaçon), le Bazar couvert, le Néon Noir, l’Arcade, le club Ondes, la laverie, le Bunker (réservé aux « visages connus ») et l’entrepôt du port.
+- `js/interiors.js` : les intérieurs (on y entre et on en sort en marchant dans la porte) : le hall de la tour des Toits (ascenseur vers le toit), l’étage de la planque (par l’escalier en colimaçon), le Bazar souterrain (par un tunnel sous la verrière), le Néon Noir, l’Arcade, le club Ondes, la laverie, le Bunker (réservé aux « visages connus ») et l’entrepôt du port.
 - `js/story.js` : dialogues du jeu et moteur des histoires des contacts (Ink).
 - `js/entities.js` : personnages, objets à examiner, passants, voitures, marqueurs.
 - `js/game.js` : déplacement, interactions, HUD, boucle de jeu, démarrage.

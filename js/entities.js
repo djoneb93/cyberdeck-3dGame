@@ -43,7 +43,6 @@ const OBJECTS=[
   {id:'o_stairs_up',x:GX-1.62,z:GZ1+.6,r:1.2,label:'Monter sur le quai',act:()=>climbStairs(true)},
   {id:'o_stairs_down',x:GX-1.62,z:QUAI_END-.3,r:1,zone:'quai',label:'Descendre l’escalier',act:()=>climbStairs(false)},
   {id:'o_tgv',x:GX-1.2,z:(GZ0+QUAI_END)/2,r:1.3,zone:'quai',label:'Regarder le TGV',dyn:()=>Math.abs(train.position.z-(GZ1-.6))<.5?'Le TGV est à quai. Portes fermées : réservé aux voyageurs munis d’un billet. Le tableau des départs annonce plusieurs destinations. Un jour, peut-être.':'La voie est vide. Le prochain TGV arrive du haut de la ville, par le viaduc.'},
-  {id:'o_up',...FP('roofs',1.2,0),r:1.2,label:'Entrer · monter sur le toit',act:()=>goRoof(true)},
   {id:'o_down',x:ROOF.x+1.9,z:ROOF.z-.5,r:1.1,roof:true,label:'Ascenseur · redescendre',act:()=>goRoof(false)},
   {id:'o_antenna',x:ROOF.x+.2,z:ROOF.z+.9,r:1.2,roof:true,label:'Regarder l’antenne',dyn:()=>'La grande antenne de la tour Zéro. Tout en haut, le feu rouge clignote pour les voitures volantes. D’ici, on capte tout le Net de la ville.'+(S.met.mira?' Mira dit que c’est ici qu’elle écoute la ville, la nuit.':'')},
   {id:'o_view',x:ROOF.x+ROOF.hw-.9,z:ROOF.z+ROOF.hd-.9,r:1.3,roof:true,label:'Regarder la ville',dyn:()=>AMB.roofs},
@@ -59,7 +58,7 @@ function spawn(){
   // patrouille Kurogane au carrefour, curieux au pied des Toits, clients du Bazar, dockers
   const R1=FP('roofs',.8,2.9),R2=FP('roofs',.8,-2.9),R3=FP('roofs',.7,4),M=PL.market;
   [[UX(AVE[2])+2.45,UZ(AVE[1])-2.45,0,'guard'],[UX(AVE[2])-2.45,UZ(AVE[1])+2.45,Math.PI,'guard'],[R1.x,R1.z,Math.PI/2,null],[R2.x,R2.z,Math.PI/2,null],[R3.x,R3.z,Math.PI*.7,null],
-   [M.x-1.8,M.z+1.8,Math.PI/2,null],[M.x-1.8,M.z-1.8,Math.PI,null],[M.x+1.8,M.z+1.8,0,null],[15.6,UZ(.6),-Math.PI/2,null],[11.4,UZ(.31),Math.PI/2,null]].forEach(([x,z,ry,k])=>{
+   [M.x-1.8,M.z+1.8,Math.PI/2,null],[M.x+.2,M.z-1.8,Math.PI,null],[M.x+1.8,M.z+1.8,0,null],[15.6,UZ(.6),-Math.PI/2,null],[11.4,UZ(.31),Math.PI/2,null]].forEach(([x,z,ry,k])=>{
     if(isSolid(x,z))return;const m=makeChar(k?SPECS[k]:randomSpec());m.position.set(x,0,z);m.userData.ry=ry;statics.push(m)});
   // passants sur les trottoirs des avenues et sur le quai
   const lanes=[{ax:'x',c:UZ(AVE[2])+2.1,a0:UX(.004),a1:UX(.996),side:1,n:6},{ax:'x',c:UZ(AVE[1])+2.1,a0:UX(.004),a1:UX(.996),side:1,n:5},{ax:'x',c:UZ(AVE[3])+2.1,a0:UX(.004),a1:UX(.996),side:1,n:5},

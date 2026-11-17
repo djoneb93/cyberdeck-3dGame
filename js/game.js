@@ -276,7 +276,7 @@ $('endClose').onclick=()=>{$('ending').hidden=true;overlayOpen=false};
 function start(hotData){
   const saved=(hotData&&hotData.S)||loadSave();
   if(saved){if(saved.mapv!==3){const n=NEW_STATE();saved.px=n.px;saved.pz=n.pz;saved.ry=0;saved.mapv=3}S=Object.assign(NEW_STATE(),saved);for(const k in S.q){const q=S.q[k];if(q.ep==null){q.ep=q.won?1:0;q.wins=q.won?1:0}}}
-  setupFX();buildWorld();spawn();buildLife();buildTaxi();buildTraffic();buildInteriors();makeMarkers();makeRain();setupWeather();setupDayNight();resize();placePlayer();
+  setupFX();buildWorld();buildPerimeter();spawn();buildLife();buildTaxi();buildTraffic();buildInteriors();makeMarkers();makeRain();setupWeather();setupDayNight();resize();placePlayer();
   $('loading').remove();
   if(hotData&&hotData.S&&hotData.running)begin(false);else showMenu();  try{window.claude&&window.claude.hot&&window.claude.hot.snapshot&&window.claude.hot.snapshot(()=>({S,running:started}))}catch(e){}
   frame();

@@ -5,7 +5,7 @@
 
 const IY=-60;                    // les pièces sont sous la ville, et hors de la carte : rien ne les voit depuis la rue
 const ROOMS={};let inLights=null,inCur=null;
-const IN_NAMES={home:'L’étage de la planque',market:'Bazar couvert',bar:'Le Néon Noir',arcade:'Arcade Pixel',club:'Club Ondes',laundry:'Laverie 24/7',bunker:'Bunker Zéro',port:'Entrepôt des Docks'};
+const IN_NAMES={home:'L’étage de la planque',market:'Bazar souterrain',roofs:'Hall de la tour des Toits',bar:'Le Néon Noir',arcade:'Arcade Pixel',club:'Club Ondes',laundry:'Laverie 24/7',bunker:'Bunker Zéro',port:'Entrepôt des Docks'};
 
 // ---------- outils ----------
 const rpick=a=>a[Math.floor(Math.random()*a.length)]; // hasard qui ne touche pas à la graine de la ville
@@ -265,17 +265,36 @@ IN_DEF.home={w:10,d:8,h:3,trim:'#7cf29a',light:[0xffc890,0x6fa8ff],fog:0x0e0c14,
     R.obj(-2,.7,1.3,'Soulever un drap',()=>'Sous le drap, un canapé couvert de poussière. Personne n’est monté ici depuis trois ans. Personne, sauf peut-être Mira : il y a une tasse propre sur l’accoudoir.');
   }};
 
-// ---------- le Bazar couvert : sous la verrière du marché, un escalier descend vers les étals de nuit ----------
+// ---------- le Bazar souterrain : sous la verrière du marché, un tunnel descend vers les étals de nuit ----------
 IN_DEF.market={w:14,d:10,h:3.6,trim:'#f6b35c',light:[0xffb547,0xff4fa3],fog:0x140c06,
   floor:canvasMat(32,32,(g,W,H)=>{g.fillStyle='#3a2a1e';g.fillRect(0,0,W,H);g.fillStyle='#4a3626';g.fillRect(1,1,14,14);g.fillRect(17,17,14,14);g.fillStyle='#2e2218';g.fillRect(17,1,14,14);g.fillRect(1,17,14,14)},10,7),
   wall:canvasMat(64,32,(g,W,H)=>{g.fillStyle='#24140e';g.fillRect(0,0,W,H);for(let y=0;y<H;y+=4)for(let x=(y/4)%2*4;x<W;x+=8){g.fillStyle=rpick(['#3a2016','#432419','#341c12']);g.fillRect(x,y,7,3)}},6,3),
-  outside(){ // la trémie de l'escalier, sous la verrière, avec son arche et son enseigne
-    const [x,z]=front('market',-.4,1.8),ry=FACE_RY[PL.market.face];box(1.5,.03,1.5,'#05060a',x,.02,z);
-    [[.75,0],[-.75,0],[0,.75],[0,-.75]].forEach(([a,b])=>box(a?.06:1.5,.06,b?.06:1.5,'#f6b35c',x+a,.05,z+b,null,true));
-    const [p1x,p1z]=front('market',-.4,2.6),[p2x,p2z]=front('market',-.4,1);box(.12,2.4,.12,'#2a3140',p1x,1.2,p1z);box(.12,2.4,.12,'#2a3140',p2x,1.2,p2z);
-    const lt=box(.12,.12,1.7,'#f6b35c',x,2.4,z,null,true);lt.rotation.y=ry+Math.PI/2;
-    const [sx,sz]=front('market',-.33,1.8);sign('BAZAR COUVERT','#f6b35c',sx,2.75,sz,ry,true,false,.03)},
-  entry:(()=>{const [x,z]=front('market',-.4,1.8);return {x,z,r:.6}})(),exit:(()=>{const [x,z]=front('market',.8,1.8);return {x,z,ry:FACE_RY[PL.market.face]}})(),
+  outside(){ // l'entrée du souterrain : un petit tunnel voûté en béton, avec ses lampes, ses rampes et l'escalier qui s'enfonce
+    const ry=FACE_RY[PL.market.face],[cx,cz]=front('market',-1.7,1.8),g=new THREE.Group();g.position.set(cx,0,cz);g.rotation.y=ry;scene.add(g);
+    const cm=photoMat('concrete',.8,.6,.5)||mat('#3a3d44');
+    [-1.15,1.15].forEach(sx=>{const m=new THREE.Mesh(boxGeo,cm);m.scale.set(.3,2,3.2);m.position.set(sx,1,0);g.add(m);camBlockers.push(m)});
+    const vault=new THREE.Mesh(new THREE.CylinderGeometry(1.3,1.3,3.2,20,1,true,-Math.PI/2,Math.PI),new THREE.MeshLambertMaterial({color:0x34373e,side:THREE.DoubleSide}));
+    vault.rotation.x=-Math.PI/2;vault.position.y=2;g.add(vault);
+    const arch=new THREE.Mesh(new THREE.TorusGeometry(1.32,.07,6,24,Math.PI),mat('#f6b35c',true));arch.position.set(0,2,1.62);g.add(arch);
+    [-1.32,1.32].forEach(sx=>box(.1,2,.1,'#f6b35c',sx,1,1.62,g,true));
+    box(2,.04,3.2,'#1c1e24',0,.02,0,g);for(let i=0;i<5;i++)box(1.9,.03,.06,'#f6b35c',0,.05,1.3-i*.6,g,true); // nez de marches lumineux
+    [-.95,.95].forEach(sx=>box(.05,.05,3,'#ffd59a',sx,.9,0,g,true));for(let i=0;i<3;i++)box(.3,.08,.3,'#fff2d0',0,3.2,1-i,g,true);
+    for(let i=0;i<4;i++)box(.5+Math.random()*.4,.3+Math.random()*.3,.02,rpick(['#ff4fa3','#39e6ff','#7dffb0']),(i%2?1:-1)*.99,.8+Math.random(),1-i*.7,g,true).rotation.y=(i%2?-1:1)*Math.PI/2; // tags fluo
+    // le fond : l'escalier qui descend vers les étals, peint en perspective et animé
+    const c=document.createElement('canvas');c.width=96;c.height=128;const t=new THREE.CanvasTexture(c);t.minFilter=THREE.LinearFilter;
+    const back=new THREE.Mesh(new THREE.PlaneGeometry(2.3,3.3),new THREE.MeshBasicMaterial({map:t,fog:false}));back.position.set(0,1.65,-1.55);g.add(back);
+    const draw=tt=>{const G=c.getContext('2d'),W2=96,H2=128;G.fillStyle='#0a0806';G.fillRect(0,0,W2,H2);
+      for(let i=0;i<12;i++){const k=i/12,y=H2-k*70,w=W2*(1-k*.75),x=(W2-w)/2;G.fillStyle=i%2?'#2a2620':'#34302a';G.fillRect(x,y-6,w,6);G.fillStyle='rgba(246,179,92,.55)';G.fillRect(x,y-6,w,1)}
+      const gl=G.createRadialGradient(W2/2,52,2,W2/2,52,30);gl.addColorStop(0,'rgba(255,190,110,.8)');gl.addColorStop(1,'rgba(255,190,110,0)');G.fillStyle=gl;G.fillRect(0,20,W2,70);
+      for(let i=0;i<4;i++){G.fillStyle=['#ffb547','#ff4fa3','#7dffb0','#5ce1e6'][(i+Math.floor(tt*2))%4];G.fillRect(W2/2-14+i*9,40+Math.sin(tt*2+i)*1.5,4,5)}
+      const px=((tt*9)%60)-10;G.fillStyle='#06050a';G.beginPath();G.arc(W2/2-20+px,58,3,0,7);G.fill();G.fillRect(W2/2-23+px,61,6,10);
+      G.fillStyle='rgba(0,0,0,.35)';G.fillRect(0,0,W2,22);G.fillRect(0,0,10,H2);G.fillRect(W2-10,0,10,H2)};
+    let k=0;IN_DEF.market.tick=dt=>{k+=dt;if(k>.1&&Math.hypot(player.position.x-cx,player.position.z-cz)<40){k=0;draw(tAcc);t.needsUpdate=true}};draw(0);
+    g.updateMatrixWorld(true);const sp=g.localToWorld(new THREE.Vector3(0,3.55,1.7));sign('BAZAR SOUTERRAIN','#f6b35c',sp.x,sp.y,sp.z,ry,true,false,.03);
+    // les murs du tunnel arrêtent le passage (on peut quand même sauter par-dessus les rampes, pas les murs : ils sont hauts)
+    for(let o=-3.2;o<=-.2;o+=.4)[.65,2.95].forEach(l=>{const [x,z]=front('market',o,l);FURN.push([x,z,.22])});
+    for(let l=.8;l<=2.8;l+=.4){const [x,z]=front('market',-3.35,l);FURN.push([x,z,.22])}},
+  entry:(()=>{const [x,z]=front('market',-2.5,1.8);return {x,z,r:.75}})(),exit:(()=>{const [x,z]=front('market',.8,1.8);return {x,z,ry:FACE_RY[PL.market.face]}})(),
   build(R){const w=R.w,d=R.d;
     const stall=(x,c,name,goods)=>{const z=-d/2+1.2;R.S(2.3,.9,.8,'#2a2420',x,.45,z);R.B(2.35,.06,.85,'#4a3a2a',x,.92,z);
       R.B(2.7,.08,1.5,shade(c,.45),x,2.5,z-.2);R.B(2.7,.06,.06,c,x,2.46,z+.55,true);[-1.25,1.25].forEach(dx=>R.B(.07,2.5,.07,'#2a3140',x+dx,1.25,z+.5));
@@ -306,13 +325,48 @@ IN_DEF.market={w:14,d:10,h:3.6,trim:'#f6b35c',light:[0xffb547,0xff4fa3],fog:0x14
     R.obj(-w/2+2,1.6,1.3,'Consulter l’Oracle',lines(['L’Oracle cligne : « Ce que tu cherches porte un nom de fer. »','L’Oracle murmure : « Le train descend du haut de la ville. Toi aussi, un jour, tu y es monté. »','L’Oracle se tait longtemps, puis : « Trois ans. Trois fragments. Une seule porte. »','L’Oracle : « Le chat de ta planque en sait plus que toi. »']));
   }};
 
+// ---------- le hall de la tour des Toits : accueil holographique, boîtes aux lettres, ascenseur vers le toit ----------
+IN_DEF.roofs={w:9,d:7,h:3.8,trim:'#6ff3f0',light:[0x9ff4f0,0xff4fa3],fog:0x081416,
+  floor:canvasMat(32,32,(g,W,H)=>{g.fillStyle='#1c2a30';g.fillRect(0,0,W,H);g.fillStyle='#2c3e44';g.fillRect(0,0,16,16);g.fillRect(16,16,16,16);g.fillStyle='rgba(111,243,240,.25)';g.fillRect(0,0,W,1);g.fillRect(0,0,1,H)},8,6),
+  wall:canvasMat(64,64,(g,W,H)=>{g.fillStyle='#10202a';g.fillRect(0,0,W,H);for(let x=0;x<W;x+=16){g.fillStyle='#16303a';g.fillRect(x+1,0,14,H);g.fillStyle='rgba(111,243,240,.18)';g.fillRect(x,0,1,H)}},4,2),
+  build(R){const w=R.w,d=R.d,z0=-d/2;
+    // l'ascenseur, au fond : cadre lumineux, portes coulissantes, afficheur d'étage
+    R.B(2,2.7,.2,'#2a3640',0,1.35,z0+.1);R.B(1.7,.06,.06,'#6ff3f0',0,2.62,z0+.22,true);R.B(.06,2.5,.06,'#6ff3f0',-.85,1.3,z0+.22,true);R.B(.06,2.5,.06,'#6ff3f0',.85,1.3,z0+.22,true);
+    R.B(1.6,2.45,.05,'#05080c',0,1.25,z0+.2);
+    const doors=[-1,1].map(s=>{const m=R.B(.8,2.45,.06,'#3e4852',s*.4,1.25,z0+.26);return {m,s}});R.block(0,z0+.25,1,.25);
+    R.screen(0,3.05,z0+.22,0,.9,.32,(g,W,H,t)=>{g.fillStyle='#02080a';g.fillRect(0,0,W,H);g.fillStyle='#6ff3f0';g.font='bold 18px monospace';g.textAlign='center';g.textBaseline='middle';
+      const f=R.fl==null?0:R.fl;g.fillText((f>0?'▲ ':'')+String(Math.round(f)).padStart(2,'0'),W/2,H/2+1)},64);
+    R.B(.12,.2,.05,'#14181f',1.15,1.2,z0+.22);R.B(.06,.06,.06,'#ffb547',1.15,1.25,z0+.26,true);
+    R.anims.push({k:0,f:t=>{const p=player.position,near=Math.hypot(p.x-R.cx,p.z-(R.cz+z0+1))<1.6?1:0;R.op=(R.op||0)+(near-(R.op||0))*.35;doors.forEach(({m,s})=>m.position.x=s*(.4+R.op*.72));
+      R.fl=R.fl==null?0:R.fl;if(R.fl>0)R.fl=Math.max(0,R.fl-.6)}});
+    // accueil avec une hôtesse holographique
+    R.S(2.6,1,.8,'#14222a',-2.3,.5,-.5);R.B(2.7,.05,.85,'#22343c',-2.3,1.02,-.5);R.B(2.7,.03,.03,'#6ff3f0',-2.3,1.05,-.08,true);R.B(2.5,.5,.05,'#1e3a44',-2.3,.6,-.08);
+    const holo=makeChar(randomSpec(),{holo:true});holo.position.set(R.cx-2.3,IY,R.cz-1.3);holo.userData.ry=0;R.chars.push({m:holo,anim:'bob',ph:0});
+    R.B(.9,.02,.9,'#1e5a5a',-2.3,.02,-1.3,true);
+    // boîtes aux lettres, plantes, banc, affiche de Lou
+    for(let i=0;i<4;i++)for(let j=0;j<3;j++){R.B(.05,.32,.42,'#5a6672',-w/2+.05,1+j*.36,1+i*.45);R.B(.02,.04,.12,'#ffb547',-w/2+.08,1.08+j*.36,1+i*.45,true)}R.block(-w/2+.1,1.7,.1,1);
+    [[w/2-.6,z0+.6],[-w/2+.6,z0+.6]].forEach(([x,z])=>{R.S(.5,.5,.5,'#3a3026',x,.25,z);R.B(.7,.9,.7,'#2f7a3e',x,.95,z)});
+    R.S(2,.45,.5,'#2a3640',w/2-.4,.22,1);
+    R.screen(w/2-.06,1.9,1,-Math.PI/2,1.6,2,(g,W,H,t)=>{g.fillStyle='#14061a';g.fillRect(0,0,W,H);g.fillStyle='#ff4fa3';g.font='bold 11px monospace';g.textAlign='center';
+      g.fillText('LOU',W/2,24);g.fillText('NÉON',W/2,38);g.fillStyle=Math.sin(t*3)>0?'#6ff3f0':'#c88bff';g.font='8px monospace';g.fillText('CE SOIR',W/2,64);g.fillText('CLUB ONDES',W/2,76);
+      for(let i=0;i<8;i++){g.fillStyle='rgba(255,79,163,.5)';g.fillRect(8+i*10,H-14-Math.abs(Math.sin(t*4+i))*14,6,4)}},96);
+    R.obj(0,z0+1.3,1.2,'Prendre l’ascenseur · toit',null);
+    OBJECTS[OBJECTS.length-1].act=()=>{R.fl=40;goRoof(true)};
+    R.obj(-2.3,.35,1.3,'Parler à l’hôtesse',lines(['L’hologramme sourit : « Bienvenue dans la tour des Toits. L’ascenseur dessert le toit, la vue est gratuite. Pour le reste, il faut un badge. »','« Mademoiselle Néon tourne ce soir au club Ondes. Voulez-vous que je vous réserve une place ? Ah. Je n’ai pas de réservations. Je suis désolée. »','L’image grésille : « Vous… vous êtes déjà venu ici. Il y a trois ans. Badge… introuvable. »']));
+    R.obj(-w/2+.8,1.7,1.1,'Les boîtes aux lettres',()=>'Des dizaines de noms, des dizaines de vies. L’une des boîtes porte un nom que tu as déjà lu quelque part : « M. Moth ». Elle déborde de prospectus.');
+  }};
+// en redescendant du toit, l'ascenseur s'arrête dans le hall
+function lobbyFromRoof(){const R=ROOMS.roofs;fadeThen(()=>{S.roof='in_roofs';player.position.set(R.cx,IY,R.cz-R.d/2+1.5);player.userData.ry=0;
+  yaw=yawT=0;focus.set(player.position.x,IY+1.5,player.position.z);R.fl=0;save();toast(IN_NAMES.roofs,'')})}
+
 function buildInteriors(){
   inLights=[new THREE.PointLight(0xffffff,0,15,1.4),new THREE.PointLight(0xffffff,0,13,1.4)];inLights.forEach(l=>scene.add(l));
   const wallOf={bunker:()=>photoMat('concrete',3,1,.5),port:()=>photoMat('corrugated',4,1.4,.45)};
   let k=0;for(const id in IN_DEF){const o=IN_DEF[id];if(!o.wall)o.wall=(wallOf[id]&&wallOf[id]())||mat('#2a2e34');makeRoom(id,o,W+60+k*22,H/2);k++}
+  const od=OBJECTS.find(o=>o.id==="o_down");if(od){od.act=lobbyFromRoof;od.label="Ascenseur · redescendre au hall"}
 }
 function updateInteriors(dt){
-  checkDoors(dt);
+  checkDoors(dt);for(const id in IN_DEF)if(IN_DEF[id].tick)IN_DEF[id].tick(dt);
   const z=zoneOf(),Z=z&&ZONES[z],R=Z&&Z.room?ROOMS[Z.room]:null;
   if(R!==inCur){inCur=R;inLights.forEach((l,i)=>{if(!R){l.intensity=0;return}l.color.setHex(R.o.light[i]);l.intensity=i?1.1:1.6;l.position.set(R.cx+(i?R.w/4:-R.w/5),IY+R.h-.5,R.cz+(i?R.d/5:-R.d/5))})}
   if(!R)return;
