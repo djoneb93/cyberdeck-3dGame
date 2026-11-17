@@ -18,7 +18,7 @@ function meshBox(w,h,d,material,x,y,z,parent){const m=new THREE.Mesh(boxGeo,mate
 function lines(list){let last=-1;return ()=>{let k;do{k=Math.floor(Math.random()*list.length)}while(list.length>1&&k===last);last=k;return list[k]}}
 
 function makeRoom(id,o,cx,cz){
-  const g=new THREE.Group();g.position.set(cx,IY,cz);scene.add(g);
+  const n0=scene.children.length,g=new THREE.Group();g.position.set(cx,IY,cz);scene.add(g);
   const w=o.w,d=o.d,h=o.h||3.4,blocks=[],anims=[],chars=[];
   const R={id,g,cx,cz,w,d,h,blocks,anims,chars,o,
     B:(bw,bh,bd,c,x,y,z,e)=>box(bw,bh,bd,c,x,y,z,g,e),
@@ -50,7 +50,7 @@ function makeRoom(id,o,cx,cz){
   const st=signTexture(o.door||'SORTIE','#7dffb0'),sp=new THREE.Mesh(new THREE.PlaneGeometry(st.w*.035,st.h*.035),new THREE.MeshBasicMaterial({map:st.tex,fog:false}));sp.position.set(0,2.95,-.04);sp.rotation.y=Math.PI;so.add(sp);
   R.B(1.4,.02,.7,o.trim,0,.01,d/2-.5,true);} // tapis lumineux devant la porte
   ZONES['in_'+id]={x:cx,z:cz,hw:w/2-.45,hd:d/2-.45,y:IY,blocks,room:id};
-  ROOMS[id]=R;o.build(R);if(o.outside)o.outside();
+  ROOMS[id]=R;o.build(R);R.own=new Set(scene.children.slice(n0));if(o.outside)o.outside(); /* tout ce que la pièce a posé dans la scène (enseignes, personnages…) */
   // la porte de la rue : on entre en marchant dedans, sans touche à presser
   if(o.entries)o.entries.forEach(e=>ENTRANCES.push({id,...e}));else{const f=o.entry||FP(id,.3,0);ENTRANCES.push({id,x:f.x,z:f.z,r:f.r||.85})}
 }
@@ -396,7 +396,7 @@ function updateInteriors(dt){
   checkDoors(dt);updatePits();
   if(rain&&typeof inPlanque==="function"&&inPlanque())rain.mesh.visible=false; // dans sa planque, on ne voit pas la pluie tomber
   const z=zoneOf(),Z=z&&ZONES[z],R=Z&&Z.room?ROOMS[Z.room]:null;
-  if(R!==inCur){inCur=R;inLights.forEach((l,i)=>{if(!R){l.intensity=0;return}l.color.setHex(R.o.light[i]);l.intensity=i?1.1:1.6;l.position.set(R.cx+(i?R.w/4:-R.w/5),IY+R.h-.5,R.cz+(i?R.d/5:-R.d/5))})}
+  if(R!==inCur){inCur=R;isolateRoom(R);inLights.forEach((l,i)=>{if(!R){l.intensity=0;return}l.color.setHex(R.o.light[i]);l.intensity=i?1.1:1.6;l.position.set(R.cx+(i?R.w/4:-R.w/5),IY+R.h-.5,R.cz+(i?R.d/5:-R.d/5))})}
   if(!R)return;
   if(distT>8)distT=8; // la caméra reste près de la pièce
   R.south.visible=camera.position.z<R.cz+R.d/2-.1;
@@ -407,4 +407,12 @@ function updateInteriors(dt){
     if(c.anim==='dance'){m.position.y=IY+Math.abs(Math.sin(c.ph*4))*.18;m.userData.ry+=dt*1.2*(c.ph%2>1?1:-1);m.userData.moving=Math.sin(c.ph*2)>0}
     else if(c.anim==='bob'){m.position.y=IY+Math.abs(Math.sin(c.ph*4.2))*.06}
     else if(c.anim==='sway'){m.userData.moving=Math.sin(c.ph*.7)>.6}});
+}
+
+// Dans une pièce (ou le métro), on ne voit qu'elle : les autres pièces, les souterrains et la ville sont masqués.
+// Les lumières restent allumées (les retirer obligerait à recompiler tous les matériaux). À la sortie, tout réapparaît.
+let isoHidden=[];
+function isolateRoom(R){
+  isoHidden.forEach(o=>o.visible=true);isoHidden=[];if(!R)return;
+  scene.children.forEach(o=>{if(!o.visible||o.isLight||o===player||R.own.has(o))return;o.visible=false;isoHidden.push(o)});
 }
