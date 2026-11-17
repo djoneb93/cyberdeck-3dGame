@@ -16,16 +16,16 @@ function blade(text,color,a,f,top,side){ // a : position le long de la façade, 
 }
 function buildLife(){
   // tours : enseignes verticales côté avenue, liserés néon verticaux, bandeaux lumineux
-  TOWERS.forEach((b,k)=>{if(b.comm)return;const x=UX(b.u),z=UZ(b.v),w=2*b.s*MS,h=HZF(b.h),c=NEON_COLS[k%NEON_COLS.length];
-    const hh=h>13?h*.62:h;
-    box(.08,hh-.4,.08,c,x+w/2+.02,hh/2+.2,z+w/2+.02,null,true);
-    if(k%3===0)box(.08,hh-.4,.08,NEON_COLS[(k+2)%6],x-w/2-.02,hh/2+.2,z+w/2+.02,null,true);
-    if(k%2===1)for(let y=4;y<hh-1;y+=4)box(w+.06,.06,.06,c,x,y,z+w/2+.03,null,true);
+  TOWERS.forEach((b,k)=>{if(b.comm||!b.box||b.type==='balcony')return;const x=UX(b.u),z=UZ(b.v),w=2*b.s*MS,h=HZF(b.h),c=NEON_COLS[k%NEON_COLS.length];
+    const hh=b.type==='setback'?h*.5:h,sq=b.type!=='chamfer';
+    if(sq)box(.08,hh-.4,.08,c,x+w/2+.02,hh/2+.2,z+w/2+.02,null,true);
+    if(sq&&k%3===0)box(.08,hh-.4,.08,NEON_COLS[(k+2)%6],x-w/2-.02,hh/2+.2,z+w/2+.02,null,true);
+    if(k%2===1)for(let y=4;y<hh-1;y+=4)box(sq?w+.06:w*.62,.06,.06,c,x,y,z+w/2+.03,null,true);
     const word=BLADE_WORDS[k%BLADE_WORDS.length],col=NEON_COLS[(k+1)%6],i=Math.round(b.u*12-.5);
     if(b.j%3===2)blade(word,col,x+w/2-.45,z+w/2,hh,'z');else if(i%3===2)blade(word,col,z+w/2-.45,x+w/2,hh,'x');
   });
   // projecteurs qui balaient le ciel depuis les plus hautes tours
-  TOWERS.filter(b=>b.h>.3).slice(0,5).forEach((b,i)=>{const h=HZF(b.h),g=new THREE.Group();g.position.set(UX(b.u),h+.4,UZ(b.v));scene.add(g);
+  TOWERS.filter(b=>b.h>.3).slice(0,5).forEach((b,i)=>{const h=HZF(b.h),o=b.s*MS*.42,g=new THREE.Group();g.position.set(UX(b.u)+o,h+.4,UZ(b.v)-o);scene.add(g);
     const beam=new THREE.Mesh(new THREE.CylinderGeometry(.18,3.2,60,14,1,true),new THREE.MeshBasicMaterial({color:i%2?0x9fd8ff:0xc8a8ff,transparent:true,opacity:.07,blending:THREE.AdditiveBlending,depthWrite:false,side:THREE.DoubleSide,fog:false}));
     beam.position.y=30;g.add(beam);box(.6,.4,.6,'#3a4252',0,-.2,0,g);searchlights.push({g,ph:i*1.7})});
   // drones de livraison et de surveillance

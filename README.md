@@ -40,6 +40,7 @@ et partagent la même portée globale.
 - `js/core.js` : état de la partie, sauvegarde, noms et couleurs des personnages.
 - `js/map.js` : la carte (grille, avenues, lieux, tours, port, gare, planque, collisions, étapes des histoires).
 - `js/render.js` : moteur 3D, matériaux, façades, enseignes, sprites pixel des personnages.
+- `js/architecture.js` : façades réalistes (verre, béton, brique, métal, résidentiel) et formes variées des tours.
 - `js/world.js` : construction du monde (sol, ciel, bâtiments, port, viaduc, immeuble de la planque).
 - `js/vehicles.js` : voitures flottantes (berline, sportive, utilitaire), taxi, rame TGV.
 - `js/station.js` : la gare Zéro en détail (quais, verrière, tableau des départs, horloge, kiosque).

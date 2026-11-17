@@ -82,8 +82,9 @@ function buildWorld(){
   instBoxes(kerb,'#ffe2b0',true);
 
   // tours de la ville (même disposition que la carte)
-  TOWERS.forEach((b,k)=>{const w=2*b.s*MS,h=HZF(b.h);tower(UX(b.u),UZ(b.v),w,w,h,k%4,b.comm?'#8fb7ff':b.neon,b.comm);
-    if(!b.comm&&h>9&&k%2===0){const aw=Math.min(w*.62,3.4);adScreen(UX(b.u),Math.min(h*.62*.6,7)+1.5,UZ(b.v)+w/2+.08,0,aw,aw*.55)}});
+  TOWERS.forEach((b,k)=>{const w=2*b.s*MS,h=HZF(b.h);archTower(b,k);
+    if(!b.comm&&b.box&&b.type!=='balcony'&&h>9&&k%2===0){const aw=Math.min(w*.62,3.4);adScreen(UX(b.u),Math.min(h*.62*.6,7)+1.5,UZ(b.v)+w/2+.08,0,aw,aw*.55)}});
+  skyBridges();flushDetails();
   // tours lointaines tout autour (pas sur le fleuve ni sur le viaduc)
   for(let i=0;i<70;i++){
     const side=i%3;let x,z;const dd=6+rnd()*26;
