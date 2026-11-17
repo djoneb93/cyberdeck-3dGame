@@ -230,7 +230,7 @@ function buildWorld(){
   box(3,.1,.9,'#4a3526',9.5,.8,3.5);[8.1,10.9].forEach(x=>box(.1,.8,.8,'#4a3526',x,.4,3.5));
   box(.9,.6,.08,'#1a1e27',9.5,1.2,3.35);box(.8,.5,.02,'#3dff9a',9.5,1.2,3.4,null,true);box(.5,.05,.25,'#2a2e36',9.5,.87,3.7);
   box(.5,.1,.5,'#3a3f4c',9.5,.45,4.5);box(.5,.5,.08,'#3a3f4c',9.5,.75,4.78);box(.08,.45,.08,'#3a3f4c',9.5,.22,4.5);
-  box(.5,.5,.5,'#6b4a36',10.5,.25,8.5);box(.7,.5,.7,'#2f7a3e',10.5,.75,8.5);box(.4,.4,.4,'#3d9a50',10.4,1.15,8.4);
+  // (la plante de ce coin a laissé sa place à l'escalier en colimaçon, voir js/interiors.js)
   box(3,.02,2.4,'#3b2a4a',6.5,.015,6.2);
   const home=new THREE.PointLight(0xffb070,1.4,9,1.5);home.position.set(6.5,2.6,6);scene.add(home);
   glow(9.5,4,1.2,'#3dff9a',.25);glow(6.5,10.6,2.2,'#7cf29a',.3);

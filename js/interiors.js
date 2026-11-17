@@ -225,13 +225,13 @@ const IN_DEF={
 
 // ---------- l'étage de la planque : ton appartement d'avant 2086, resté sous les draps ----------
 IN_DEF.home={w:10,d:8,h:3,trim:'#7cf29a',light:[0xffc890,0x6fa8ff],fog:0x0e0c14,door:'ESCALIER',
-  entry:{x:5.5+HX,z:5.3+HZ,r:.55},exit:{x:6.6+HX,z:6.1+HZ,ry:0},
+  entry:{x:9.7+HX,z:8.5+HZ,r:.5},exit:{x:8.7+HX,z:7.9+HZ,ry:-Math.PI/2},
   floor:canvasMat(64,64,(g,W,H)=>{for(let i=0;i<8;i++){g.fillStyle=i%2?'#3a281c':'#43301f';g.fillRect(0,i*8,W,8);g.fillStyle='rgba(0,0,0,.4)';g.fillRect(0,i*8,W,1);g.fillRect((i*29)%W,i*8,1,8)}},4,3),
   wall:canvasMat(64,64,(g,W,H)=>{g.fillStyle='#2b2333';g.fillRect(0,0,W,H);for(let x=0;x<W;x+=16){g.fillStyle='#33293d';g.fillRect(x,0,8,H)}g.fillStyle='#4a3e48';for(let i=0;i<5;i++)g.fillRect(Math.random()*W,Math.random()*H,6,10)},5,2),
-  outside(){ // escalier en colimaçon dans la planque, contre le lit
-    const x=5.5+HX,z=4.5+HZ;solid[I(5+HX,4+HZ)]=1;box(.12,3.2,.12,'#8899aa',x,1.6,z);
+  outside(){ // escalier en colimaçon dans la planque, dans le coin à côté du coffre-fort
+    const x=10.5+HX,z=8.5+HZ;solid[I(10+HX,8+HZ)]=1;box(.12,3.2,.12,'#8899aa',x,1.6,z);
     for(let i=0;i<9;i++){const a=i*.75,s=box(.6,.06,.22,'#5a6070',x+Math.cos(a)*.3,.2+i*.34,z+Math.sin(a)*.3);s.rotation.y=-a}
-    box(.05,.05,.05,'#7cf29a',x,3.2,z,null,true);box(.9,.02,.7,'#7cf29a',x,.01,z+.8,null,true)},
+    box(.05,.05,.05,'#7cf29a',x,3.2,z,null,true);box(.6,.02,.8,'#7cf29a',x-.85,.01,z,null,true)},
   build(R){const w=R.w,d=R.d;
     // grande fenêtre sur la ville : le ciel suit l'heure
     R.screen(0,1.75,-d/2+.06,0,4,1.7,(g,W,H,t)=>{const k=typeof dnLevel==='number'?dnLevel:0;const sky=g.createLinearGradient(0,0,0,H);

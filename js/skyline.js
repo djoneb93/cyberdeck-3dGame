@@ -65,7 +65,7 @@ function buildPerimeter(){
   // dx, dz : la direction de la chaussée (la crosse du lampadaire penche vers elle, le dossier du banc lui tourne le dos)
   const lamp=(x,z,ax,dx,dz)=>{B('#2a2e36',false,x,2,z,.1,4,.1);B('#2a2e36',false,x+dx*.35,4,z+dz*.35,ax?.8:.08,.08,ax?.08:.8);B('#fff1d6',true,x+dx*.7,3.93,z+dz*.7,.3,.05,.3);
     glow(x+dx*.7,z+dz*.7,2.4,'#ffd9a0',.22);FURN.push([x,z,.16])};
-  const bench=(x,z,ax,dx,dz)=>{B('#5a4030',false,x,.45,z,ax?.45:1.5,.06,ax?1.5:.45);B('#2a2e36',false,x,.22,z,ax?.35:1.3,.44,ax?1.3:.35);B('#5a4030',false,x-dx*.2,.72,z-dz*.2,ax?.06:1.5,.4,ax?1.5:.06);FURN.push([x,z,.6])};
+  const bench=(x,z,ax,dx,dz)=>{B('#5a4030',false,x,.45,z,ax?.45:1.5,.06,ax?1.5:.45);B('#2a2e36',false,x,.22,z,ax?.35:1.3,.44,ax?1.3:.35);B('#5a4030',false,x-dx*.2,.72,z-dz*.2,ax?.06:1.5,.4,ax?1.5:.06);FURN.push([x,z,.6]);BENCHES.push({x,z,fx:dx,fz:dz})};
   const bin=(x,z)=>{B('#3a5a46',false,x,.45,z,.42,.9,.42);B('#7cf29a',true,x,.86,z,.44,.04,.44);FURN.push([x,z,.25])};
   // nord : trottoir de 2 m (z de 0 à 2), est : x de 88 à 92, sud : z de 72 à 76 ; on suit chaque trottoir en son milieu
   // le trottoir nord est étroit : seulement des lampadaires et des poubelles, pour laisser passer de chaque côté
@@ -91,13 +91,20 @@ function buildPerimeter(){
     blk(X0,O0,0,HT);blk(O1,X1,0,HT);blk(O0,O1,YT,HT);blk(O0,O1,0,YB);
     const black=new THREE.MeshBasicMaterial({color:0x010102,fog:false});
     const liner=(w,h,x,y,z,ry)=>{const p=new THREE.Mesh(new THREE.PlaneGeometry(w,h),black);p.position.set(x,y,z);p.rotation.y=ry||0;scene.add(p)};
-    liner(10,YT-YB,O0+.01,(YB+YT)/2,-5,Math.PI/2);liner(10,YT-YB,O1-.01,(YB+YT)/2,-5,-Math.PI/2);
-    const top=new THREE.Mesh(new THREE.PlaneGeometry(O1-O0,10),black);top.rotation.x=Math.PI/2;top.position.set(GX,YT-.01,-5);scene.add(top);
-    liner(O1-O0,YT-YB,GX,(YB+YT)/2,-10,0); // le fond noir
+    // l'arche : murs droits jusqu'à la naissance de la voûte, puis un demi-cercle (voûte noire à l'intérieur, écoinçons en béton devant)
+    const RA=(O1-O0)/2,YS=YT-RA;
+    liner(10,YS-YB,O0+.01,(YB+YS)/2,-5,Math.PI/2);liner(10,YS-YB,O1-.01,(YB+YS)/2,-5,-Math.PI/2);
+    const vault=new THREE.Mesh(new THREE.CylinderGeometry(RA-.01,RA-.01,10,24,1,true,-Math.PI/2,Math.PI),new THREE.MeshBasicMaterial({color:0x010102,fog:false,side:THREE.DoubleSide}));
+    vault.rotation.x=-Math.PI/2;vault.position.set(GX,YS,-5);scene.add(vault);
+    const sp=new THREE.Shape();sp.moveTo(-RA,0);sp.lineTo(-RA,RA);sp.lineTo(RA,RA);sp.lineTo(RA,0);sp.absarc(0,0,RA,0,Math.PI,false);
+    const cm=photoMat('concrete',.8,.8,.5)||mat('#3a3d44'),spd=new THREE.Mesh(new THREE.ExtrudeGeometry(sp,{depth:10,bevelEnabled:false,curveSegments:24}),[cm,cm]);spd.position.set(GX,YS,-10);scene.add(spd);
+    liner(O1-O0,YS-YB,GX,(YB+YS)/2,-10,0);const endc=new THREE.Mesh(new THREE.CircleGeometry(RA,24,0,Math.PI),black);endc.position.set(GX,YS,-10);scene.add(endc); // le fond noir
     for(let z=-.8;z>-9;z-=1.6)[O0+.03,O1-.03].forEach(x=>B('#ffb547',true,x,YB+2.6,z,.04,.06,.3)); // lampes qui s'enfoncent dans le noir
-    // encadrement de la bouche, néon et panneau de ligne
-    B('#2a2e36',false,GX,YT+.25,.15,O1-O0+.8,.5,.3);B('#2a2e36',false,O0-.2,(YB+YT)/2,.15,.4,YT-YB,.3);B('#2a2e36',false,O1+.2,(YB+YT)/2,.15,.4,YT-YB,.3);
-    B('#ff4fa3',true,GX,YT+.02,.32,O1-O0+.4,.05,.05);B('#ff4fa3',true,O0-.02,(YB+YT)/2,.32,.05,YT-YB,.05);B('#ff4fa3',true,O1+.02,(YB+YT)/2,.32,.05,YT-YB,.05);
+    // encadrement arrondi, néon qui suit l'arche, clé de voûte, panneau de ligne
+    B('#2a2e36',false,O0-.2,(YB+YS)/2,.15,.4,YS-YB,.3);B('#2a2e36',false,O1+.2,(YB+YS)/2,.15,.4,YS-YB,.3);
+    const fr=new THREE.Mesh(new THREE.TorusGeometry(RA+.2,.2,8,28,Math.PI),mat('#2a2e36'));fr.position.set(GX,YS,.15);scene.add(fr);
+    const ne=new THREE.Mesh(new THREE.TorusGeometry(RA+.02,.035,6,40,Math.PI),mat('#ff4fa3',true));ne.position.set(GX,YS,.32);scene.add(ne);
+    B('#ff4fa3',true,O0-.02,(YB+YS)/2,.32,.05,YS-YB,.05);B('#ff4fa3',true,O1+.02,(YB+YS)/2,.32,.05,YS-YB,.05);B('#3a3e46',false,GX,YT+.32,.2,.5,.6,.4);
     sign('LIGNE 3 · NEO-BXL NORD','#ff4fa3',GX,YT+1.1,.36,0,false,false,.04);
     B('#3a4252',false,GX,HT+.3,zc,X1-X0-1,.5,D-2);B('#2a3242',false,GX,HT+.08,zc,X1-X0+.2,.16,D+.2)}
   for(const k in boxes){const e=k.endsWith('!');instBoxes(boxes[k],e?k.slice(0,-1):k,e)}

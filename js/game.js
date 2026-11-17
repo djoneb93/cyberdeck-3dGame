@@ -23,6 +23,9 @@ function updatePlayer(dt){
     player.position.set(c.from.x+(c.to.x-c.from.x)*e,c.from.y+(c.to.y-c.from.y)*Math.min(1,Math.max(0,(e-.08)/.84)),c.from.z+(c.to.z-c.from.z)*e);
     ud.ry=Math.atan2(c.to.x-c.from.x,c.to.z-c.from.z);ud.moving=true;
     if(c.t>=1){S.roof=c.up?'quai':false;climb=null;overlayOpen=false;ud.moving=false;S.px=player.position.x;S.pz=player.position.z}return}
+  // assis sur un banc : on se relève dès qu'on veut marcher (touches ou clic)
+  if(seated){const go=!dlgOpen&&!overlayOpen&&(target||['KeyW','KeyS','KeyA','KeyD','ArrowUp','ArrowDown','ArrowLeft','ArrowRight'].some(k=>keys[k]));
+    if(!go){player.userData.moving=false;return}standUp()}
   let mx=0,mz=0;
   if(!dlgOpen&&!overlayOpen){
     const f=(keys.KeyW||keys.ArrowUp?1:0)-(keys.KeyS||keys.ArrowDown?1:0);
@@ -275,7 +278,7 @@ $('endClose').onclick=()=>{$('ending').hidden=true;overlayOpen=false};
 function start(hotData){
   const saved=(hotData&&hotData.S)||loadSave();
   if(saved){if(saved.mapv!==5){const n=NEW_STATE();saved.px=n.px;saved.pz=n.pz;saved.ry=0;saved.roof=false;saved.mapv=5}S=Object.assign(NEW_STATE(),saved);for(const k in S.q){const q=S.q[k];if(q.ep==null){q.ep=q.won?1:0;q.wins=q.won?1:0}}}
-  setupFX();buildWorld();buildPerimeter();spawn();buildLife();buildTaxi();buildTraffic();buildInteriors();makeMarkers();makeRain();setupWeather();setupDayNight();resize();placePlayer();
+  setupFX();buildWorld();buildPerimeter();spawn();buildLife();buildTaxi();buildTraffic();buildInteriors();registerBenches();makeMarkers();makeRain();setupWeather();setupDayNight();resize();placePlayer();
   $('loading').remove();
   if(hotData&&hotData.S&&hotData.running)begin(false);else showMenu();  try{window.claude&&window.claude.hot&&window.claude.hot.snapshot&&window.claude.hot.snapshot(()=>({S,running:started}))}catch(e){}
   frame();
@@ -285,3 +288,11 @@ const fontWait=(document.fonts&&document.fonts.load)?Promise.race([document.font
 // on attend que tous les scripts soient chargés (le menu est dans intro.js, chargé après ce fichier)
 const ready=()=>Promise.all([fontWait,loadTextures()]).then(boot,boot);
 if(document.readyState==='loading')addEventListener('DOMContentLoaded',ready);else ready();
+
+/* ===================== BANCS : S'ASSEOIR ===================== */
+// Chaque banc de la ville (rues et trottoirs extérieurs) devient un objet : E ou F pour s'asseoir, encore une fois (ou marcher) pour se lever.
+let seated=null;
+function sitOn(b){if(seated===b){standUp();return}target=null;pendingTalk=null;seated=b;const ud=player.userData;
+  player.position.set(b.x-b.fx*.05,0,b.z-b.fz*.05);ud.ry=Math.atan2(b.fx,b.fz);ud.moving=false;ud.sit=true}
+function standUp(){const b=seated;if(!b)return;seated=null;player.userData.sit=false;player.position.x=b.x+b.fx*.85;player.position.z=b.z+b.fz*.85}
+function registerBenches(){BENCHES.forEach((b,i)=>OBJECTS.push({id:'bench_'+i,x:b.x+b.fx*.6,z:b.z+b.fz*.6,r:1.1,get label(){return seated===b?'Se lever':'S’asseoir sur le banc'},act:()=>sitOn(b)}))}

@@ -183,8 +183,10 @@ function updateSprite(c,dt){
   ud.plane.rotation.y=ca;
   let rel=((ca-ud.ry+Math.PI)%(Math.PI*2)+Math.PI*2)%(Math.PI*2)-Math.PI;
   const a=Math.abs(rel);const dir=a<Math.PI/4?0:a>Math.PI*3/4?3:(rel>0?1:2);
-  let fr=0;if(ud.moving){ud.phase+=dt*8;fr=[1,0,2,0][Math.floor(ud.phase)%4]}
-  ud.tex.offset.set(fr/3,1-(dir+1)/4);
+  let fr=0;if(ud.moving&&!ud.sit){ud.phase+=dt*8;fr=[1,0,2,0][Math.floor(ud.phase)%4]}
+  // assis : on ne montre que le haut du personnage (les jambes sont cachées par le banc), posé plus bas
+  const k=ud.sit?.76:1;if(ud._k!==k){if(!ud.h0)ud.h0=ud.plane.position.y*2;ud._k=k;ud.plane.scale.y=k;ud.plane.position.y=ud.h0*k/2;ud.tex.repeat.y=k/4}
+  ud.tex.offset.set(fr/3,1-(dir+1)/4+(1-k)/4);
 }
 
 const SKINS=['#f1c7a5','#d9b08c','#c99a7a','#a8754f','#7a4e32','#5a3a28'];

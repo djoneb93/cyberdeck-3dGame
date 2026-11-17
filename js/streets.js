@@ -3,7 +3,7 @@
 'use strict';
 
 let srnd_s=7331;const srnd=()=>{srnd_s=(srnd_s*16807)%2147483647;return (srnd_s-1)/2147483646};
-const FURN=[],trafficLights=[],puddles=[];let wetness=-1;
+const FURN=[],trafficLights=[],puddles=[],BENCHES=[];let wetness=-1; // BENCHES : bancs où l’on peut s’asseoir (fx, fz : direction du regard)
 // ---------- textures du sol (tuile de 4 × 4 unités, appliquée selon la position dans le monde) ----------
 function groundTex(kind){
   const ph=TEXIMG[kind==='asphalt'?'asphalt':'paving'];if(ph){const c=document.createElement('canvas');c.width=c.height=256;const g=c.getContext('2d');g.drawImage(ph,0,0,256,256);g.fillStyle='rgba(255,255,255,.18)';g.fillRect(0,0,256,256);
@@ -57,7 +57,7 @@ function buildStreets(){
   const place=(x,z,along)=>{if(!onTile(x,z,1)||nearCross(x,z,3.4)||nearEntrance(Math.floor(x),Math.floor(z))||Math.hypot(x-TAXI_STAND.x,z-TAXI_STAND.z)<3||LAMPS.some(([lx,lz])=>Math.hypot(lx+.5-x,lz+.5-z)<1.3)||(x<UX(.2)&&z>UZ(.72)))return;
     const r=srnd(),X=along==='z';
     if(r<.32){sd('#2a313c',false,x,.42,z,.46,.84,.46);sd('#3a4252',false,x,.87,z,.5,.06,.5);sd('#7dffb0',true,x+(X?.24:0),.7,z+(X?0:.24),X?.02:.12,.06,X?.12:.02);FURN.push([x,z,.32])}
-    else if(r<.46){sd('#4a3526',false,x,.42,z,X?.38:1.4,.08,X?1.4:.38);sd('#4a3526',false,x+(X?.17:0),.66,z+(X?0:.17),X?.05:1.4,.34,X?1.4:.05);sd('#2a3140',false,x,.2,z,X?.3:1.2,.38,X?1.2:.3);FURN.push([x,z,.6])}
+    else if(r<.46){sd('#4a3526',false,x,.42,z,X?.38:1.4,.08,X?1.4:.38);sd('#4a3526',false,x+(X?.17:0),.66,z+(X?0:.17),X?.05:1.4,.34,X?1.4:.05);sd('#2a3140',false,x,.2,z,X?.3:1.2,.38,X?1.2:.3);FURN.push([x,z,.6]);BENCHES.push({x,z,fx:X?-1:0,fz:X?0:-1})}
     else if(r<.68){sd('#2a2f38',false,x,.25,z,.9,.5,.9);sd(pick(['#39e6ff','#ff4fa3','#7dffb0']),true,x,.51,z,.92,.04,.92);sd('#3a2a20',false,x,1.2,z,.12,1.5,.12);
       [[0,2.1,0,1.1],[.25,2.5,.15,.8],[-.2,2.6,-.1,.7]].forEach(([dx,y,dz,s])=>sd(pick(['#1f4a32','#2a5a3a','#244a3e','#3a2a4a']),false,x+dx,y,z+dz,s,s*.8,s));FURN.push([x,z,.55])}
     else if(r<.78){sd('#d8a020',false,x,.3,z,.26,.6,.26);sd('#e8b030',false,x,.64,z,.32,.08,.32);sd('#d8a020',false,x,.4,z,.42,.08,.1);FURN.push([x,z,.25])}
