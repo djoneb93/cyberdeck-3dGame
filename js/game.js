@@ -1,0 +1,290 @@
+// Déplacement, interactions, boîte de dialogue, HUD, pluie, boucle de jeu et démarrage.
+'use strict';
+
+/* ===================== DÉPLACEMENT ===================== */
+const R=.27;
+function blocked(x,z){
+  if(S.roof){if(Math.abs(x-ROOF.x)>ROOF.hw-.5||Math.abs(z-ROOF.z)>ROOF.hd-.5)return true;return ROOF_BLOCK.some(([cx,cz,hx,hz])=>Math.abs(x-cx)<hx+R&&Math.abs(z-cz)<hz+R)}
+  if(isSolid(x-R,z-R)||isSolid(x+R,z-R)||isSolid(x-R,z+R)||isSolid(x+R,z+R))return true;
+  for(const n of npcs){const dx=n.mesh.position.x-x,dz=n.mesh.position.z-z;if(dx*dx+dz*dz<.36)return true}
+  for(const s of statics){const dx=s.position.x-x,dz=s.position.z-z;if(dx*dx+dz*dz<.36)return true}
+  return false;
+}
+function distTo(o){const p=o.mesh?o.mesh.position:o;return Math.hypot(p.x-player.position.x,p.z-player.position.z)}
+
+function updatePlayer(dt){
+  let mx=0,mz=0;
+  if(!dlgOpen&&!overlayOpen){
+    const f=(keys.KeyW||keys.ArrowUp?1:0)-(keys.KeyS||keys.ArrowDown?1:0);
+    const r=(keys.KeyD||keys.ArrowRight?1:0)-(keys.KeyA||keys.ArrowLeft?1:0);
+    if(f||r){target=null;pendingTalk=null;mx=-Math.sin(yaw)*f+Math.cos(yaw)*r;mz=-Math.cos(yaw)*f-Math.sin(yaw)*r;}
+    else if(target){const dx=target.x-player.position.x,dz=target.z-player.position.z,d=Math.hypot(dx,dz);
+      if(pendingTalk&&distTo(pendingTalk)<1.6){const n=pendingTalk;target=null;pendingTalk=null;talkTo(n)}
+      else if(d<.12)target=null;else{mx=dx/d;mz=dz/d}}
+  }
+  const len=Math.hypot(mx,mz);const ud=player.userData;
+  if(len>0){
+    mx/=len;mz/=len;const sp=4*dt;
+    const ox=player.position.x,oz=player.position.z;
+    if(!blocked(ox+mx*sp,oz))player.position.x+=mx*sp;
+    if(!blocked(player.position.x,oz+mz*sp))player.position.z+=mz*sp;
+    const moved=Math.hypot(player.position.x-ox,player.position.z-oz);
+    if(target){if(moved<sp*.2){stuck+=dt;if(stuck>.35){target=null;pendingTalk=null;stuck=0}}else stuck=0}
+    ud.ry=Math.atan2(mx,mz);ud.moving=moved>sp*.2;
+  }else ud.moving=false;
+  player.position.y=S.roof?ROOF.y:0;
+  S.px=player.position.x;S.pz=player.position.z;S.ry=ud.ry;
+}
+const lerp=(a,b,t)=>a+(b-a)*t;
+function lerpAngle(a,b,t){let d=((b-a+Math.PI)%(Math.PI*2)+Math.PI*2)%(Math.PI*2)-Math.PI;return a+d*t}
+
+/* ===================== INTERACTIONS ===================== */
+function nearest(){
+  let best=null,bd=1e9;
+  npcs.forEach(n=>{const d=S.roof?99:distTo(n);if(d<1.9&&d<bd){bd=d;best={kind:'npc',n,label:'Parler à '+(S.met[n.id]?NAMES[n.id]:'???')}}});
+  for(const id in S.q){const q=S.q[id];if(!q.active||q.b>=3)continue;const s=SPOTS[id][q.b];if(!!s.roof!==!!S.roof)continue;const d=distTo(s);if(d<1.5&&d<bd+.6){bd=d-.6;best={kind:'spot',id,label:'Enquêter · '+spotLab(id,q.b)}}}
+  OBJECTS.forEach(o=>{if(!!o.roof!==!!S.roof)return;const d=distTo(o);if(d<o.r&&d<bd-.4){bd=d;best={kind:'obj',o,label:o.label}}});
+  return best;
+}
+function interact(){const t=nearest();if(!t)return;if(t.kind==='npc')talkTo(t.n);else if(t.kind==='spot')openDlg(beatDlg(t.id));else if(t.o.act)t.o.act();else openDlg(t.o.dyn?{n1:{s:'nar',t:t.o.dyn()}}:t.o.id)}
+// monter sur le toit / redescendre : fondu au noir, puis on réapparaît de l'autre côté de la porte
+function goRoof(up){const f=$('fade');f.style.opacity=1;overlayOpen=true;target=null;pendingTalk=null;
+  setTimeout(()=>{S.roof=up;const p=up?{x:ROOF.x+1.9,z:ROOF.z-.45}:FP('roofs',1.6,0);player.position.set(p.x,up?ROOF.y:0,p.z);player.userData.ry=up?0:0;
+    focus.set(p.x,player.position.y+1.5,p.z);save();f.style.opacity=0;overlayOpen=false;toast(up?'Toit de la tour Zéro':'Rue · Toits de Zone Zéro','')},380)}
+function talkTo(n){
+  let id=n.id;talking=n;
+  if(S.flags.chapter1){ // chapitre 2
+    if(id==='mira'){
+      if(!S.flags.ch2)return openDlg('mira_ch2');
+      const q=S.q.mira;
+      if(!S.flags.chapter2&&wins()>=3&&!(q&&q.active))return openDlg('mira_end2');
+      if(S.flags.chapter2&&!(q&&q.active)&&!epLeft('mira'))return openDlg('mira_after2');
+    }
+    if(!S.flags.ch2)return openDlg({n1:{s:id,t:id==='lou'&&!S.met.lou?'Hé ! Toi ! … On en parle plus tard, va d’abord voir Mira.':'Mira te cherche. Va la voir à ta planque, on causera après.',fx:{met:id}}});
+    return openDlg(storyDlg(id));
+  }
+  if(id==='mira'){id=!S.flags.started?'mira_intro':S.frags.length>=3?'mira_end':'mira_wait'}
+  else if(id==='lou'){id=S.met.lou?'lou_wait':'lou_meet'}
+  else{const fr={vasko:'contrat',doc:'implant',okoro:'dossier'}[id];id=!S.flags.started?id+'_pre':S.frags.includes(fr)?id+'_done':id}
+  openDlg(id);
+}
+
+
+/* ===================== BOÎTE DE DIALOGUE ===================== */
+let cur=null,node=null,shown=0,full='';
+function openDlg(id){cur=typeof id==='string'?DLG[id]:id;dlgOpen=true;target=null;pendingTalk=null;$('prompt').hidden=true;$('dlg').hidden=false;$('help').hidden=true;$('cam').hidden=true;showNode('n1')}
+function showNode(k){
+  node=cur[k];if(node.fx)applyFx(node.fx);if(node.vfx)vfx(node.vfx);
+  const s=node.s;$('dlg').style.setProperty('--k',COLORS[s]);
+  $('dlgName').textContent=s==='nar'?'':(s==='you'?'Toi':(S.met[s]?NAMES[s]:'???'));
+  $('dlgName').hidden=s==='nar';
+  $('dlgText').style.fontStyle=s==='nar'?'italic':'normal';
+  full=node.t;shown=0;$('dlgText').textContent='';
+  $('dlgChoices').innerHTML='';$('dlgNext').hidden=true;
+}
+function renderChoices(){
+  const bx=$('dlgChoices');bx.innerHTML='';
+  if(node.ch){node.ch.filter(c=>!c.cond||c.cond()).forEach((c,i)=>{const b=document.createElement('button');b.type='button';b.innerHTML='<b>'+(i+1)+'</b>';b.appendChild(document.createTextNode(c.t));
+    b.onclick=ev=>{ev.stopPropagation();if(c.fx)applyFx(c.fx);if(c.next)showNode(c.next);else closeDlg()};bx.appendChild(b)});}
+  else $('dlgNext').hidden=false;
+}
+function dlgAdvance(){
+  if(shown<full.length){shown=full.length;$('dlgText').textContent=full;renderChoices();return}
+  if(node.ch)return;
+  if(node.next)showNode(node.next);else closeDlg();
+}
+$('dlg').addEventListener('click',dlgAdvance);
+function closeDlg(){dlgOpen=false;$('dlg').hidden=true;$('help').hidden=false;$('cam').hidden=false;talking=null;cur=null;
+  if(S.flags.chapter1&&!S.flags.endShown){S.flags.endShown=true;save();showEnding(1)}
+  else if(S.flags.chapter2&&!S.flags.end2Shown){S.flags.end2Shown=true;save();showEnding(2)}
+  updateHUD();}
+function typeTick(dt){if(!dlgOpen||shown>=full.length)return;shown=Math.min(full.length,shown+dt*70);$('dlgText').textContent=full.slice(0,Math.floor(shown));if(shown>=full.length)renderChoices()}
+
+function vfx(k){if(k!=='glitch')return;const b=document.body;b.classList.remove('glitch');void b.offsetWidth;b.classList.add('glitch');setTimeout(()=>b.classList.remove('glitch'),450)}
+function applyFx(fx){
+  if(fx.met&&!S.met[fx.met]){S.met[fx.met]=true;if(!(fx.met in S.friend))S.friend[fx.met]=0}
+  if(fx.friend)for(const k in fx.friend){const v=fx.friend[k];S.met[k]=true;S.friend[k]=(S.friend[k]||0)+v;toast((v>0?'♥ +':'♥ ')+v+' Amitié · '+NAMES[k],'fr')}
+  if(fx.rep){S.rep=Math.max(0,S.rep+fx.rep);toast((fx.rep>0?'+':'')+fx.rep+' Réputation','rp')}
+  if(fx.frag&&!S.frags.includes(fx.frag)){S.frags.push(fx.frag);toast('NEURA · souvenir retrouvé · '+FRAG_NAMES[fx.frag],'mem');drawBoard()}
+  if(fx.flag)S.flags[fx.flag]=true;
+  if(fx.quest){const o=S.q[fx.quest]||{};S.q[fx.quest]={active:true,b:0,sc:0,won:!!o.won,ep:o.ep||0,wins:o.wins||0};toast('Nouvelle histoire · '+title(fx.quest),'mem')}
+  if(fx.beat){const [id,sc]=fx.beat,q=S.q[id];if(q&&q.active){q.sc+=sc;q.b++;toast(title(id)+' · piste '+q.b+' / 3','')}}
+  if(fx.resolve){const id=fx.resolve,q=S.q[id];if(q&&q.active){q.active=false;const ep=q.ep||0;
+    if(q.sc>=4){q.won=true;q.lost=false;q.wins=(q.wins||0)+1;q.ep=ep+1;const r=ep===0?8:5;S.friend[id]=(S.friend[id]||0)+2;S.rep+=r;if(ep===0&&!S.mems.includes(id))S.mems.push(id);
+      toast('♥ +2 Amitié · '+NAMES[id],'fr');toast('+'+r+' Réputation','rp');if(ep===0)toast('NEURA · souvenir déchiffré','mem')}
+    else{q.lost=true;S.rep+=1;toast('Histoire ratée · tu pourras réessayer','')}}}
+  save();updateHUD();
+}
+
+/* ===================== HUD ===================== */
+function tier(r){return r>=45?'Respecté':r>=25?'Fiable':r>=10?'Visage connu':'Inconnu'}
+function friendLabel(v){return v<0?'Méfiant':v>=5?'Proche':v>=2?'Ami':'Connaissance'}
+function updateHUD(){
+  $('repTier').textContent=tier(S.rep);$('repVal').textContent=S.rep+' / 60';$('repBar').style.width=Math.min(100,S.rep/60*100)+'%';
+  const met=Object.keys(S.met).filter(k=>S.met[k]&&k!=='neura'&&NAMES[k]);
+  $('contacts').innerHTML=met.length?met.map(k=>{const v=S.friend[k]||0;let h='';for(let i=0;i<7;i++)h+=i<v?'♥':'·';
+    return '<button type="button" class="ct" data-k="'+k+'"><b style="color:'+COLORS[k]+'">'+NAMES[k]+'</b><span class="hearts" style="color:'+(v<0?'#8296a4':'#ff4fa3')+'">'+h+'</span><span>'+friendLabel(v)+' · fiche ▸</span></button>'}).join(''):'<div class="empty">Personne pour l’instant.</div>';
+  const o=$('obj');
+  if(!S.flags.started)o.innerHTML='<div class="o"><i>▸</i>Parle à la personne près de la porte.</div>';
+  else if(S.flags.chapter1&&!S.flags.ch2)o.innerHTML='<div class="o"><i>▸</i>Chapitre 2 · Parle à Mira, à ta planque.</div>';
+  else if(S.flags.chapter1){
+    const rows=Q_ORDER.map(id=>{const q=S.q[id]||{},a=q.active,ep=epOf(id),left=epLeft(id);
+      if(!a&&!left)return '<div class="o done"><i>✓</i>'+NAMES[id]+' · toutes ses histoires</div>';
+      const t=NAMES[id]+' · '+title(id)+(epCount()>1?' ('+(ep+1)+'/'+epCount()+')':'')+(a?(q.b<3?' · piste '+(q.b+1)+' : '+spotLab(id,q.b):' · retourne le voir'):(q.lost?' · à retenter':''));
+      return '<div class="o"><i>'+(a?'◆':'▸')+'</i>'+t+'</div>'}).join('');
+    o.innerHTML=(S.flags.chapter2?'<div class="o done"><i>✓</i>Chapitre 2 terminé. Les histoires continuent.</div>':'')+rows+(!S.flags.chapter2&&wins()>=3?'<div class="o"><i>◆</i>Retourne voir Mira à ta planque.</div>':'');
+    $('frags').textContent=(S.flags.chapter2?'':'Contacts aidés : '+wins()+' / 3 requis · ')+'Souvenirs NEURA : '+(S.frags.length+S.mems.length);
+    return;
+  }  else if(S.frags.length>=3)o.innerHTML='<div class="o"><i>▸</i>Retourne voir Mira à ta planque.</div>';
+  else o.innerHTML=[['contrat','Vasko · Gare Zéro'],['implant','Doc Ferrant · Bazar Néon'],['dossier','Sergent Okoro · Laverie 24/7']].map(([f,t])=>{const d=S.frags.includes(f);return '<div class="o'+(d?' done':'')+'"><i>'+(d?'✓':'▸')+'</i>'+t+'</div>'}).join('');
+  $('frags').textContent='Souvenirs : '+S.frags.length+' / 3'+(S.frags.length?' · '+S.frags.map(f=>FRAG_NAMES[f]).join(', '):'');
+}
+$('btnContacts').onclick=()=>{$('contacts').hidden=!$('contacts').hidden};
+$('contacts').addEventListener('click',e=>{const b=e.target.closest('[data-k]');if(b)openFiche(b.dataset.k)});
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+function openFiche(k){
+  const d=DOSS[DOSS_ID[k]||k];if(!d)return;const v=S.friend[k]||0;
+  const sec=(lv,html)=>v>=lv?html:'<div class="lock">▒▒▒▒▒▒ Amitié '+lv+' requise</div>';
+  $('ficheBody').innerHTML='<div class="lbl" style="color:'+COLORS[k]+'">Fiche contact · '+esc(d.alias)+'</div>'+
+    '<h2 style="color:'+COLORS[k]+'">'+esc(NAMES[k])+'</h2>'+
+    '<dl><dt>Âge</dt><dd>'+esc(d.age)+'</dd><dt>Lieu</dt><dd>'+esc(d.lieu)+'</dd><dt>Métier</dt><dd>'+esc(d.metier)+'</dd></dl>'+
+    sec(FICHE_LV.bio1,'<p>'+esc(d.bio[0])+'</p>')+
+    sec(FICHE_LV.traits,'<p><span class="lbl">Signe</span> '+esc(d.signe)+'</p><p class="cit">« '+esc(d.citation)+' »</p>')+
+    sec(FICHE_LV.bio2,'<p>'+esc(d.bio[1])+'</p>')+
+    sec(FICHE_LV.gouts,'<p><span class="lbl">Aime</span> '+esc(d.aime)+'</p><p><span class="lbl">Déteste</span> '+esc(d.deteste)+'</p>')+
+    sec(FICHE_LV.bio3,'<p>'+esc(d.bio[2])+'</p>')+
+    sec(FICHE_LV.toi,'<p class="toi"><span class="lbl">Toi et '+esc(NAMES[k])+'</span> '+esc(d.toi)+'</p>');
+  $('fiche').hidden=false;overlayOpen=true;
+}
+function closeFiche(){$('fiche').hidden=true;overlayOpen=false}
+$('ficheClose').onclick=closeFiche;
+$('fiche').addEventListener('click',e=>{if(e.target===$('fiche'))closeFiche()});
+function toast(t,cls){const d=document.createElement('div');d.className='toast panel '+cls;d.textContent=t;$('toasts').appendChild(d);setTimeout(()=>d.remove(),2600)}
+
+const FRAG_OF={vasko:'contrat',doc:'implant',okoro:'dossier'};
+function questTarget(id){
+  if(!S.flags.started)return id==='mira';
+  if(S.flags.chapter1){
+    if(!S.flags.ch2)return id==='mira';
+    const q=S.q[id];
+    if(id==='mira'&&!S.flags.chapter2&&wins()>=3&&!(q&&q.active))return true;
+    if(q&&q.active)return q.b>=3;
+    return epLeft(id);
+  }  if(id==='lou')return false;
+  if(S.frags.length>=3)return id==='mira';
+  return !!FRAG_OF[id]&&!S.frags.includes(FRAG_OF[id]);
+}
+const v3=new THREE.Vector3();
+function updateLabels(){
+  npcs.forEach(n=>{
+    const d=distTo(n);v3.set(n.mesh.position.x,2.05*(SPECS[n.id].scale||1),n.mesh.position.z).project(camera);
+    if(d>16||v3.z>1){n.label.hidden=true;return}
+    n.label.hidden=false;n.label.style.left=((v3.x+1)/2*innerWidth)+'px';n.label.style.top=((1-v3.y)/2*innerHeight)+'px';
+    const html=(questTarget(n.id)?'<em>◆</em>':'')+(S.met[n.id]?NAMES[n.id]:'???');if(n.label._h!==html){n.label.innerHTML=html;n.label._h=html}
+  });
+  const t=(!dlgOpen&&!overlayOpen)?nearest():null;const p=$('prompt');
+  if(t){const h='<kbd>ESPACE</kbd> · '+t.label;if(p._h!==h){p.innerHTML=h;p._h=h}p.hidden=false}else p.hidden=true;
+}
+$('prompt').addEventListener('click',interact);
+
+/* ===================== PLUIE ===================== */
+let rain;
+function makeRain(){const N=1500,pos=new Float32Array(N*6);rain={N,pos,sp:new Float32Array(N)};
+  for(let i=0;i<N;i++){const x=(Math.random()-.5)*40,y=Math.random()*16,z=(Math.random()-.5)*40;pos.set([x,y,z,x+.05,y+.5,z],i*6);rain.sp[i]=15+Math.random()*8}
+  const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.BufferAttribute(pos,3));
+  rain.mesh=new THREE.LineSegments(g,new THREE.LineBasicMaterial({color:0x8fb8e8,transparent:true,opacity:.3}));scene.add(rain.mesh)}
+function updateRain(dt){const p=rain.pos;for(let i=0;i<rain.N;i++){const o=i*6,dy=rain.sp[i]*dt;p[o+1]-=dy;p[o+4]-=dy;p[o]-=dy*.1;p[o+3]-=dy*.1;
+  if(p[o+1]<0){const x=(Math.random()-.5)*40,z=(Math.random()-.5)*40,y=14+Math.random()*3;p[o]=x;p[o+1]=y;p[o+2]=z;p[o+3]=x+.05;p[o+4]=y+.5;p[o+5]=z}}
+  rain.mesh.geometry.attributes.position.needsUpdate=true;rain.mesh.position.set(focus.x,focus.y-1.5,focus.z)}
+
+/* ===================== BOUCLE ===================== */
+const clock=new THREE.Clock();let tAcc=0,saveT=0;
+const camDir=new THREE.Vector3();
+function updateCamera(dt){
+  yaw=lerp(yaw,yawT,Math.min(1,dt*8));pitch=lerp(pitch,pitchT,Math.min(1,dt*8));dist=lerp(dist,distT,Math.min(1,dt*8));
+  focus.x=lerp(focus.x,player.position.x,Math.min(1,dt*7));focus.z=lerp(focus.z,player.position.z,Math.min(1,dt*7));focus.y=lerp(focus.y,player.position.y+1.5,Math.min(1,dt*5));
+  camDir.set(Math.sin(yaw)*Math.cos(pitch),Math.sin(pitch),Math.cos(yaw)*Math.cos(pitch));
+  // la caméra se rapproche quand un mur est entre elle et toi
+  ray.set(focus,camDir);ray.far=dist;const hit=ray.intersectObjects(camBlockers).find(h=>h.object.visible&&(!h.object.parent||h.object.parent.visible));ray.far=Infinity;
+  const want=hit?Math.max(1.2,hit.distance-.35):dist;
+  camD=want<camD?want:lerp(camD,want,Math.min(1,dt*3));
+  camera.position.copy(focus).addScaledVector(camDir,camD);
+  camera.lookAt(focus.x,focus.y+.2,focus.z);
+}
+function frame(){
+  requestAnimationFrame(frame);
+  const dt=Math.min(.05,clock.getDelta());tAcc+=dt;
+  if(started){updatePlayer(dt);typeTick(dt)}
+  updateWalkers(dt);
+  npcs.forEach(n=>{const d=distTo(n);let want=n.baseRy;if(d<3.2||talking===n)want=Math.atan2(player.position.x-n.mesh.position.x,player.position.z-n.mesh.position.z);
+    n.mesh.userData.ry=lerpAngle(n.mesh.userData.ry,want,Math.min(1,dt*5));});
+  updateCity(dt);flyers.forEach(f=>{f.g.position.x+=f.v*dt;if(f.g.position.x>W+14)f.g.position.x=-14;if(f.g.position.x<-14)f.g.position.x=W+14;f.g.position.y+=Math.sin(tAcc*1.5+f.v)*.004});
+  beacons.forEach(b=>b.visible=Math.sin(tAcc*3)>-.2);updateMarkers();
+  if(cat)cat.userData.body.scale.y=1+Math.sin(tAcc*2.2)*.06;
+  if(holo){holo.position.y=holo.userData.baseY+Math.sin(tAcc*1.3)*.08;const hm=holo.userData.plane.material;hm.opacity=.45+Math.sin(tAcc*9)*.04+(Math.random()<.02?-.25:0);holo.userData.moving=false;}
+  updateCamera(dt);
+  sprites.forEach(s=>updateSprite(s,dt));
+  updateRain(dt);
+  if(started)updateLabels();
+  saveT+=dt;if(started&&saveT>4){saveT=0;save()}
+  if(composer)composer.render();else renderer.render(scene,camera);
+}
+
+/* ===================== DÉMARRAGE ===================== */
+function setupFX(){
+  const [lw,lh]=lowSize();
+  try{
+    if(THREE.Reflector){
+      mirror=new THREE.Reflector(new THREE.PlaneGeometry(W,H),{textureWidth:lw,textureHeight:lh,color:0x8890a0,clipBias:.003});
+      mirror.rotation.x=-Math.PI/2;mirror.position.set(W/2,-.01,H/2);scene.add(mirror);
+      const orig=mirror.onBeforeRender;
+      mirror.onBeforeRender=function(){if(ground)ground.visible=false;if(rain)rain.mesh.visible=false;orig.apply(this,arguments);if(ground)ground.visible=true;if(rain)rain.mesh.visible=true};
+    }
+  }catch(e){mirror=null}
+  try{
+    if(THREE.EffectComposer&&THREE.UnrealBloomPass){
+      composer=new THREE.EffectComposer(renderer);composer.addPass(new THREE.RenderPass(scene,camera));
+      bloom=new THREE.UnrealBloomPass(new THREE.Vector2(lw,lh),1.0,.55,.62);composer.addPass(bloom);
+    }
+  }catch(e){composer=null}
+}
+function placePlayer(){const y0=S.roof?ROOF.y:0;player.position.set(S.px,y0,S.pz);player.userData.ry=S.ry||0;focus.set(S.px,y0+1.5,S.pz);yaw=yawT=0}
+function begin(fresh){
+  if(fresh){S=NEW_STATE();save()}
+  placePlayer();drawBoard();
+  $('intro').hidden=true;overlayOpen=false;started=true;
+  ['hudL','hudR','cam','help'].forEach(id=>$(id).hidden=false);
+  updateHUD();
+  if(fresh||!S.flags.woke){S.flags.woke=true;save();setTimeout(()=>openDlg('wake'),500)}
+}
+function showEnding(n){
+  const friends=Object.keys(S.met).filter(k=>k!=='neura'&&(S.friend[k]||0)>=2).length;
+  if(n===2){$('endLbl').textContent='Fin du chapitre 2 · Alliés';$('endH').textContent='Un nouveau nom : le Dr Eliane Vex';
+    $('endP').textContent='Tu as aidé la Zone Zéro, et la Zone Zéro se souvient de toi. Quelque part sous le Bazar, la co-conceptrice de Léthé travaille sur Mnémosyne. Le chapitre 3 reste à écrire.'}
+  else{$('endLbl').textContent='Fin du chapitre 1 · Réveil';$('endH').textContent='Un nom revient dans les trois récits : Kurogane';
+    $('endP').textContent='Tu as retrouvé trois fragments de ta mémoire, et un mot : Léthé. Parle à Mira pour ouvrir le chapitre 2.'}
+  $('endStats').innerHTML='<div><span class="lbl">Réputation</span><b>'+tier(S.rep)+'</b></div><div><span class="lbl">Souvenirs</span><b>'+(S.frags.length+S.mems.length)+'</b></div><div><span class="lbl">Amis</span><b>'+friends+'</b></div>';
+  $('ending').hidden=false;overlayOpen=true;
+}
+$('endClose').onclick=()=>{$('ending').hidden=true;overlayOpen=false};
+
+function start(hotData){
+  const saved=(hotData&&hotData.S)||loadSave();
+  if(saved){if(saved.mapv!==3){const n=NEW_STATE();saved.px=n.px;saved.pz=n.pz;saved.ry=0;saved.mapv=3}S=Object.assign(NEW_STATE(),saved);for(const k in S.q){const q=S.q[k];if(q.ep==null){q.ep=q.won?1:0;q.wins=q.won?1:0}}}
+  setupFX();buildWorld();spawn();makeMarkers();makeRain();resize();placePlayer();
+  $('loading').remove();
+  const acts=$('introActs');
+  if(hotData&&hotData.S&&hotData.running){begin(false);}
+  else{
+    if(saved&&saved.flags&&saved.flags.woke){
+      const c=document.createElement('button');c.type='button';c.className='pri';c.textContent='Continuer';c.onclick=()=>begin(false);acts.appendChild(c);
+      const n=document.createElement('button');n.type='button';n.textContent='Nouvelle partie';n.onclick=()=>begin(true);acts.appendChild(n);
+    }else{const c=document.createElement('button');c.type='button';c.className='pri';c.textContent='Ouvrir les yeux';c.onclick=()=>begin(true);acts.appendChild(c)}
+    $('intro').hidden=false;
+  }
+  try{window.claude&&window.claude.hot&&window.claude.hot.snapshot&&window.claude.hot.snapshot(()=>({S,running:started}))}catch(e){}
+  frame();
+}
+const boot=()=>{try{if(window.claude&&window.claude.hot&&window.claude.hot.ready)window.claude.hot.ready(start);else start(window.claude&&window.claude.hot&&window.claude.hot.data||{})}catch(e){start({})}};
+const fontWait=(document.fonts&&document.fonts.load)?Promise.race([document.fonts.load('8px Silkscreen'),new Promise(r=>setTimeout(r,1500))]):Promise.resolve();
+fontWait.then(boot,boot);

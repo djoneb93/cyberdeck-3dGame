@@ -31,6 +31,18 @@ puis ouvre http://localhost:8765/.
 
 ## Organisation
 
-- `index.html` : le jeu (Three.js r128 depuis un CDN, aucune étape de build).
+Aucune étape de build : Three.js r128 et inkjs viennent d'un CDN, les scripts sont chargés dans l'ordre par `index.html`
+et partagent la même portée globale.
+
+- `index.html` : la page (HUD, boîtes de dialogue, écrans d'intro et de fin) et l'ordre de chargement des scripts.
+- `css/style.css` : l'interface.
+- `js/data/app-data.js` : données reprises de l'appli (fiches contacts, histoires, histoires Ink compilées, ambiances des lieux).
+- `js/core.js` : état de la partie, sauvegarde, noms et couleurs des personnages.
+- `js/map.js` : la carte (grille, avenues, lieux, tours, port, gare, planque, collisions, étapes des histoires).
+- `js/render.js` : moteur 3D, matériaux, façades, enseignes, sprites pixel des personnages.
+- `js/world.js` : construction du monde (sol, ciel, bâtiments, port, gare et rame, véhicules, immeuble de la planque).
+- `js/story.js` : dialogues du jeu et moteur des histoires des contacts (Ink).
+- `js/entities.js` : personnages, objets à examiner, passants, voitures, marqueurs.
+- `js/game.js` : déplacement, interactions, HUD, boucle de jeu, démarrage.
 - `tools/serve.ps1` : petit serveur local.
 - `.claude/launch.json` : configuration de prévisualisation pour Claude Code.
