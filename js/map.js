@@ -115,7 +115,7 @@ const isSolid=(x,z)=>{const cx=Math.floor(x),cz=Math.floor(z);if(cx<0||cz<0||cx>
 // réverbères le long des avenues et du quai
 const LAMPS=[];
 // jamais de réverbère devant une entrée ou une enseigne
-const nearEntrance=(x,z)=>Object.keys(PL).some(id=>{const [fx,fz]=front(id,1.3);return Math.hypot(fx-x-.5,fz-z-.5)<3.6})||Math.hypot(PL.bar.x-x-.5,PL.bar.z+PL.bar.hd+1-z-.5)<3;
+const nearEntrance=(x,z)=>Object.keys(PL).some(id=>{const [fx,fz]=front(id,1.3);return Math.hypot(fx-x-.5,fz-z-.5)<6.2})||Math.hypot(PL.bar.x-x-.5,PL.bar.z+PL.bar.hd+1-z-.5)<3;
 AVE.forEach(a=>{for(let t=.03;t<.99;t+=.085){[[UX(a)+2.6,UZ(t)],[UX(t),UZ(a)+2.6]].forEach(([x,z])=>{const cx=Math.floor(x),cz=Math.floor(z);if(!isSolid(cx,cz)&&tile[I(cx,cz)]!==2&&!isSolid(cx+1,cz)&&!isSolid(cx,cz+1)&&!nearEntrance(cx,cz))LAMPS.push([cx,cz])})}});
 for(let z=UZ(.05);z<UZ(.98);z+=7){const cz=Math.floor(z);if(!isSolid(10,cz)&&!PIERS.some(p=>Math.abs(p-cz)<2))LAMPS.push([10,cz])}
 // étapes des histoires, posées devant les entrées

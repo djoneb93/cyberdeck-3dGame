@@ -57,7 +57,7 @@ function spawn(){
     const el=document.createElement('div');el.className='nl';el.style.color=COLORS[d.id];$('labels').appendChild(el);
     npcs.push({...d,mesh:m,baseRy:d.ry,label:el})});
   // patrouille Kurogane au carrefour, curieux au pied des Toits, clients du Bazar, dockers
-  const R1=FP('roofs',2.8,1),R2=FP('roofs',3.2,-.6),R3=FP('roofs',2.4,3.4),M=PL.market;
+  const R1=FP('roofs',3.6,3),R2=FP('roofs',4,-3.2),R3=FP('roofs',2.6,3.8),M=PL.market;
   [[UX(AVE[2])-1.7,UZ(AVE[1])-2.4,0,'guard'],[UX(AVE[2])+1.7,UZ(AVE[1])+2.4,Math.PI,'guard'],[R1.x,R1.z,Math.PI/2,null],[R2.x,R2.z,Math.PI/2,null],[R3.x,R3.z,Math.PI*.7,null],
    [M.x-1.8,M.z+1.8,Math.PI/2,null],[M.x+1.8,M.z+5.4,Math.PI,null],[M.x-5.4,M.z-1.8,0,null],[15.6,UZ(.6),-Math.PI/2,null],[11.4,UZ(.31),Math.PI/2,null]].forEach(([x,z,ry,k])=>{
     if(isSolid(x,z))return;const m=makeChar(k?SPECS[k]:randomSpec());m.position.set(x,0,z);m.userData.ry=ry;statics.push(m)});
