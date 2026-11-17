@@ -41,6 +41,9 @@ function audioInit(){
   L.fly=drone('sawtooth',92,'lowpass',380);L.moto=drone('triangle',62,'lowpass',260);L.club=drone('sine',46,'lowpass',160);
   // brouhaha de conversations (deux bandes de voix), qui ne passe pas par le filtre des intérieurs : on l'entend dans le bar ou le Bazar
   N.room=c.createGain();N.room.gain.value=0;N.room.connect(N.master);
+  // la laverie : le tambour des machines qui tourne (souffle grave, rythmé) et le ronron des moteurs
+  {const s=c.createBufferSource();s.buffer=AUD.brown;s.loop=true;const fl=c.createBiquadFilter();fl.type='bandpass';fl.frequency.value=220;fl.Q.value=1.2;const g=c.createGain();g.gain.value=0;s.connect(fl);fl.connect(g);g.connect(N.room);s.start();L.wash={g,fl};
+   const o=c.createOscillator();o.frequency.value=52;const g2=c.createGain();g2.gain.value=0;o.connect(g2);g2.connect(N.room);o.start();L.washMotor={g:g2}}
   L.babble=['900',' 2100'].map((f,i)=>{const s=c.createBufferSource();s.buffer=AUD.brown;s.loop=true;const fl=c.createBiquadFilter();fl.type='bandpass';fl.frequency.value=+f;fl.Q.value=i?2:1.3;const g=c.createGain();g.gain.value=0;s.connect(fl);fl.connect(g);g.connect(N.room);s.start(0,Math.random()*3);return {g,fl}});
   startMusic();
 }
@@ -84,6 +87,9 @@ function updateAudio(dt){
   // brouhaha : dans le Néon Noir, dans le Bazar souterrain, et sous la verrière du Bazar Néon ; les voix montent et descendent comme des phrases
   const M=PL.market,inMk=!z&&Math.abs(p.x-M.x)<M.hw+1&&Math.abs(p.z-M.z)<M.hd+1,bab=z==='in_bar'?.07:z==='in_market'?.08:z==='in_metro'?.03:inMk?.055:0;
   murmur(D,bab*1.6); // des voix qui parlent entre elles, par-dessus un fond calme
+  // ambiances de lieux : les machines de la laverie, les bornes de l'arcade
+  const wash=z==='in_laundry';setG(L.wash,wash?.05*(.6+.4*Math.sin(tAcc*2.6)):0,.15);setG(L.washMotor,wash?.025:0,.5);
+  if(z==='in_arcade')arcadeBleeps(D);
   L.babble.forEach((b,i)=>{b.g.gain.setTargetAtTime(bab*.45*(i?.35:1)*(.5+.5*Math.random()),now(),.08);b.fl.frequency.setTargetAtTime((i?2100:900)*(.85+.3*Math.random()),now(),.1)});
   portSounds(D,!z&&p.x<20&&p.z>UZ(.12)&&p.z<UZ(.66));
   // sons de proximité, 3 m au plus : le passant le plus proche, la mer, le TGV, une voiture, une voiture volante, le club
@@ -106,7 +112,8 @@ function updateAudio(dt){
 // ---- musique : deux morceaux générés ----
 // « calm » : synthwave sombre en la mineur, 88 BPM (menu, pause, radio). « club » : morceau dansant en ré mineur, 124 BPM, quatre temps au sol.
 const MUS={step:0,next:0,want:'calm',track:'calm',
-  calm:{bpm:88,chords:[[57,60,64],[53,57,60],[48,52,55],[55,59,62]]},club:{bpm:124,chords:[[50,53,57],[46,50,53],[53,57,60],[48,52,55]]}};
+  calm:{bpm:88,chords:[[57,60,64],[53,57,60],[48,52,55],[55,59,62]]},club:{bpm:124,chords:[[50,53,57],[46,50,53],[53,57,60],[48,52,55]]},
+  lofi:{bpm:72,chords:[[53,57,60,64],[52,55,59,62],[50,53,57,60],[48,52,55,59]]},drive:{bpm:104,chords:[[52,55,59],[48,52,55],[55,59,62],[50,54,57]]}}; // lofi : douce et lente ; drive : synthwave de route, rapide
 const mtof=m=>440*Math.pow(2,(m-69)/12);
 function startMusic(){MUS.next=now()+.3;setInterval(()=>{if(!AUD.ctx||AUD.ctx.state!=='running')return;
   while(MUS.next<now()+.25){if(MUS.step%16===0&&MUS.track!==MUS.want){MUS.track=MUS.want;MUS.step=0} // on change de morceau au début d'une mesure
@@ -122,6 +129,12 @@ function drum(t,kind,lvl){const c=AUD.ctx,g=c.createGain();g.connect(AUD.N.mus);
   const d=kind==='hat'?.05:.18;g.gain.setValueAtTime((kind==='hat'?.035:.09)*lvl,t);g.gain.exponentialRampToValueAtTime(.001,t+d);if(kind!=='hat')g.connect(AUD.N.rev);s.start(t,Math.random());s.stop(t+d+.02)}
 function playStep(s,t){
   const T=MUS[MUS.track],bar=Math.floor(s/16)%4,ch=T.chords[bar],i=s%16,section=Math.floor(s/64)%4;
+  if(MUS.track==='lofi'){ // accords de piano électrique, basse ronde, batterie feutrée et un peu décalée
+    if(i===0)pad(ch,t,60/T.bpm*4,.01);if(i===0||i===6||i===10)ch.forEach((m,j)=>note('triangle',mtof(m+12),t+j*.012,.6,.012,1800,true));
+    if(i===0||i===8)note('sine',mtof(ch[0]-24),t,.5,.12,400);if(i===0||i===10)drum(t,'kick',.6);if(i===8)drum(t,'snare',.45);if(i%4===2)drum(t+.03,'hat',.7);return}
+  if(MUS.track==='drive'){ // basse en croches, arpège qui monte, quatre temps : l'autoroute la nuit
+    if(i===0)pad(ch,t,60/T.bpm*4,.014);if(i%2===0)note('sawtooth',mtof(ch[0]-24+(i%4===2?12:0)),t,.16,.08,650);
+    note('square',mtof(ch[i%3]+12+(i>7?12:0)),t,.09,.014,2600,true);if(i%4===0)drum(t,'kick');if(i===4||i===12)drum(t,'snare',.9);if(i%2===1)drum(t,'hat',.8);return}
   if(MUS.track==='club'){ // quatre temps au sol, charleston en contretemps, basse qui saute, arpège lumineux
     if(i===0)pad(ch,t,60/T.bpm*4,.012);
     if(i%4===0)drum(t,'kick',1.1);if(i%4===2)drum(t,'hat',1.4);if(i===4||i===12)drum(t,'snare',.8);
@@ -160,3 +173,11 @@ function syl(t,dur,f0,lvl){const c=AUD.ctx,o=c.createOscillator();o.type='sawtoo
   const v=VOW[Math.floor(Math.random()*VOW.length)],g=c.createGain();g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(lvl,t+.025);g.gain.linearRampToValueAtTime(0,t+dur);
   v.forEach((F,i)=>{const b=c.createBiquadFilter();b.type='bandpass';b.frequency.value=F;b.Q.value=5;const bg=c.createGain();bg.gain.value=i?.5:1;o.connect(b);b.connect(bg);bg.connect(g)});
   const lp=c.createBiquadFilter();lp.type='lowpass';lp.frequency.value=1700;g.connect(lp);lp.connect(AUD.N.room);o.start(t);o.stop(t+dur+.03)}
+
+// ---- l'arcade : bips de bornes façon console portable, et de temps en temps une pièce qui tombe ----
+let arcT=0,coinT=4;const PENTA=[0,3,5,7,10];
+function arcadeBleeps(D){arcT-=D;coinT-=D;const c=AUD.ctx,t=now();
+  if(arcT<=0){arcT=.12+Math.random()*.25;const n=72+PENTA[Math.floor(Math.random()*5)]+12*Math.floor(Math.random()*2),o=c.createOscillator(),g=c.createGain();o.type='square';o.frequency.value=mtof(n);
+    g.gain.setValueAtTime(.018,t);g.gain.exponentialRampToValueAtTime(.0005,t+.07);o.connect(g);g.connect(AUD.N.room);o.start(t);o.stop(t+.08)}
+  if(coinT<=0){coinT=5+Math.random()*7;[88,95].forEach((n,i)=>{const o=c.createOscillator(),g=c.createGain(),tt=t+i*.08;o.type='square';o.frequency.value=mtof(n);
+    g.gain.setValueAtTime(.025,tt);g.gain.exponentialRampToValueAtTime(.0005,tt+.18);o.connect(g);g.connect(AUD.N.room);o.start(tt);o.stop(tt+.2)})}}

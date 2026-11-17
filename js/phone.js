@@ -6,7 +6,7 @@ let phoneOpen=false;
 function togglePhone(force){phoneOpen=force!=null?force:!phoneOpen;$('phone').hidden=!phoneOpen;overlayOpen=phoneOpen;if(phoneOpen){target=null;pendingTalk=null;renderPhone()}}
 addEventListener('keydown',e=>{if(e.code!=='KeyF'||!started||dlgOpen||cine||!$('pause').hidden||!$('intro').hidden||!$('settings').hidden)return;if(overlayOpen&&!phoneOpen)return;e.preventDefault();togglePhone()});
 addEventListener('keydown',e=>{if(e.code==='Escape'&&phoneOpen){e.stopImmediatePropagation();togglePhone(false)}},true);
-const TRACKS={calm:'Néons sous la pluie',club:'Nuit au club Ondes'};
+const TRACKS={calm:'Néons sous la pluie',club:'Nuit au club Ondes',lofi:'Pluie sur Midi (lo-fi)',drive:'Autoroute néon'},TRACK_ORDER=Object.keys(TRACKS);
 function renderPhone(){
   const h=S.hour||0,hh=String(Math.floor(h)).padStart(2,'0'),mm=String(Math.floor((h%1)*60)).padStart(2,'0');
   $('phTime').textContent=hh+':'+mm;$('phMap').classList.toggle('on',!!S.minimap);$('phMapState').textContent=S.minimap?'affichée':'masquée';
@@ -14,7 +14,7 @@ function renderPhone(){
 }
 $('phMap').onclick=()=>{S.minimap=!S.minimap;save();renderPhone();$('minimap').hidden=!S.minimap};
 $('phPlay').onclick=()=>{S.walkman=!S.walkman;save();renderPhone();if(typeof audioInit==='function')audioInit()};
-$('phNext').onclick=()=>{S.wmTrack=(S.wmTrack||'calm')==='calm'?'club':'calm';save();renderPhone()};
+$('phNext').onclick=()=>{const i=TRACK_ORDER.indexOf(S.wmTrack||'calm');S.wmTrack=TRACK_ORDER[(i+1)%TRACK_ORDER.length];save();renderPhone()};
 $('phClose').onclick=()=>togglePhone(false);
 
 // ---- la mini-carte : la ville vue de haut (rues, trottoirs, immeubles, eau), les lieux, ta position et ton regard ----
@@ -30,7 +30,7 @@ function buildMinimap(){
 let mmLast=null;
 function updateMinimap(dt){
   const show=!!(mmBase&&S.minimap&&started&&!$('hudL').hidden);$('mmWrap').hidden=!show;$('minimap').hidden=!show;if(!show)return;mmT+=dt;if(mmT<.12)return;mmT=0;
-  const cv=$('minimap'),g=cv.getContext('2d'),R=cv.width/2,k=2,s=1.6,z=zoneOf(),inRoom=!!(z&&String(z).startsWith('in_'));
+  const cv=$("minimap"),g=cv.getContext("2d"),R=cv.width/2,k=2,s=.95,z=zoneOf(),inRoom=!!(z&&String(z).startsWith('in_'));
   if(!inRoom&&!z)mmLast={x:player.position.x,z:player.position.z};const c=inRoom||!mmLast?(mmLast||{x:W/2,z:H/2}):mmLast; // dans une pièce : la carte reste là où tu es entré
   const px=x=>R+(x-c.x)*k*s,pz=zz=>R+(zz-c.z)*k*s;
   g.clearRect(0,0,cv.width,cv.height);g.save();g.beginPath();g.arc(R,R,R-1,0,7);g.clip();g.fillStyle='#07090e';g.fillRect(0,0,cv.width,cv.height);

@@ -62,8 +62,8 @@ function spawn(){
   // passants sur les trottoirs des avenues et sur le quai
   const lanes=[{ax:'x',c:UZ(AVE[2])+2.1,a0:UX(.004),a1:UX(.996),side:1,n:6},{ax:'x',c:UZ(AVE[1])+2.1,a0:UX(.004),a1:UX(.996),side:1,n:5},{ax:'x',c:UZ(AVE[3])+2.1,a0:UX(.004),a1:UX(.996),side:1,n:5},
     {ax:'z',c:UX(AVE[1])-2.1,a0:UZ(.004),a1:UZ(.996),side:-1,n:5},{ax:'z',c:UX(AVE[2])+2.1,a0:UZ(.004),a1:UZ(.996),side:1,n:5},{ax:'z',c:UX(AVE[3])-2.1,a0:UZ(.004),a1:UZ(.996),side:-1,n:4},
-    {ax:'z',c:13.6,a0:UZ(.0),a1:UZ(1),side:1,n:4}];
-  lanes.forEach(L=>{for(let i=0;i<L.n+2;i++){ /* deux passants de plus par trottoir */let a=0;for(let t=0;t<12;t++){a=L.a0+rnd()*(L.a1-L.a0);if(!(L.ax==='x'?isSolid(a,L.c):isSolid(L.c,a)))break}
+    {ax:'z',c:13.6,a0:UZ(.0),a1:UZ(1),side:1,n:9},{ax:'z',c:16.6,a0:UZ(.0),a1:UZ(1),side:-1,n:7}]; // le quai du port est large : plus de promeneurs
+  lanes.forEach(L=>{for(let i=0;i<(L.c>12&&L.c<17?L.n:Math.max(2,L.n-1));i++){ /* moins de monde dans les rues étroites du centre */let a=0;for(let t=0;t<12;t++){a=L.a0+rnd()*(L.a1-L.a0);if(!(L.ax==='x'?isSolid(a,L.c):isSolid(L.c,a)))break}
     const m=makeChar(randomSpec());if(L.ax==='x')m.position.set(a,0,L.c);else m.position.set(L.c,0,a);
     walkers.push({m,L,v:(L.side>0?1:-1)*(1.1+rnd()*.8),off:0}) /* trottoir à sens unique */}});
   [[ '#5a2a6a','#ff4fa3',14,UZ(AVE[1]),7],[ '#1e3a4a','#39e6ff',12,UZ(AVE[2]),-5],[ '#4a3a1a','#ffb547',10,UZ(AVE[3]),9],[ '#2a2a2a','#ff3b4e',13,UZ(AVE[0])+2,6]].forEach(([b,c,y,z,v],i)=>{

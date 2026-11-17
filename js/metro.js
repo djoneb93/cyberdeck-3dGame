@@ -30,22 +30,38 @@ IN_DEF.metro={w:32,d:12,h:4.4,trim:'#39e6ff',light:[0xcfe8ff,0x39e6ff],fog:0x0a1
     for(let i=0;i<16;i++){ig.fillStyle='#1e5a8a';ig.fillRect(i*16+3,18,10,14);ig.fillStyle='#20242c';if(Math.random()<.45){ig.beginPath();ig.arc(i*16+8,14,3.5,0,7);ig.fill();ig.fillRect(i*16+5,17,6,10)}}
     for(let i=0;i<8;i++){ig.fillStyle='#1a2028';ig.fillRect(i*32+30,0,3,32)}
     const im=new THREE.MeshBasicMaterial({map:new THREE.CanvasTexture(ic)});
-    for(let k=0;k<3;k++){const L=9.4,cx=-10+k*10,front=k===2,back=k===0;const rings=[],zs=[];
-      for(let i=0;i<=20;i++){const u=i/20,z=-L/2+u*L;let t=0;if(front&&z>L/2-1.4)t=(z-(L/2-1.4))/1.4;if(back&&z<-L/2+1.4)t=(-L/2+1.4-z)/1.4;
-        rings.push(superRing(36,1.05*(1-.3*t*t),.12+.1*t*t,2.6-.55*t*t,.42));zs.push(z)}
+    // chaque voiture est fermée et arrondie à ses deux bouts (nez long et bombé en tête et en queue, bouts courts entre voitures)
+    for(let k=0;k<3;k++){const L=9.4,cx=-10+k*10,front=k===2,back=k===0,e1=front?1.9:.6,e0=back?1.9:.6;const rings=[],zs=[];
+      for(let i=0;i<=40;i++){const u=i/40,z=-L/2+u*L;let t=0,nose=false;if(z>L/2-e1){t=(z-(L/2-e1))/e1;nose=front}else if(z<-L/2+e0){t=(-L/2+e0-z)/e0;nose=back}
+        const sw=Math.sqrt(Math.max(.0006,1-t*t)),sh=Math.sqrt(Math.max(.0006,1-Math.pow(t,nose?3:2.2))),mid=nose?1.15+.25*t:1.36,hh=1.24*sh;
+        rings.push(superRing(36,1.05*sw+.01,Math.max(.1,mid-hh),mid+hh*(nose?.92:1),.42));zs.push(z)}
       const car=new THREE.Mesh(loft(rings,zs,col),mm);car.rotation.y=Math.PI/2;car.position.set(cx,0,tz);tr.add(car);
-      [-1,1].forEach(s=>{const w=new THREE.Mesh(new THREE.PlaneGeometry(L-(front||back?1.8:.4),.6),im);w.position.set(cx+(front?-.7:back?.7:0),1.7,tz+s*1.07);w.rotation.y=s>0?0:Math.PI;tr.add(w)});
-      box(L-.6,.04,.04,'#eaf6ff',cx,2.55,tz,tr,true)}
-    box(.04,.25,.9,'#eaf6ff',15.2,1.2,tz,tr,true);box(.04,.2,.6,'#ff2a3a',-15.2,1.2,tz,tr,true); // phares, feux arrière
+      const wl=L-e0-e1-.3;[-1,1].forEach(s=>{const w=new THREE.Mesh(new THREE.PlaneGeometry(wl,.6),im);w.position.set(cx+(e0-e1)/2,1.7,tz+s*1.065);w.rotation.y=s>0?0:Math.PI;tr.add(w)});
+      box(wl,.04,.04,'#eaf6ff',cx+(e0-e1)/2,2.58,tz,tr,true);if(k<2)box(.9,1.9,1.5,'#22262e',cx+5,1.3,tz,tr)} // soufflet entre deux voitures
+    box(.06,.2,.7,'#eaf6ff',14.62,1.25,tz,tr,true);box(.06,.16,.5,'#ff2a3a',-14.62,1.25,tz,tr,true); // phares, feux arrière
     R.anims.push({k:0,f:t=>{const c=t%30;tr.position.x=c<6?-40+40*(1-Math.pow(1-c/6,2)):c<14?0:c<20?40*Math.pow((c-14)/6,2):60}}); // arrive, s'arrête 8 s, repart
     R.metroStopped=()=>{const c=tAcc%30;return c>=6&&c<14};
-    // les bouches de tunnel aux deux bouts de la voie : arche noire en profondeur, encadrement et néon (comme la sortie du TGV)
-    [-1,1].forEach(s=>{const g=new THREE.Group();g.position.set(s*(w/2-.02),0,tz);g.rotation.y=-s*Math.PI/2;R.g.add(g);
-      const sh=new THREE.Shape();sh.moveTo(-1.45,0);sh.lineTo(-1.45,2.2);sh.absarc(0,2.2,1.45,Math.PI,0,true);sh.lineTo(1.45,0);sh.closePath();
-      const hole=new THREE.Mesh(new THREE.ShapeGeometry(sh,24),new THREE.MeshBasicMaterial({color:0x010102,fog:false}));hole.position.z=.01;g.add(hole);
-      const fr=new THREE.Mesh(new THREE.TorusGeometry(1.6,.14,8,28,Math.PI),mat('#2a2e36'));fr.position.set(0,2.2,.06);g.add(fr);
-      const ne=new THREE.Mesh(new THREE.TorusGeometry(1.48,.03,6,40,Math.PI),mat('#ff4fa3',true));ne.position.set(0,2.2,.1);g.add(ne);
-      [-1.6,1.6].forEach(x=>{box(.28,2.2,.12,'#2a2e36',x,1.1,.06,g);box(.04,2.2,.04,'#ff4fa3',x*.93,1.1,.12,g,true)})});
+    // les tunnels aux deux bouts de la voie : le mur du fond est percé d'une arche, et derrière, un vrai tunnel noir qui s'enfonce
+    // (voûte, parois, rails qui continuent, petites lampes), comme la sortie du TGV dehors
+    R.g.children.filter(m=>m.isMesh&&m.geometry.type==='PlaneGeometry'&&Math.abs(Math.abs(m.position.x)-w/2)<.01&&Math.abs(m.position.y-R.h/2)<.01).forEach(m=>R.g.remove(m));
+    const ew=R.o.wall.clone();ew.map=R.o.wall.map.clone();ew.map.needsUpdate=true;ew.map.repeat.set(8/d,1.6/R.h);
+    const RA=1.45,YS=2.2,blk=new THREE.MeshBasicMaterial({color:0x020204,fog:false,side:THREE.DoubleSide});
+    [-1,1].forEach(s=>{
+      const sh=new THREE.Shape();sh.moveTo(-d/2,0);sh.lineTo(d/2,0);sh.lineTo(d/2,R.h);sh.lineTo(-d/2,R.h);sh.closePath();
+      const hx=s<0?-tz:tz,hole=new THREE.Path();hole.moveTo(hx-RA,0);hole.lineTo(hx-RA,YS);hole.absarc(hx,YS,RA,Math.PI,0,true);hole.lineTo(hx+RA,0);hole.closePath();sh.holes.push(hole);
+      const wall=new THREE.Mesh(new THREE.ShapeGeometry(sh,24),ew);wall.position.set(s*w/2,0,0);wall.rotation.y=-s*Math.PI/2;R.g.add(wall);
+      const L=9,cxT=s*(w/2+L/2); // le tunnel derrière le mur
+      const vault=new THREE.Mesh(new THREE.CylinderGeometry(RA,RA,L,24,1,true,0,Math.PI),blk);vault.rotation.z=Math.PI/2;vault.position.set(cxT,YS,tz);R.g.add(vault);
+      [-1,1].forEach(k=>{const pl=new THREE.Mesh(new THREE.PlaneGeometry(L,YS),blk);pl.position.set(cxT,YS/2,tz+k*RA);R.g.add(pl)});
+      const fl=new THREE.Mesh(new THREE.PlaneGeometry(L,2*RA),new THREE.MeshBasicMaterial({color:0x0a0b0e}));fl.rotation.x=-Math.PI/2;fl.position.set(cxT,.005,tz);R.g.add(fl);
+      const end=new THREE.Mesh(new THREE.PlaneGeometry(2*RA,YS+RA),blk);end.position.set(s*(w/2+L),(YS+RA)/2,tz);end.rotation.y=-s*Math.PI/2;R.g.add(end);
+      for(const z of [tz-.5,tz+.5])box(L,.04,.08,'#4a5058',cxT,.03,z,R.g);
+      for(let i=1;i<5;i++)box(.04,.06,.3,'#ffb547',s*(w/2+i*1.8),1.7,tz-RA+.05,R.g,true);
+      // encadrement de l'arche, côté station : béton sombre, liseré néon rose
+      const g=new THREE.Group();g.position.set(s*(w/2-.02),0,tz);g.rotation.y=-s*Math.PI/2;R.g.add(g);
+      const fr=new THREE.Mesh(new THREE.TorusGeometry(RA+.14,.14,8,28,Math.PI),mat('#2a2e36'));fr.position.set(0,YS,.08);g.add(fr);
+      const ne=new THREE.Mesh(new THREE.TorusGeometry(RA+.02,.03,6,40,Math.PI),mat('#ff4fa3',true));ne.position.set(0,YS,.14);g.add(ne);
+      [-1,1].forEach(k=>{box(.28,YS,.16,'#2a2e36',k*(RA+.14),YS/2,.08,g);box(.04,YS,.04,'#ff4fa3',k*(RA+.02),YS/2,.16,g,true)})});
     // néons au plafond de la station
     for(let i=-3;i<=3;i++)R.B(3,.05,.12,'#eaf6ff',i*4.4,R.h-.06,-1.4,true);
     // les commerces, au sud : vitrines en profondeur, comptoir de presse, distributeurs de tickets

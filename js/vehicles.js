@@ -25,7 +25,7 @@ const podMat=new THREE.MeshLambertMaterial({color:0x15181f});
 function carModel(body,glowC,x,y,z,ry,parked,noGlow,kind){
   kind=kind||pick(['sedan','sedan','sport','van']);const K=CAR_KINDS[kind],G=carGeo(kind);
   const g=new THREE.Group();g.position.set(x,y,z);g.rotation.y=ry;scene.add(g);
-  const bm=new THREE.MeshPhongMaterial({color:body,specular:0x5a6470,shininess:70});
+  const bm=new THREE.MeshPhongMaterial({color:body,specular:0x8a96a8,shininess:100}); // peinture métallisée
   g.add(new THREE.Mesh(G.lo,bm));g.add(new THREE.Mesh(G.gl,glassMat));
   if(K.roof){const r=box(K.roof[2],.05,.82,body,K.roof[0],K.roof[1],0,g);r.material=bm}
   // phares : bandeau LED à l'avant, feux arrière sur toute la largeur
@@ -33,6 +33,12 @@ function carModel(body,glowC,x,y,z,ry,parked,noGlow,kind){
   box(.04,.06,1.12,'#ff2a3a',K.rear,.5,0,g,true);
   // liseré néon sur les flancs, poignées affleurantes
   box(2.5,.03,.02,glowC,0,.35,.67,g,true);box(2.5,.03,.02,glowC,0,.35,-.67,g,true);
+  // détails : bas de caisse sombre, lignes de carrosserie, filet lumineux sous les vitres, anneaux autour des patins
+  box(2.95,.09,1.2,'#14161c',-.05,.22,0,g);[.6,-.6].forEach(s=>{box(2.4,.014,.014,'#0a0c10',-.05,.5,s*1.105,g);box(1.9,.018,.018,glowC,-.2,(K.roof?.62:.55),s*.47,g,true)});
+  [[1,.5],[1,-.5],[-1,.5],[-1,-.5]].forEach(([a,b])=>{const ring=new THREE.Mesh(new THREE.TorusGeometry(.25,.018,4,18),mat(glowC,true));ring.rotation.x=Math.PI/2;ring.position.set(a,.1,b);g.add(ring)});
+  if(kind==='sport'){const sp=box(.34,.04,1.16,body,K.rear+.2,.74,0,g);sp.material=bm;[-.42,.42].forEach(z=>box(.05,.18,.05,'#2a2e36',K.rear+.24,.64,z,g));for(let i=-2;i<=2;i++)box(.2,.12,.03,'#0a0c10',K.rear+.05,.26,i*.2,g)} // aileron, diffuseur
+  if(kind==='sedan')box(.6,.04,.1,glowC,-.25,1.02,0,g,true); // rampe lumineuse sur le toit
+  if(kind==='van'){box(.05,.3,1.0,'#20242c',-1.73,.5,0,g);box(.04,.04,.9,glowC,-1.75,.7,0,g,true)}
   [.68,-.68].forEach(s=>{box(.14,.08,.16,body,K.front*.32,.74,s*1.02,g).material=bm;box(.02,.06,.12,'#9ab4c8',K.front*.32-.08,.74,s*1.02,g)}); // rétroviseurs
   box(.02,.13,.36,'#e8e4d0',K.rear-.012,.3,0,g,true);box(.02,.13,.36,'#e8e4d0',K.front+.012,.3,0,g); // plaques
   // patins de sustentation aux quatre coins, avec leur lueur
