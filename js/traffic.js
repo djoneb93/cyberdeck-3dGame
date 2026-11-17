@@ -27,6 +27,8 @@ function updateTraffic(dt){
     look(player.position.x,player.position.z);walkers.forEach(w=>look(w.m.position.x,w.m.position.z));statics.forEach(s=>look(s.position.x,s.position.z));npcs.forEach(n=>look(n.mesh.position.x,n.mesh.position.z));
     aveCars.forEach(o=>{if(o!==c&&o.on&&o.ax===c.ax&&o.dir===c.dir&&Math.abs(o.lat-c.lat)<.5){const along=(o.s-c.s)*c.dir;if(along>0&&along<free+3)free=Math.min(free,along-2.2)}});
     if(taxi&&taxi.state==='wait')look(taxi.g.position.x,taxi.g.position.z);
+    // feux tricolores : arrêt avant le passage piéton au rouge (et à l'orange si on a encore le temps)
+    AVE.forEach(b=>{const cc=X?UX(b):UZ(b),d=(cc-c.s)*c.dir,st=lightState(c.ax);if(d>2.6&&d<7&&st!==2&&!(st===1&&d<3.6))free=Math.min(free,d-2.4)});
     const want=free<2.6?0:free<6?c.sp*(free-2.6)/3.4:c.sp;c.v+=(want-c.v)*Math.min(1,dt*3);c.s+=c.dir*c.v*dt;
     c.g.position.set(X?c.s:c.lat,.32+Math.sin(tAcc*3+c.s)*.04,X?c.lat:c.s);
     c.stk=c.v<.2?c.stk+dt:0;

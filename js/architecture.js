@@ -96,7 +96,7 @@ function archTower(b,k){
     det(sc,true,x,.95,z+w/2+.04,fw,1.3,.06);det(sc,true,x+w/2+.04,.95,z,.06,1.3,fw);
     det('#1d2430',false,x,2.05,z+w/2+.22,fw+.3,.1,.55);det('#1d2430',false,x+w/2+.22,2.05,z,.55,.1,fw+.3);det(neon,true,x,2,z+w/2+.5,fw+.3,.05,.05)}
   // façades : climatiseurs, conduites, escaliers de secours
-  if(b.box&&style!=='glass'&&!b.comm&&type!=='balcony'){for(let i=0;i<5;i++){const y=3+((arnd()*(Math.max(1,h-5)))|0),o=-w*.35+arnd()*w*.4;det('#8a929c',false,x+w/2+.16,y,z+o,.3,.34,.5)}
+  if(b.box&&style!=='glass'&&!b.comm&&type!=='balcony'){for(let i=0;i<5;i++){const y=4+((arnd()*(Math.max(1,h-6)))|0),o=-w*.35+arnd()*w*.4;det('#8a929c',false,x+w/2+.16,y,z+o,.3,.34,.5)}
     det('#4a5058',false,x+w/2+.1,h/2,z-w/2+.35,.12,h-.2,.12)}
   if(style==='brick'&&b.box&&h>6)for(let y=3;y<h-1;y+=2){det('#2a2e36',false,x+w/2+.45,y,z-w*.15,.8,.06,1.3);det('#2a2e36',false,x+w/2+.82,y+.5,z-w*.15,.04,1,1.3)}
   // couronnements

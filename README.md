@@ -42,6 +42,7 @@ et partagent la même portée globale.
 - `js/render.js` : moteur 3D, matériaux, façades, enseignes, sprites pixel des personnages.
 - `js/architecture.js` : façades réalistes (verre, béton, brique, métal, résidentiel) et formes variées des tours.
 - `js/world.js` : construction du monde (sol, ciel, bâtiments, port, viaduc, immeuble de la planque).
+- `js/streets.js` : rues et sol (asphalte et dalles texturés, flaques, plaques d'égout, mobilier urbain, feux tricolores, câbles, tags).
 - `js/vehicles.js` : voitures flottantes (berline, sportive, utilitaire), taxi, rame TGV.
 - `js/station.js` : la gare Zéro en détail (quais, verrière, tableau des départs, horloge, kiosque).
 - `js/life.js` : la ville vivante (enseignes verticales, liserés néon, projecteurs, drones, vapeur, fenêtres).

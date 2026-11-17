@@ -47,15 +47,7 @@ function faceBox(id,w,h,y,lat,color,emis,out){const [x,z]=front(id,out==null?.03
 function faceSign(id,text,c,y,lat,k,light){const [x,z]=front(id,.08,lat||0),p=PL[id],fw=2*(p.face[1]==='x'?p.hd:p.hw)-2*Math.abs(lat||0)-.5;sign(text,c,x,y,z,FACE_RY[p.face],false,light!==false,k,false,fw)}
 function buildWorld(){
   // sol de la ville : dalles légèrement transparentes posées sur un miroir → sol mouillé qui reflète les néons
-  const n=W*H;const gm=new THREE.InstancedMesh(new THREE.PlaneGeometry(1,1).rotateX(-Math.PI/2),new THREE.MeshLambertMaterial({transparent:true,opacity:mirror?.86:1}),n);
-  const m4=new THREE.Matrix4(),col=new THREE.Color();
-  const base=['#1d222c','#2c313d','#14161e','#5a3d2b','#252832','#0d2f5e'];
-  for(let z=0;z<H;z++)for(let x=0;x<W;x++){
-    const i=I(x,z),t=tile[i];m4.makeTranslation(x+.5,0,z+.5);gm.setMatrixAt(i,m4);
-    col.set(base[t]);let j=(rnd()-.5)*.025;if(t===4&&(x+z)%2)j-=.02;if(t===3&&z%2)j-=.04;if(t===5)j=(rnd()-.5)*.02;
-    col.offsetHSL(0,0,j);gm.setColorAt(i,col);
-  }
-  scene.add(gm);ground=gm;
+  buildGround(); // asphalte et dalles texturés (js/streets.js)
   // ciel : dégradé nocturne avec la lueur de la ville à l'horizon, et des étoiles
   const skc=document.createElement('canvas');skc.width=2;skc.height=256;const sg=skc.getContext('2d'),sgr=sg.createLinearGradient(0,0,0,256);
   sgr.addColorStop(0,'#020309');sgr.addColorStop(.36,'#070a18');sgr.addColorStop(.47,'#1c1236');sgr.addColorStop(.5,'#3a1a48');sgr.addColorStop(.53,'#160d22');sgr.addColorStop(1,'#05060a');sg.fillStyle=sgr;sg.fillRect(0,0,2,256);
@@ -84,7 +76,7 @@ function buildWorld(){
   // tours de la ville (même disposition que la carte)
   TOWERS.forEach((b,k)=>{const w=2*b.s*MS,h=HZF(b.h);archTower(b,k);
     if(!b.comm&&b.box&&b.type!=='balcony'&&h>9&&k%2===0){const aw=Math.min(w*.62,3.4);adScreen(UX(b.u),Math.min(h*.62*.6,7)+1.5,UZ(b.v)+w/2+.08,0,aw,aw*.55)}});
-  skyBridges();flushDetails();
+  skyBridges();flushDetails();buildStreets();
   // tours lointaines tout autour (pas sur le fleuve ni sur le viaduc)
   for(let i=0;i<70;i++){
     const side=i%3;let x,z;const dd=6+rnd()*26;

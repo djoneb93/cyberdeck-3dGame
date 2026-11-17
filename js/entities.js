@@ -71,8 +71,10 @@ function spawn(){
   [[ '#5a2a6a','#ff4fa3',14,UZ(AVE[1]),7],[ '#1e3a4a','#39e6ff',12,UZ(AVE[2]),-5],[ '#4a3a1a','#ffb547',10,UZ(AVE[3]),9],[ '#2a2a2a','#ff3b4e',13,UZ(AVE[0])+2,6]].forEach(([b,c,y,z,v],i)=>{
     const g=carModel(b,c,-10+i*16,y,z,v>0?0:Math.PI,false);flyers.push({g,v})});
 }
+let FURN_POS=null;
 function updateWalkers(dt){
-  const obs=[player.position,...npcs.map(n=>n.mesh.position),...statics.map(s=>s.position)];
+  if(!FURN_POS)FURN_POS=FURN.map(([x,z])=>({x,z})); // les passants contournent le mobilier urbain
+  const obs=[player.position,...npcs.map(n=>n.mesh.position),...statics.map(s=>s.position),...FURN_POS];
   walkers.forEach(w=>{const others=walkers.filter(o=>o!==w).map(o=>o.m.position);
     const p=w.m.position,L=w.L,X=L.ax==='x';let block=false,want=0;const pa=X?p.x:p.z;
     for(const o of obs.concat(others)){const da=(X?o.x:o.z)-pa,db=(X?o.z:o.x)-(L.c+w.off);if(Math.sign(da)===Math.sign(w.v)&&Math.abs(da)<1.3&&Math.abs(db)<.7){want=.8*L.side;if(Math.abs(da)<.5&&Math.abs(db)<.45)block=true}}
