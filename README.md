@@ -21,7 +21,7 @@ puis ouvre http://localhost:8765/.
 
 - **ZQSD** ou flèches : marcher · **clic** au sol : aller
 - **glisser** : tourner et incliner la caméra · **A / R** : pivoter · **molette** : zoom
-- **E** ou **F** : parler, examiner · **Espace** : sauter, continuer un dialogue · **1 2 3** : choisir une réponse · **P** : taille des pixels · **M** : aperçu de la météo suivante · **N** : passer au moment suivant (aube, jour, crépuscule, nuit)
+- **E** ou **F** : parler, examiner, continuer un dialogue · on entre dans les lieux en marchant dans leur porte · **1 2 3** : choisir une réponse · **P** : taille des pixels · **M** : aperçu de la météo suivante · **N** : passer au moment suivant (aube, jour, crépuscule, nuit)
 
 ## Contenu
 

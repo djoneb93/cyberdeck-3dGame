@@ -3,13 +3,14 @@
 'use strict';
 
 let taxi=null,taxiRide=false;
-const TAXI_PAD={x:UX(AVE[2]),z:UZ(.93)},TAXI_STAND={x:UX(AVE[2])+2.3,z:UZ(.93)};
+// la station est sur la petite place dégagée, à l’est de l’avenue, près de ta planque
+const TAXI_PAD={x:64.2,z:61.5},TAXI_STAND={x:59.8,z:61.5};
 function buildTaxi(){
   const A=AVE.map(UX),Z=AVE.map(UZ),y=12;
   // itinéraire au-dessus des avenues (aucune tour sur le chemin), avec un détour par le port et la gare
-  const P=[[A[2],.5,TAXI_PAD.z],[A[2],5,TAXI_PAD.z-3],[A[2],y,Z[3]],[A[2],y,Z[2]],[A[2],y,Z[1]],[A[2],y,Z[0]+3],[A[2]+4,y,Z[0]],[A[3]-4,y,Z[0]],[A[3],y,Z[0]+4],
+  const P=[[TAXI_PAD.x,.5,TAXI_PAD.z],[TAXI_PAD.x-2,4,TAXI_PAD.z-.5],[A[2],9,UZ(.86)],[A[2],y,Z[3]],[A[2],y,Z[2]],[A[2],y,Z[1]],[A[2],y,Z[0]+3],[A[2]+4,y,Z[0]],[A[3]-4,y,Z[0]],[A[3],y,Z[0]+4],
     [A[3],y,Z[2]],[A[3],y,Z[3]-4],[A[3]-4,y,Z[3]],[A[1]+4,y,Z[3]],[A[1],y,Z[3]-4],[A[1],y+4,Z[2]],[A[1],y+8,PL.roofs.z],[A[1],y+3,Z[1]+4],[A[1]-4,y,Z[1]],
-    [A[0],y,Z[1]],[12,y-2,Z[1]],[7,y-2,Z[1]+6],[7,y-2,UZ(.62)],[8,y-1,UZ(.9)],[A[0],y,UZ(.93)],[GX,y,UZ(.93)],[A[1],y-1,UZ(.95)],[A[2]-4,8,UZ(.95)],[A[2],3,TAXI_PAD.z-1],[A[2],.5,TAXI_PAD.z]];
+    [A[0],y,Z[1]],[12,y-2,Z[1]],[7,y-2,Z[1]+6],[7,y-2,UZ(.62)],[8,y-1,UZ(.9)],[A[0],y,UZ(.93)],[GX,y,UZ(.93)],[A[1],y-1,UZ(.95)],[A[2]-4,8,UZ(.95)],[A[2],9,UZ(.86)],[TAXI_PAD.x-2,4,TAXI_PAD.z-.5],[TAXI_PAD.x,.5,TAXI_PAD.z]];
   const curve=new THREE.CatmullRomCurve3(P.map(p=>new THREE.Vector3(p[0],p[1],p[2])),false,'centripetal');
   const len=curve.getLength();
   const g=taxiModel();g.position.set(TAXI_PAD.x,.45,TAXI_PAD.z);g.rotation.y=Math.PI/2;

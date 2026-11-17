@@ -8,7 +8,7 @@ const solid=new Uint8Array(W*H), tile=new Uint8Array(W*H); // tile: 0 béton,1 t
 const I=(x,z)=>z*W+x;
 function fill(arr,x0,z0,x1,z1,v){for(let z=z0;z<=z1;z++)for(let x=x0;x<=x1;x++)if(x>=0&&z>=0&&x<W&&z<H)arr[I(x,z)]=v}
 const UX=u=>MOX+u*MS,UZ=v=>MO+v*MS;
-const HX=41,HZ=58; // la planque (construite en coordonnées locales 2–11 × 2–9) est posée au point vert de la carte
+const HX=41,HZ=57; // la planque (construite en coordonnées locales 2–11 × 2–9) est posée au point vert de la carte
 const AVE=[0,3,6,9].map(i=>(i+.5)/12);
 const PLACE={bar:{n:'LE NÉON NOIR',c:'#ff4fa3'},market:{n:'BAZAR NÉON',c:'#f6b35c'},club:{n:'CLUB ONDES',c:'#b98cff'},roofs:{n:'TOITS DE ZONE ZÉRO',c:'#6ff3f0'},laundry:{n:'LAVERIE 24/7',c:'#7cf29a'},arcade:{n:'ARCADE PIXEL',c:'#5ce1e6'},port:{n:'PORT FLUVIAL',c:'#8fb7ff'},lab:{n:'PARKING-LABO',c:'#e8505b'},bunker:{n:'BUNKER ZÉRO',c:'#ff2e3e'},comm:{n:'ANCIEN COMMISSARIAT',c:'#8fb7ff'}};
 const HZF=h=>Math.max(2.4,h/.46*MS*.55);
@@ -70,6 +70,8 @@ for(let z=0;z<H;z++)for(let x=0;x<W;x++){
   if(t===5)solid[i]=1;
   tile[i]=t;
 }
+// trottoirs extérieurs, au pied des immeubles qui ferment la ville (nord, est, sud) : on peut s’y promener
+for(let z=0;z<H;z++)for(let x=18;x<W;x++){if(z<2||z>=72||x>=88){solid[I(x,z)]=0;tile[I(x,z)]=1}}
 const PIERS=[.3,.5,.7,.9].map(UZ);
 PIERS.forEach(pz=>{fill(tile,2,Math.floor(pz),9,Math.floor(pz)+1,4);fill(solid,2,Math.floor(pz),9,Math.floor(pz)+1,0)});
 // tours et lieux
@@ -101,7 +103,7 @@ const zoneY=()=>{const z=zoneOf();return z?ZONES[z].y:0};
 const itemZone=o=>o.zone||(o.roof?'roof':null);
 [[GX+GHW+.6,GZ0+2],[GX+GHW+.6,GZ0+3],[GX+GHW+.24,(GZ0-.6+GZ1)/2+2],[GX+GHW+.24,(GZ0-.6+GZ1)/2-2],[GX+GHW+1.8,GZ1-.6]].forEach(([x,z])=>{solid[I(Math.floor(x),Math.floor(z))]=1}); // distributeurs, piliers du tableau
 fill(solid,Math.floor(GX+GHW+2.3),Math.floor(GZ1-1.9),Math.floor(GX+GHW+4.5),Math.floor(GZ1-.3),1); // kiosque
-solid[I(Math.floor(UX(AVE[2])+2.3),Math.floor(UZ(.93)))]=1;solid[I(Math.floor(UX(AVE[2])+2.3),Math.floor(UZ(.93)-.7))]=1; // station de taxis
+// (la borne de la station de taxis est posée dans js/taxi.js)
 // planque
 fill(tile,2+HX,2+HZ,11+HX,9+HZ,3);
 const hs=(x,z)=>{solid[I(x+HX,z+HZ)]=1},hf=(x0,z0,x1,z1)=>fill(solid,x0+HX,z0+HZ,x1+HX,z1+HZ,1);

@@ -50,7 +50,8 @@ function showMenu(){
   ['hudL','hudR','cam','help','prompt','dlg','pause','quit'].forEach(id=>$(id).hidden=true);npcs.forEach(n=>n.label.hidden=true);dlgOpen=false;
   const acts=$('introActs');acts.innerHTML='';const saved=loadSave(),mk=(t,fn,pri)=>{const b=document.createElement('button');b.type='button';b.textContent=t;if(pri)b.className='pri';b.onclick=fn;acts.appendChild(b)};
   if(saved&&saved.flags&&saved.flags.woke)mk('Continuer',()=>begin(false),true);
-  mk('Nouvelle partie',()=>{if(saved&&saved.flags&&saved.flags.woke&&!confirm('Recommencer depuis le début ? Ta partie en cours sera effacée.'))return;begin(true)},!(saved&&saved.flags&&saved.flags.woke));
+  // pas de confirm() : les fenêtres du navigateur sont bloquées dans la page publiée. On confirme par un second clic.
+  mk('Nouvelle partie',e=>{const b=e.currentTarget;if(saved&&saved.flags&&saved.flags.woke&&!b.dataset.sure){b.dataset.sure='1';b.textContent='Confirmer : effacer la partie et recommencer';b.classList.add('warn');return}begin(true)},!(saved&&saved.flags&&saved.flags.woke));
   mk('Commandes',()=>{$('menuKeys').hidden=!$('menuKeys').hidden});
   mk('Quitter',quitGame);
   $('intro').hidden=false;

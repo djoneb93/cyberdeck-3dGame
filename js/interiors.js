@@ -49,12 +49,14 @@ function makeRoom(id,o,cx,cz){
   // la porte de la rue : on entre en marchant dedans, sans touche à presser
   const f=o.entry||FP(id,.3,0);ENTRANCES.push({id,x:f.x,z:f.z,r:f.r||.85});
 }
-const ENTRANCES=[];let doorArmed=true,doorCool=0;
+const ENTRANCES=[];let doorArmed=true,doorCool=0,liftArmed=true;
 function checkDoors(dt){
   doorCool-=dt;if(!started||dlgOpen||overlayOpen||climb||taxiRide||cine||doorCool>0)return;
   const p=player.position,z=zoneOf(),Z=z&&ZONES[z];
   if(!z){const e=ENTRANCES.find(e=>Math.hypot(p.x-e.x,p.z-e.z)<e.r);if(!e){doorArmed=true;return}
     if(doorArmed){doorArmed=false;doorCool=1;enterRoom(e.id)}return}
+  if(z==="roof"){const inT=Math.hypot(p.x-(ROOF.x+1.9),p.z-(ROOF.z-.75))<.5;if(!inT)liftArmed=true;else if(liftArmed){liftArmed=false;doorCool=1.2;lobbyFromRoof()}return}
+  if(z==="in_roofs"){const L=ROOMS.roofs,inT=Math.abs(p.x-L.cx)<.7&&p.z<L.cz-L.d/2+1;if(!inT)liftArmed=true;else if(liftArmed){liftArmed=false;doorCool=1.2;goRoof(true);return}}
   if(!Z.room)return;const R=ROOMS[Z.room];
   if(p.z>R.cz+R.d/2-.8&&Math.abs(p.x-R.cx)<.9){doorCool=1.2;exitRoom(Z.room)}
 }
@@ -269,32 +271,34 @@ IN_DEF.home={w:10,d:8,h:3,trim:'#7cf29a',light:[0xffc890,0x6fa8ff],fog:0x0e0c14,
 IN_DEF.market={w:14,d:10,h:3.6,trim:'#f6b35c',light:[0xffb547,0xff4fa3],fog:0x140c06,
   floor:canvasMat(32,32,(g,W,H)=>{g.fillStyle='#3a2a1e';g.fillRect(0,0,W,H);g.fillStyle='#4a3626';g.fillRect(1,1,14,14);g.fillRect(17,17,14,14);g.fillStyle='#2e2218';g.fillRect(17,1,14,14);g.fillRect(1,17,14,14)},10,7),
   wall:canvasMat(64,32,(g,W,H)=>{g.fillStyle='#24140e';g.fillRect(0,0,W,H);for(let y=0;y<H;y+=4)for(let x=(y/4)%2*4;x<W;x+=8){g.fillStyle=rpick(['#3a2016','#432419','#341c12']);g.fillRect(x,y,7,3)}},6,3),
-  outside(){ // l'entrée du souterrain : un petit tunnel voûté en béton, avec ses lampes, ses rampes et l'escalier qui s'enfonce
-    const ry=FACE_RY[PL.market.face],[cx,cz]=front('market',-1.7,1.8),g=new THREE.Group();g.position.set(cx,0,cz);g.rotation.y=ry;scene.add(g);
-    const cm=photoMat('concrete',.8,.6,.5)||mat('#3a3d44');
-    [-1.15,1.15].forEach(sx=>{const m=new THREE.Mesh(boxGeo,cm);m.scale.set(.3,2,3.2);m.position.set(sx,1,0);g.add(m);camBlockers.push(m)});
-    const vault=new THREE.Mesh(new THREE.CylinderGeometry(1.3,1.3,3.2,20,1,true,-Math.PI/2,Math.PI),new THREE.MeshLambertMaterial({color:0x34373e,side:THREE.DoubleSide}));
-    vault.rotation.x=-Math.PI/2;vault.position.y=2;g.add(vault);
-    const arch=new THREE.Mesh(new THREE.TorusGeometry(1.32,.07,6,24,Math.PI),mat('#f6b35c',true));arch.position.set(0,2,1.62);g.add(arch);
-    [-1.32,1.32].forEach(sx=>box(.1,2,.1,'#f6b35c',sx,1,1.62,g,true));
-    box(2,.04,3.2,'#1c1e24',0,.02,0,g);for(let i=0;i<5;i++)box(1.9,.03,.06,'#f6b35c',0,.05,1.3-i*.6,g,true); // nez de marches lumineux
-    [-.95,.95].forEach(sx=>box(.05,.05,3,'#ffd59a',sx,.9,0,g,true));for(let i=0;i<3;i++)box(.3,.08,.3,'#fff2d0',0,3.2,1-i,g,true);
-    for(let i=0;i<4;i++)box(.5+Math.random()*.4,.3+Math.random()*.3,.02,rpick(['#ff4fa3','#39e6ff','#7dffb0']),(i%2?1:-1)*.99,.8+Math.random(),1-i*.7,g,true).rotation.y=(i%2?-1:1)*Math.PI/2; // tags fluo
-    // le fond : l'escalier qui descend vers les étals, peint en perspective et animé
-    const c=document.createElement('canvas');c.width=96;c.height=128;const t=new THREE.CanvasTexture(c);t.minFilter=THREE.LinearFilter;
-    const back=new THREE.Mesh(new THREE.PlaneGeometry(2.3,3.3),new THREE.MeshBasicMaterial({map:t,fog:false}));back.position.set(0,1.65,-1.55);g.add(back);
-    const draw=tt=>{const G=c.getContext('2d'),W2=96,H2=128;G.fillStyle='#0a0806';G.fillRect(0,0,W2,H2);
-      for(let i=0;i<12;i++){const k=i/12,y=H2-k*70,w=W2*(1-k*.75),x=(W2-w)/2;G.fillStyle=i%2?'#2a2620':'#34302a';G.fillRect(x,y-6,w,6);G.fillStyle='rgba(246,179,92,.55)';G.fillRect(x,y-6,w,1)}
-      const gl=G.createRadialGradient(W2/2,52,2,W2/2,52,30);gl.addColorStop(0,'rgba(255,190,110,.8)');gl.addColorStop(1,'rgba(255,190,110,0)');G.fillStyle=gl;G.fillRect(0,20,W2,70);
-      for(let i=0;i<4;i++){G.fillStyle=['#ffb547','#ff4fa3','#7dffb0','#5ce1e6'][(i+Math.floor(tt*2))%4];G.fillRect(W2/2-14+i*9,40+Math.sin(tt*2+i)*1.5,4,5)}
-      const px=((tt*9)%60)-10;G.fillStyle='#06050a';G.beginPath();G.arc(W2/2-20+px,58,3,0,7);G.fill();G.fillRect(W2/2-23+px,61,6,10);
-      G.fillStyle='rgba(0,0,0,.35)';G.fillRect(0,0,W2,22);G.fillRect(0,0,10,H2);G.fillRect(W2-10,0,10,H2)};
-    let k=0;IN_DEF.market.tick=dt=>{k+=dt;if(k>.1&&Math.hypot(player.position.x-cx,player.position.z-cz)<40){k=0;draw(tAcc);t.needsUpdate=true}};draw(0);
-    g.updateMatrixWorld(true);const sp=g.localToWorld(new THREE.Vector3(0,3.55,1.7));sign('BAZAR SOUTERRAIN','#f6b35c',sp.x,sp.y,sp.z,ry,true,false,.03);
-    // les murs du tunnel arrêtent le passage (on peut quand même sauter par-dessus les rampes, pas les murs : ils sont hauts)
-    for(let o=-3.2;o<=-.2;o+=.4)[.65,2.95].forEach(l=>{const [x,z]=front('market',o,l);FURN.push([x,z,.22])});
-    for(let l=.8;l<=2.8;l+=.4){const [x,z]=front('market',-3.35,l);FURN.push([x,z,.22])}},
-  entry:(()=>{const [x,z]=front('market',-2.5,1.8);return {x,z,r:.75}})(),exit:(()=>{const [x,z]=front('market',.8,1.8);return {x,z,ry:FACE_RY[PL.market.face]}})(),
+  outside(){ // l'entrée du souterrain, au ras du sol : une trémie avec garde-corps ; l'escalier qui s'enfonce est dessiné par un shader
+    const ry=FACE_RY[PL.market.face],[cx,cz]=front('market',-1.6,1.8),g=new THREE.Group();g.position.set(cx,0,cz);g.rotation.y=ry;scene.add(g);
+    // la profondeur : pour chaque pixel de l'ouverture, on suit le regard dans la cage d'escalier (marches, murs, lampes, porte éclairée en bas)
+    const pm=new THREE.ShaderMaterial({uniforms:{uCam:{value:new THREE.Vector3()},uTime:{value:0}},
+      vertexShader:'varying vec3 vP;void main(){vP=position;gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.);}',
+      fragmentShader:`uniform vec3 uCam;uniform float uTime;varying vec3 vP;
+        float sY(float z){if(z>1.2)return 0.;return -min(7.,floor((1.2-z)/.4)+1.)*.22;}
+        void main(){vec3 d=normalize(vP-uCam);vec3 p=vP;vec3 c=vec3(.02);
+          for(int i=0;i<110;i++){vec3 q=p+d*.03;
+            if(abs(q.x)>.7){float s=sY(q.z);c=vec3(.15,.15,.16)*(.8+.2*fract(q.z*3.));if(abs(q.y-(s+.8))<.025)c=vec3(1.,.7,.35)*1.5;break;}
+            if(q.z<-1.2){c=vec3(.16,.15,.14);if(abs(q.x)<.36&&q.y<-.55)c=mix(vec3(1.,.6,.28),vec3(1.,.35,.6),.5+.5*sin(uTime*1.1))*(1.1+.15*sin(uTime*6.));break;}
+            float s=sY(q.z);if(q.y<s){if(p.y>=s){c=vec3(.5,.47,.42);if(fract((1.2-q.z)/.4)<.1)c=vec3(1.,.72,.36)*1.4;}else c=vec3(.11,.1,.1);break;}
+            if(q.y<-1.8){c=vec3(.05);break;}
+            p=q;}
+          c*=mix(1.,.45,clamp(-p.y/1.6,0.,1.));gl_FragColor=vec4(c,1.);}`});
+    const pg=new THREE.PlaneGeometry(1.4,2.4).rotateX(-Math.PI/2),pit=new THREE.Mesh(pg,pm);pit.position.y=.015;g.add(pit);
+    // margelle en acier, garde-corps sur trois côtés (on entre par le côté de la rue), petite enseigne sur un mât
+    [[0,1.24,1.5,.08],[0,-1.24,1.5,.08],[.74,0,.08,2.56],[-.74,0,.08,2.56]].forEach(([x,z,w,d])=>box(w,.05,d,'#5a6068',x,.03,z,g));
+    [.8,-.8].forEach(x=>{box(.04,.04,2.5,'#f6b35c',x,.95,0,g,true);for(let z=-1.2;z<=1.21;z+=.6)box(.05,.95,.05,'#3a4048',x,.48,z,g)});
+    box(1.64,.04,.04,'#f6b35c',0,.95,-1.27,g,true);[-.8,0,.8].forEach(x=>box(.05,.95,.05,'#3a4048',x,.48,-1.27,g));
+    box(.08,2.4,.08,'#2a3140',-.95,1.2,1.15,g);
+    g.updateMatrixWorld(true);const sp=g.localToWorld(new THREE.Vector3(-.95,2.25,1.15));sign('BAZAR · SOUS-SOL','#f6b35c',sp.x,sp.y,sp.z,ry,true,false,.022);
+    const inv=new THREE.Matrix4(),cl=new THREE.Vector3();
+    IN_DEF.market.tick=dt=>{if(Math.hypot(camera.position.x-cx,camera.position.z-cz)>60)return;inv.copy(pit.matrixWorld).invert();pm.uniforms.uCam.value.copy(cl.copy(camera.position).applyMatrix4(inv));pm.uniforms.uTime.value=tAcc};
+    // les garde-corps arrêtent le passage sur les côtés et au fond
+    for(let o=-2.8;o<=-.4;o+=.35)[1.0,2.6].forEach(l=>{const [x,z]=front('market',o,l);FURN.push([x,z,.16])});
+    for(let l=1.1;l<=2.5;l+=.35){const [x,z]=front('market',-2.85,l);FURN.push([x,z,.16])}},
+  entry:(()=>{const [x,z]=front('market',-.9,1.8);return {x,z,r:.55}})(),exit:(()=>{const [x,z]=front('market',.8,1.8);return {x,z,ry:FACE_RY[PL.market.face]}})(),
   build(R){const w=R.w,d=R.d;
     const stall=(x,c,name,goods)=>{const z=-d/2+1.2;R.S(2.3,.9,.8,'#2a2420',x,.45,z);R.B(2.35,.06,.85,'#4a3a2a',x,.92,z);
       R.B(2.7,.08,1.5,shade(c,.45),x,2.5,z-.2);R.B(2.7,.06,.06,c,x,2.46,z+.55,true);[-1.25,1.25].forEach(dx=>R.B(.07,2.5,.07,'#2a3140',x+dx,1.25,z+.5));
@@ -363,7 +367,8 @@ function buildInteriors(){
   inLights=[new THREE.PointLight(0xffffff,0,15,1.4),new THREE.PointLight(0xffffff,0,13,1.4)];inLights.forEach(l=>scene.add(l));
   const wallOf={bunker:()=>photoMat('concrete',3,1,.5),port:()=>photoMat('corrugated',4,1.4,.45)};
   let k=0;for(const id in IN_DEF){const o=IN_DEF[id];if(!o.wall)o.wall=(wallOf[id]&&wallOf[id]())||mat('#2a2e34');makeRoom(id,o,W+60+k*22,H/2);k++}
-  const od=OBJECTS.find(o=>o.id==="o_down");if(od){od.act=lobbyFromRoof;od.label="Ascenseur · redescendre au hall"}
+  // les ascenseurs de la tour se prennent en marchant dedans : plus besoin de les « utiliser »
+  for(let i=OBJECTS.length-1;i>=0;i--)if(OBJECTS[i].id==="o_down"||(OBJECTS[i].zone==="in_roofs"&&/ascenseur/.test(OBJECTS[i].label)))OBJECTS.splice(i,1);
 }
 function updateInteriors(dt){
   checkDoors(dt);for(const id in IN_DEF)if(IN_DEF[id].tick)IN_DEF[id].tick(dt);

@@ -46,7 +46,6 @@ function updatePlayer(dt){
   player.position.y=zoneY()+(J.jy||0);
   S.px=player.position.x;S.pz=player.position.z;S.ry=ud.ry;
 }
-function jump(){const J=player.userData;if(taxiRide||climb||(J.jy||0)>0)return;J.jv=7.2;J.jy=.001}
 const lerp=(a,b,t)=>a+(b-a)*t;
 function lerpAngle(a,b,t){let d=((b-a+Math.PI)%(Math.PI*2)+Math.PI*2)%(Math.PI*2)-Math.PI;return a+d*t}
 
@@ -275,7 +274,7 @@ $('endClose').onclick=()=>{$('ending').hidden=true;overlayOpen=false};
 
 function start(hotData){
   const saved=(hotData&&hotData.S)||loadSave();
-  if(saved){if(saved.mapv!==3){const n=NEW_STATE();saved.px=n.px;saved.pz=n.pz;saved.ry=0;saved.mapv=3}S=Object.assign(NEW_STATE(),saved);for(const k in S.q){const q=S.q[k];if(q.ep==null){q.ep=q.won?1:0;q.wins=q.won?1:0}}}
+  if(saved){if(saved.mapv!==5){const n=NEW_STATE();saved.px=n.px;saved.pz=n.pz;saved.ry=0;saved.roof=false;saved.mapv=5}S=Object.assign(NEW_STATE(),saved);for(const k in S.q){const q=S.q[k];if(q.ep==null){q.ep=q.won?1:0;q.wins=q.won?1:0}}}
   setupFX();buildWorld();buildPerimeter();spawn();buildLife();buildTaxi();buildTraffic();buildInteriors();makeMarkers();makeRain();setupWeather();setupDayNight();resize();placePlayer();
   $('loading').remove();
   if(hotData&&hotData.S&&hotData.running)begin(false);else showMenu();  try{window.claude&&window.claude.hot&&window.claude.hot.snapshot&&window.claude.hot.snapshot(()=>({S,running:started}))}catch(e){}

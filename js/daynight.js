@@ -64,7 +64,7 @@ function updateDayNight(dt){
   if(skyMesh)skyMesh.material.opacity=1-Math.max(d,gld*.5);updateSky(h,d,gld);
   if(dnStars)dnStars.material.opacity=.7*(1-Math.min(1,d*2+gld));
   // ciel et sol, soleil (ou lune)
-  hemi.intensity+=d*1.05+gld*.25;hemi.color.copy(C_HEMI_N).lerp(C_HEMI_D,d);hemi.groundColor.copy(C_GND_N).lerp(C_GND_D,d);
+  hemi.intensity+=d*.8+gld*.25;hemi.color.copy(C_HEMI_N).lerp(C_HEMI_D,d);hemi.groundColor.copy(C_GND_N).lerp(C_GND_D,d);
   const a=(h-6)/12*Math.PI;moon.position.set(W/2+Math.cos(a)*-60,Math.max(8,Math.sin(a)*70),H/2+30);moon.target.position.set(W/2,0,H/2);
   moon.color.copy(C_MOON).lerp(C_SUN,d).lerp(C_SUNSET,gld*.7);moon.intensity=.3+d*1.05+gld*.4;
   // les néons restent, mais les fenêtres et les lampes comptent moins en plein jour

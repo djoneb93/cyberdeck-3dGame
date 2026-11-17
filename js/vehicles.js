@@ -33,6 +33,8 @@ function carModel(body,glowC,x,y,z,ry,parked,noGlow,kind){
   box(.04,.06,1.12,'#ff2a3a',K.rear,.5,0,g,true);
   // liseré néon sur les flancs, poignées affleurantes
   box(2.5,.03,.02,glowC,0,.35,.67,g,true);box(2.5,.03,.02,glowC,0,.35,-.67,g,true);
+  [.68,-.68].forEach(s=>{box(.14,.08,.16,body,K.front*.32,.74,s*1.02,g).material=bm;box(.02,.06,.12,'#9ab4c8',K.front*.32-.08,.74,s*1.02,g)}); // rétroviseurs
+  box(.02,.13,.36,'#e8e4d0',K.rear-.012,.3,0,g,true);box(.02,.13,.36,'#e8e4d0',K.front+.012,.3,0,g); // plaques
   // patins de sustentation aux quatre coins, avec leur lueur
   [[1,.5],[1,-.5],[-1,.5],[-1,-.5]].forEach(([a,b])=>{const p=new THREE.Mesh(podGeo,podMat);p.position.set(a,.12,b);g.add(p);const q=new THREE.Mesh(podGlowGeo,mat(glowC,true));q.position.set(a,.04,b);g.add(q)});
   if(!noGlow){const gp=new THREE.Mesh(new THREE.PlaneGeometry(3.4,2),new THREE.MeshBasicMaterial({map:glowTex,color:glowC,transparent:true,opacity:.42,blending:THREE.AdditiveBlending,depthWrite:false}));gp.rotation.x=-Math.PI/2;gp.position.y=-y+.05;g.add(gp)}

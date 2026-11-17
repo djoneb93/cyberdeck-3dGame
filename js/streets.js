@@ -3,7 +3,7 @@
 'use strict';
 
 let srnd_s=7331;const srnd=()=>{srnd_s=(srnd_s*16807)%2147483647;return (srnd_s-1)/2147483646};
-const FURN=[],trafficLights=[],puddles=[];
+const FURN=[],trafficLights=[],puddles=[];let wetness=-1;
 // ---------- textures du sol (tuile de 4 × 4 unités, appliquée selon la position dans le monde) ----------
 function groundTex(kind){
   const ph=TEXIMG[kind==='asphalt'?'asphalt':'paving'];if(ph){const c=document.createElement('canvas');c.width=c.height=256;const g=c.getContext('2d');g.drawImage(ph,0,0,256,256);g.fillStyle='rgba(255,255,255,.18)';g.fillRect(0,0,256,256);
@@ -26,7 +26,7 @@ function worldUVMaterial(map,kind){ // la texture suit la position au sol : pas 
 }
 function buildGround(){
   const grp=new THREE.Group();scene.add(grp);ground=grp;
-  const base=['#2a2f3a','#3a404c','#1e2129','#5a3d2b','#323642','#0d2f5e'];
+  const base=['#2a2f3a','#3a404c','#1e2129','#5a3d2b','#323642','#1a323c'];
   const kinds={asphalt:[],paving:[],other:[]};
   for(let z=0;z<H;z++)for(let x=0;x<W;x++){const t=tile[I(x,z)];(t===2?kinds.asphalt:(t===0||t===1||t===4)?kinds.paving:kinds.other).push([x,z,t])}
   const geo=new THREE.PlaneGeometry(1,1).rotateX(-Math.PI/2),m4=new THREE.Matrix4(),col=new THREE.Color();
@@ -100,6 +100,8 @@ function buildStreets(){
 function lightState(axis){const p=tAcc%16,zg=p<7,zy=p>=7&&p<8,xg=p>=8&&p<15,xy=p>=15;return axis==='z'?(zg?2:zy?1:0):(xg?2:xy?1:0)}
 function updateStreets(dt){
   trafficLights.forEach(t=>{const s=lightState(t.axis);t.L.forEach((m,i)=>m.visible=(2-i)===s)});
-  const wet=typeof wx!=='undefined'&&wx?Math.min(1,.35+wx.rain):.5;
-  puddles.forEach(p=>{p.dark.material.opacity=.25+.35*wet;p.glint.material.opacity=(.1+.22*wet)*(.8+.2*Math.sin(tAcc*1.7+p.ph))});
+  // sol mouillé seulement quand il pleut (pas sous le soleil, ni dans une tempête de sable) : reflets, flaques et brillance suivent
+  const w=typeof WEATHERS!=='undefined'?WEATHERS[weatherIdx]:null,wantWet=w&&w.rain>0&&!w.sand?1:0;if(wetness<0)wetness=wantWet;wetness+=(wantWet-wetness)*Math.min(1,dt*.25);const wet=wetness;
+  if(mirror)mirror.visible=wet>.02;if(ground)ground.children.forEach(m=>{const M=m.material;M.opacity=1-.14*wet;M.transparent=wet>.02;if(M.shininess!==undefined)M.shininess=8+32*wet});
+  puddles.forEach(p=>{p.dark.material.opacity=.6*wet;p.glint.material.opacity=.32*wet*(.8+.2*Math.sin(tAcc*1.7+p.ph))});
 }

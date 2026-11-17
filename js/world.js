@@ -64,7 +64,7 @@ function buildWorld(){
   instBoxes(zb,'#b8bec8');
   // au-delà de la carte : un sol continu jusqu'à l'horizon, et le fleuve à gauche
   const far=new THREE.Mesh(new THREE.PlaneGeometry(800,800).rotateX(-Math.PI/2),new THREE.MeshLambertMaterial({color:0x15181f}));far.position.set(W/2,-.03,H/2);scene.add(far);
-  const river=new THREE.Mesh(new THREE.PlaneGeometry(400,800).rotateX(-Math.PI/2),new THREE.MeshLambertMaterial({color:0x0b2448}));river.position.set(-199.5,-.005,H/2);scene.add(river);
+  const river=new THREE.Mesh(new THREE.PlaneGeometry(400,800).rotateX(-Math.PI/2),new THREE.MeshLambertMaterial({color:0x16303a}));river.position.set(-199.5,-.005,H/2);scene.add(river);
   // marquages : tirets rouges au milieu des avenues et du périphérique (comme sur la carte)
   const dash=[];
   AVE.forEach(a=>{for(let t=-.03;t<1.03;t+=.035){dash.push([UX(a),.012,UZ(t),.08,.02,.7]);dash.push([UX(t),.012,UZ(a),.7,.02,.08])}});
@@ -83,8 +83,7 @@ function buildWorld(){
     if(side===0){x=W+dd;z=-20+rnd()*(H+40)}else if(side===1){x=-5+rnd()*(W+30);z=-dd}else{x=-5+rnd()*(W+30);z=H+dd}
     if(Math.abs(x-GX)<6&&z<0)continue;
     const w=3+rnd()*5,d=3+rnd()*5,h=14+rnd()*34,v=Math.floor(rnd()*4);
-    const m=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),[facadeMat(v,d/4,h/8),facadeMat(v,d/4,h/8),roofMat,roofMat,facadeMat(v,w/4,h/8),facadeMat(v,w/4,h/8)]);
-    m.position.set(x,h/2,z);scene.add(m);if(rnd()<.3)box(.3,.3,.3,pick(['#ff3b4e','#39e6ff']),x,h+.3,z,null,true);
+    rnd(); // ces tours lointaines sont remplacées par la bordure de js/skyline.js ; on garde les tirages pour que le reste de la ville ne change pas
   }
 
   // ===== les lieux de la carte, entrée face à une avenue =====
@@ -174,16 +173,29 @@ function buildWorld(){
   for(let i=0;i<3;i++)for(let k=0;k<2;k++)for(let l=0;l<(i===1?3:2);l++){ // conteneurs côte à côte, sans se chevaucher (plus de scintillement), avec leurs nervures
     const cx=CONT[0]+.68+i*1.32,cz=CONT[1]+1.5+k*3.1,cy=.6+l*1.22;box(1.22,1.18,2.8,cc[(i*2+k+l)%5],cx,cy,cz);
     for(let r=-1;r<=1;r+=2)box(1.26,1.1,.06,'#15181e',cx,cy,cz+r*.7)}
-  const boat=(x,z,len,c,big)=>{const g=new THREE.Group();g.position.set(x,0,z);scene.add(g);
-    box(len,.8,big?2.6:1.5,c,0,.15,0,g);box(len*.92,.12,(big?2.6:1.5)*.9,'#2a2e36',0,.6,0,g);box(len*.3,big?1.2:.8,(big?2:1.1),'#d8d8d8',-len*.25,1.1,0,g);
-    box(len*.28,.25,(big?2:1.1)+.02,'#6fdcff',-len*.25,1.25,0,g,true);box(.12,.12,.12,'#ff3b4e',len/2-.1,.75,0,g,true);box(.12,.12,.12,'#5dff9a',-len/2+.1,.75,0,g,true);
-    if(big)for(let i=0;i<3;i++)box(1.2,.8,1.8,cc[i],len*.1+i*1.3,1,0,g);
+  // bateaux : coque extrudée (proue effilée, poupe arrondie), ligne de flottaison rouge, pont, timonerie vitrée, feux de navigation.
+  // Les petits ont des pare-battages et une bouée ; les grands (barges) portent des conteneurs et une passerelle à l'arrière.
+  const hullShape=(L,Wd)=>{const s=new THREE.Shape(),l=L/2,w=Wd/2;s.moveTo(-l,-w*.82);s.lineTo(l*.35,-w);s.quadraticCurveTo(l*.9,-w*.82,l,0);s.quadraticCurveTo(l*.9,w*.82,l*.35,w);s.lineTo(-l,w*.82);s.quadraticCurveTo(-l*1.06,0,-l,-w*.82);return s};
+  const hullMesh=(L,Wd,h,y,c,g,sc)=>{const geo=new THREE.ExtrudeGeometry(hullShape(L,Wd),{depth:h,bevelEnabled:true,bevelThickness:.05,bevelSize:.05,bevelSegments:2,curveSegments:12});geo.rotateX(-Math.PI/2);
+    const m=new THREE.Mesh(geo,new THREE.MeshPhongMaterial({color:c,shininess:40,specular:0x2a3038}));m.position.y=y;if(sc)m.scale.set(sc,1,sc);g.add(m);return m};
+  const boat=(x,z,len,c,big)=>{const g=new THREE.Group();g.position.set(x,0,z);scene.add(g);const wd=big?2.6:1.5;
+    hullMesh(len,wd,.32,-.32,'#5a1a18',g);hullMesh(len,wd,.08,0,'#b4b6ba',g,1.003);hullMesh(len,wd,.42,.08,c,g);hullMesh(len*.94,wd*.9,.04,.5,big?'#3a4048':'#7a5a3e',g); // carène, flottaison, coque, pont
+    const cab=(cx,cw,cd,ch,y0)=>{box(cw,ch,cd,'#a9aeb6',cx,y0+ch/2,0,g);box(cw*.96,ch*.32,cd+.02,'#1a2a36',cx,y0+ch*.68,0,g);box(cw*.9,ch*.22,cd+.04,'#ffd9a0',cx,y0+ch*.68,0,g,true);box(cw+.1,.06,cd+.1,'#3a4048',cx,y0+ch+.03,0,g)};
+    if(big){cab(-len*.36,len*.16,wd*.8,1.6,.54);box(.3,.9,.3,'#c0392b',-len*.42,2.6,0,g);box(.04,.9,.04,'#8899aa',-len*.32,2.65,0,g);
+      for(let i=0;i<4;i++)for(let l=0;l<(i%2?2:1);l++){const bx=-len*.18+i*(len*.5/4)+.3;box(len*.11,.62,wd*.72,cc[(i+l)%5],bx,.86+l*.64,0,g);box(len*.112,.08,wd*.74,'#15181e',bx,.86+l*.64+.29,0,g)}
+      box(.14,.14,.14,'#fff2c0',len/2-.2,1.2,0,g,true)}
+    else{cab(-len*.12,len*.3,wd*.7,.8,.54);box(.04,1,.04,'#8899aa',-len*.12,1.85,0,g);box(.1,.1,.1,'#fff2c0',-len*.12,2.36,0,g,true);
+      [-1,1].forEach(s=>{for(let i=0;i<3;i++){const f=new THREE.Mesh(new THREE.CylinderGeometry(.08,.08,.32,8),mat('#20232a'));f.position.set(-len*.3+i*len*.25,.3,s*(wd/2+.06));g.add(f)}});
+      const ring=new THREE.Mesh(new THREE.TorusGeometry(.17,.05,6,14),mat('#ff6a2a'));ring.position.set(-len*.12,.95,wd*.36+.02);g.add(ring);
+      box(len*.3,.04,.04,'#8899aa',len*.22,.78,wd*.4,g);box(len*.3,.04,.04,'#8899aa',len*.22,.78,-wd*.4,g)} // garde-corps à l'avant
+    box(.1,.1,.06,'#ff3b4e',len*.05,.6,-wd/2-.02,g,true);box(.1,.1,.06,'#5dff9a',len*.05,.6,wd/2+.02,g,true); // bâbord rouge, tribord vert
     boats.push({g,ph:x*1.7+z});return g};
   PIERS.forEach((pz,i)=>{boat(5.8,pz-1.2,i%2?4.6:3.6,i%2?'#2a3a5a':'#5a2a2a');boat(5,pz+3.1,3.2,'#1e3a4a')});
   // sur le fleuve, des bateaux passent de temps en temps (ils remontent ou descendent le courant)
   [[-12,UZ(.35),12,'#22303e',true,1.1],[-26,UZ(.75),14,'#2a2a34',true,-.8],[-6,UZ(.1),3,'#5a2a2a',false,2.2],[-18,UZ(.6),4,'#2a3a5a',false,-1.7]].forEach(([x,z,l,c,big,sp])=>{
     const g=boat(x,z,l,c,big);g.rotation.y=sp>0?-Math.PI/2:Math.PI/2;boats[boats.length-1].mv=sp;
-    box(.12,.12,.12,'#fff2c0',l/2-.05,big?1.9:1.5,0,g,true)});
+    box(.12,.12,.12,'#fff2c0',l/2-.05,big?1.9:1.5,0,g,true);
+    const wk=new THREE.Mesh(new THREE.PlaneGeometry(l*1.1,big?3.4:2),new THREE.MeshBasicMaterial({map:glowTex,color:0xcfe8ff,transparent:true,opacity:.28,depthWrite:false}));wk.rotation.x=-Math.PI/2;wk.position.set(-l*.75,.04,0);g.add(wk)}); // sillage d'écume
   sign('DOCKS NOIRS','#8fb7ff',13.6,6.2,UZ(-.03),0,true,true,.12);[11.8,15.4].forEach(x=>box(.16,6.2,.16,'#2a3140',x,3.1,UZ(-.03)));
 
   // ===== gare Zéro : viaduc qui file au loin derrière la ville, halle voûtée, rame =====

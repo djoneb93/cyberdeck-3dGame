@@ -95,7 +95,11 @@ const INTERIOR_GLSL=`
     }else if(t==t3.y)c=d.y<0.?vec3(.2,.14,.1):vec3(1.,.95,.85)*(1.5-length(h.xz-vec2(.5,.6))*1.1);
     else c=vec3(.36,.33,.31)*(1.-.4*h.z/sz.z);
     float sh=1.-.5*h.z/sz.z;
-    totalEmissiveRadiance=c*sh*(totalEmissiveRadiance/lum)*lum*1.6;
+    vec3 room=c*sh*(totalEmissiveRadiance/lum)*lum*1.6;
+    float fr=pow(1.-clamp(-dot(rd,N),0.,1.),3.);room=mix(room,vec3(.32,.42,.58)*lum*1.3,fr*.55);
+    if(abs(f.x-.5)<.014)room*=.25;
+    float sw=f.x-f.y*.45;if(abs(sw-.12)<.035||abs(sw-.2)<.012)room+=vec3(.1,.12,.14)*lum;
+    totalEmissiveRadiance=room;
   }
 }
 #endif`;
