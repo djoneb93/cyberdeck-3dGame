@@ -25,7 +25,7 @@ IN_DEF.metro={w:32,d:12,h:4.4,trim:'#39e6ff',light:[0xcfe8ff,0x39e6ff],fog:0x0a1
     // la rame : le même train que le TGV du viaduc, agrandi à la taille du quai (on récupère le modèle existant)
     const tr=new THREE.Group();R.g.add(tr);R.metro=tr;const tz=-d/2+1.3,K=1.55;
     const tgv=buildTrain(0,0);tr.add(tgv);tgv.scale.setScalar(K);tgv.rotation.y=Math.PI/2;tgv.position.set(TGV.LEN*K/2,.05,tz);
-    R.anims.push({k:0,f:t=>{const c=t%30;tr.position.x=c<6?-50+50*(1-Math.pow(1-c/6,2)):c<14?0:c<20?60*Math.pow((c-14)/6,2):70}}); // arrive, s’arrête 8 s, repart (caché dans les tunnels avant et après)
+    R.anims.push({k:0,every:true,f:t=>{const c=t%30;tr.position.x=c<6?-50+50*(1-Math.pow(1-c/6,2)):c<14?0:c<20?60*Math.pow((c-14)/6,2):70}}); // arrive, s’arrête 8 s, repart (caché dans les tunnels avant et après)
     R.metroStopped=()=>{const c=tAcc%30;return c>=6&&c<14};
     // les tunnels aux deux bouts de la voie : le mur du fond est percé d'une arche, et derrière, un vrai tunnel noir qui s'enfonce
     // (voûte, parois, rails qui continuent, petites lampes), comme la sortie du TGV dehors

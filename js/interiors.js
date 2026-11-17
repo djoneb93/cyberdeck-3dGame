@@ -402,7 +402,7 @@ function updateInteriors(dt){
   R.south.visible=camera.position.z<R.cz+R.d/2-.1;
   // dans une pièce : pas de pluie, pas de brouillard de la rue
   if(rain)rain.mesh.visible=false;scene.fog.color.setHex(R.o.fog);scene.background.setHex(R.o.fog);scene.fog.density=.03;hemi.intensity=.6;
-  R.anims.forEach(a=>{a.k+=dt;if(a.k>.08){a.k=0;a.f(tAcc)}});
+  R.anims.forEach(a=>{if(a.every){a.f(tAcc);return}a.k+=dt;if(a.k>.08){a.k=0;a.f(tAcc)}}); // « every » : animé à chaque image (ce qui bouge vite, comme la rame du métro)
   R.chars.forEach(c=>{if(!c.anim)return;c.ph+=dt;const m=c.m;
     if(c.anim==='dance'){m.position.y=IY+Math.abs(Math.sin(c.ph*4))*.18;m.userData.ry+=dt*1.2*(c.ph%2>1?1:-1);m.userData.moving=Math.sin(c.ph*2)>0}
     else if(c.anim==='bob'){m.position.y=IY+Math.abs(Math.sin(c.ph*4.2))*.06}

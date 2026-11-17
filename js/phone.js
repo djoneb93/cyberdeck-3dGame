@@ -6,7 +6,7 @@ let phoneOpen=false;
 function togglePhone(force){phoneOpen=force!=null?force:!phoneOpen;$('phone').hidden=!phoneOpen;overlayOpen=phoneOpen;if(phoneOpen){target=null;pendingTalk=null;renderPhone()}}
 addEventListener('keydown',e=>{if(e.code!=='KeyF'||!started||dlgOpen||cine||!$('pause').hidden||!$('intro').hidden||!$('settings').hidden)return;if(overlayOpen&&!phoneOpen)return;e.preventDefault();togglePhone()});
 addEventListener('keydown',e=>{if(e.code==='Escape'&&phoneOpen){e.stopImmediatePropagation();togglePhone(false)}},true);
-const TRACKS={calm:'Néons sous la pluie',club:'Nuit au club Ondes',lofi:'Pluie sur Midi (lo-fi)',drive:'Autoroute néon'},TRACK_ORDER=Object.keys(TRACKS);
+const TRACKS={calm:'Néons sous la pluie',club:'Nuit au club Ondes',lofi:'Pluie sur Midi (lo-fi)',drive:'Autoroute néon',bar:'Cocktail au Néon Noir',arcade:'Pixel Rush (arcade)'},TRACK_ORDER=Object.keys(TRACKS);
 function renderPhone(){
   const h=S.hour||0,hh=String(Math.floor(h)).padStart(2,'0'),mm=String(Math.floor((h%1)*60)).padStart(2,'0');
   $('phTime').textContent=hh+':'+mm;$('phMap').classList.toggle('on',!!S.minimap);$('phMapState').textContent=S.minimap?'affichée':'masquée';

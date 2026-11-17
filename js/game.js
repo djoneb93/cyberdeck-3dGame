@@ -210,7 +210,7 @@ $('prompt').addEventListener('click',interact);
 const clock=new THREE.Clock();let tAcc=0,saveT=0;
 const camDir=new THREE.Vector3();
 function updateCamera(dt){
-  if(cineCam(dt)||trainCam(dt))return; // menu principal, cinématique ou voyage en TGV : la caméra est pilotée
+  if(cineCam(dt)||trainCam(dt)||viewCam(dt))return; // menu principal, cinématique ou voyage en TGV : la caméra est pilotée
   yaw=lerp(yaw,yawT,Math.min(1,dt*8));pitch=lerp(pitch,pitchT,Math.min(1,dt*8));dist=lerp(dist,distT,Math.min(1,dt*8));
   focus.x=lerp(focus.x,player.position.x,Math.min(1,dt*7));focus.z=lerp(focus.z,player.position.z,Math.min(1,dt*7));focus.y=lerp(focus.y,player.position.y+1.5,Math.min(1,dt*5));
   camDir.set(Math.sin(yaw)*Math.cos(pitch),Math.sin(pitch),Math.cos(yaw)*Math.cos(pitch));
@@ -333,3 +333,14 @@ function danceStep(dt){const ud=player.userData;
   dancing-=dt;if(dancing<=0){dancing=0;return false}
   const b=tAcc*124/60*Math.PI; // sur le tempo du club
   ud.ry+=dt*(Math.sin(tAcc*.9)>0?2.2:-2.2);ud.moving=Math.sin(b*2)>0;player.position.y=zoneY()+Math.abs(Math.sin(b))*.14;return true}
+
+/* ===================== LA VUE DEPUIS LE TOIT ===================== */
+// Sur le toit de la tour des Toits, « Observer la vue » : un lent panoramique sur la ville (du sud vers la mer, puis vers le nord),
+// la caméra s'élève doucement au-dessus du parapet. Une touche ou un clic l'arrête.
+let viewShot=null;
+function startView(){if(viewShot)return;viewShot={t:0,hud:['hudL','hudR','help','cam','prompt'].filter(id=>!$(id).hidden)};viewShot.hud.forEach(id=>$(id).hidden=true);overlayOpen=true;target=null}
+function endView(){if(!viewShot)return;viewShot.hud.forEach(id=>$(id).hidden=false);viewShot=null;overlayOpen=false}
+function viewCam(dt){if(!viewShot)return false;const V=viewShot;V.t+=dt;const T=18,k=Math.min(1,V.t/T),e=k*k*(3-2*k);
+  const a=Math.PI/2-1.1+e*2.9,cx=ROOF.x,cz=ROOF.z,cy=ROOF.y+3+e*5,dx=Math.cos(a),dz=Math.sin(a);
+  camera.position.set(cx-dx*3,cy,cz-dz*3);camera.lookAt(cx+dx*45,ROOF.y*.35,cz+dz*45);if(k>=1)endView();return true}
+['keydown','pointerdown'].forEach(ev=>addEventListener(ev,()=>{if(viewShot&&viewShot.t>.4)endView()}));
