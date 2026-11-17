@@ -18,14 +18,15 @@ function buildPerimeter(){
     {st:['concrete'],sc:['#2a2a30','#1e2a30'],neon:'#ffb13b',h:[10,16]},
     {st:['concrete'],sc:['#1e2a30','#2a2430'],neon:'#39e6ff',h:[12,20]},
     {st:['concrete'],sc:['#2a2430','#2a2a30'],neon:'#b98cff',h:[14,24]}];
-  const gapN=a=>a>23.5&&a<32.5; // côté nord : on laisse passer le viaduc du TGV
+  const gapN=(a0,a1)=>a0<32.5&&a1>gapX0; // côté nord : le passage du viaduc est fermé par le mur du tunnel (plus bas)
+  let gapX0=23.4;
   const mk=(S,a,o,w,d,h,style,v,ry,y0)=>{const [x,z]=S.P(a,o),X=Math.abs(Math.sin(ry))>.5;addMesh(new THREE.BoxGeometry(w,h,d),boxMats(style,w,h,d,v),x,(y0||0)+h/2,z,ry);return {x,z,X}};
   SIDES.forEach((S,si)=>{
     let a=S.a0,k=0;
     while(a<S.a1){
       const D=DISTRICTS[Math.floor(r()*DISTRICTS.length)],n=3+Math.floor(r()*3),v=Math.floor(r()*3),hBase=D.h[0]+r()*(D.h[1]-D.h[0]);
       for(let i=0;i<n&&a<S.a1;i++,k++){
-        const w=Math.round(4+r()*4);if(S.name==='nord'&&gapN(a+w/2)){a=32.5;continue}
+        const w=Math.round(4+r()*4);if(S.name==='nord'&&gapN(a,a+w)){gapX0=Math.max(a,18);a=32.5;continue}
         const style=D.st[i%D.st.length],h=Math.round(hBase*(.82+r()*.36)),d=8+Math.round(r()*4),am=a+w/2;
         const sb=r()<.35&&h>11; // retrait en haut (gradins)
         const hb=sb?Math.round(h*.65):h;
@@ -48,7 +49,7 @@ function buildPerimeter(){
     }
     // seconde rangée, plus haute et plus sombre : la silhouette de la ville qui continue
     for(let b=S.a0-8;b<S.a1+8;){const w=6+Math.round(r()*6),h=24+Math.round(r()*26),o=13+r()*4,st='concrete';
-      if(!(S.name==='nord'&&gapN(b+w/2))){mk(S,b+w/2,o+5,w,10,h,st,Math.floor(r()*3),S.ry);
+      if(!(S.name==='nord'&&gapN(b,b+w))){mk(S,b+w/2,o+5,w,10,h,st,Math.floor(r()*3),S.ry);
         if(r()<.4){const [tx,tz]=S.P(b+w/2,o+5);beacons.push(box(.24,.24,.24,'#ff3b4e',tx,h+.4,tz,null,true))}}
       b+=w+1+r()*2}
   });
@@ -83,6 +84,22 @@ function buildPerimeter(){
     B('#5a6470',false,2.05,1.06,p+1,.05,.05,2.1);for(let zz=p;zz<=p+2;zz+=1)B('#3a4048',false,2.05,.62,zz,.05,.9,.05);B('#ffb547',true,2.05,1.1,p+1,.08,.04,.4)});
   // ---- de grands écrans publicitaires sur la bordure, tournés vers la ville : la ville vit aussi le jour ----
   [[38,.02,0],[58,.02,0],[78,.02,0],[92.02,20,-Math.PI/2],[92.02,48,-Math.PI/2],[40,76.02,Math.PI],[66,76.02,Math.PI]].forEach(([x,z,ry],i)=>adScreen(x,6.4+(i%2)*1.1,z,ry,4.6,2.6));
+  // ---- la sortie du TGV : un mur de béton comble le passage du viaduc, percé d'une bouche de tunnel en hauteur ----
+  // L'intérieur est noir, quelques lampes s'y enfoncent ; le train disparaît dans ce fond noir (on ne voit plus le bout de la ville).
+  { const RY=2.6,X0=gapX0,X1=32.5,O0=GX-1.7,O1=GX+1.7,YB=RY-.35,YT=RY+4.4,HT=17,D=22,zc=-D/2;
+    const blk=(x0,x1,y0,y1)=>{const w=x1-x0,h=y1-y0;addMesh(new THREE.BoxGeometry(w,h,D),boxMats('concrete',w,h,D,1),(x0+x1)/2,y0+h/2,zc)};
+    blk(X0,O0,0,HT);blk(O1,X1,0,HT);blk(O0,O1,YT,HT);blk(O0,O1,0,YB);
+    const black=new THREE.MeshBasicMaterial({color:0x010102,fog:false});
+    const liner=(w,h,x,y,z,ry)=>{const p=new THREE.Mesh(new THREE.PlaneGeometry(w,h),black);p.position.set(x,y,z);p.rotation.y=ry||0;scene.add(p)};
+    liner(10,YT-YB,O0+.01,(YB+YT)/2,-5,Math.PI/2);liner(10,YT-YB,O1-.01,(YB+YT)/2,-5,-Math.PI/2);
+    const top=new THREE.Mesh(new THREE.PlaneGeometry(O1-O0,10),black);top.rotation.x=Math.PI/2;top.position.set(GX,YT-.01,-5);scene.add(top);
+    liner(O1-O0,YT-YB,GX,(YB+YT)/2,-10,0); // le fond noir
+    for(let z=-.8;z>-9;z-=1.6)[O0+.03,O1-.03].forEach(x=>B('#ffb547',true,x,YB+2.6,z,.04,.06,.3)); // lampes qui s'enfoncent dans le noir
+    // encadrement de la bouche, néon et panneau de ligne
+    B('#2a2e36',false,GX,YT+.25,.15,O1-O0+.8,.5,.3);B('#2a2e36',false,O0-.2,(YB+YT)/2,.15,.4,YT-YB,.3);B('#2a2e36',false,O1+.2,(YB+YT)/2,.15,.4,YT-YB,.3);
+    B('#ff4fa3',true,GX,YT+.02,.32,O1-O0+.4,.05,.05);B('#ff4fa3',true,O0-.02,(YB+YT)/2,.32,.05,YT-YB,.05);B('#ff4fa3',true,O1+.02,(YB+YT)/2,.32,.05,YT-YB,.05);
+    sign('LIGNE 3 · NEO-BXL NORD','#ff4fa3',GX,YT+1.1,.36,0,false,false,.04);
+    B('#3a4252',false,GX,HT+.3,zc,X1-X0-1,.5,D-2);B('#2a3242',false,GX,HT+.08,zc,X1-X0+.2,.16,D+.2)}
   for(const k in boxes){const e=k.endsWith('!');instBoxes(boxes[k],e?k.slice(0,-1):k,e)}
   buildGroundDetails(free);
 }

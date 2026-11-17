@@ -24,7 +24,7 @@ function setupDayNight(){
 }
 const dnNeon=[];
 // ---- deux ciels : celui de la nuit (étoiles, lueur de la ville, js/world.js) et celui du jour (bleu, nuages), en fondu ----
-let daySky=null,sunSpr=null,moonSpr=null;
+let daySky=null,sunSpr=null,moonSpr=null,moonHalo=null;
 function buildDaySky(){
   const c=document.createElement('canvas');c.width=512;c.height=256;const g=c.getContext('2d'),gr=g.createLinearGradient(0,0,0,256);
   gr.addColorStop(0,'#1f4f9a');gr.addColorStop(.3,'#4f86c8');gr.addColorStop(.44,'#9cc0e0');gr.addColorStop(.5,'#e4e2d6');gr.addColorStop(.53,'#8a8c90');gr.addColorStop(1,'#4a4c50');
@@ -35,18 +35,19 @@ function buildDaySky(){
   const t=new THREE.CanvasTexture(c);t.wrapS=THREE.RepeatWrapping;
   daySky=new THREE.Mesh(new THREE.SphereGeometry(196,32,16),new THREE.MeshBasicMaterial({map:t,side:THREE.BackSide,fog:false,depthWrite:false,transparent:true,opacity:0}));
   daySky.position.set(W/2,0,H/2);daySky.renderOrder=-1;scene.add(daySky);
-  sunSpr=new THREE.Sprite(new THREE.SpriteMaterial({map:glowTex,color:0xfff2c8,fog:false,depthWrite:false,transparent:true,blending:THREE.AdditiveBlending}));sunSpr.scale.set(46,46,1);sunSpr.renderOrder=-1;scene.add(sunSpr);
+  sunSpr=new THREE.Sprite(new THREE.SpriteMaterial({map:glowTex,color:0xfff2c8,fog:false,depthWrite:false,transparent:true,blending:THREE.AdditiveBlending}));sunSpr.scale.set(60,60,1);sunSpr.renderOrder=-1;scene.add(sunSpr);
   const mc=document.createElement('canvas');mc.width=mc.height=64;const m=mc.getContext('2d');m.fillStyle='#e8ecf4';m.beginPath();m.arc(32,32,26,0,7);m.fill();
   m.fillStyle='rgba(150,160,180,.5)';[[22,24,6],[38,36,8],[28,42,4],[42,20,4]].forEach(([x,y,r])=>{m.beginPath();m.arc(x,y,r,0,7);m.fill()});
-  moonSpr=new THREE.Sprite(new THREE.SpriteMaterial({map:new THREE.CanvasTexture(mc),fog:false,depthWrite:false,transparent:true}));moonSpr.scale.set(12,12,1);moonSpr.renderOrder=-1;scene.add(moonSpr);
+  moonSpr=new THREE.Sprite(new THREE.SpriteMaterial({map:new THREE.CanvasTexture(mc),fog:false,depthWrite:false,transparent:true}));moonSpr.scale.set(16,16,1);moonSpr.renderOrder=-1;scene.add(moonSpr);
+  moonHalo=new THREE.Sprite(new THREE.SpriteMaterial({map:glowTex,color:0xaabbe8,fog:false,depthWrite:false,transparent:true,blending:THREE.AdditiveBlending}));moonHalo.scale.set(48,48,1);moonHalo.renderOrder=-1;scene.add(moonHalo); // halo de la lune
 }
 function updateSky(h,d,gld){
   if(!daySky)return;const a=(h-6)/12*Math.PI,cp=camera.position,cx=cp.x,cz=cp.z+40;
   daySky.position.set(cp.x,0,cp.z);if(skyMesh)skyMesh.position.set(cp.x,0,cp.z); // les ciels suivent la caméra : jamais coupés par la distance d’affichage
-  const out=!String(zoneOf()||"").startsWith("in_");[daySky,sunSpr,moonSpr,skyMesh,dnStars].forEach(o=>{if(o)o.visible=out}); // dans une pièce : pas de ciel
+  const out=!String(zoneOf()||"").startsWith("in_");[daySky,sunSpr,moonSpr,moonHalo,skyMesh,dnStars].forEach(o=>{if(o)o.visible=out}); // dans une pièce : pas de ciel
   daySky.material.opacity=Math.max(d,gld*.75);daySky.material.color.copy(wx.sky).lerp(C_DUSK,gld*.65);daySky.rotation.y+=.0004;
-  sunSpr.position.set(cx-Math.cos(a)*140,Math.sin(a)*100+8,cz-50);sunSpr.material.opacity=Math.max(0,Math.min(1,Math.sin(a)*3+.3))*(wx.rain>.5?.35:1);sunSpr.material.color.copy(C_SUN).lerp(C_SUNSET,gld);
-  moonSpr.position.set(cx+Math.cos(a)*140,-Math.sin(a)*100+8,cz-50);moonSpr.material.opacity=Math.max(0,Math.min(1,-Math.sin(a)*3))*(1-d);
+  sunSpr.position.set(cx-Math.cos(a)*150,Math.sin(a)*42+4,cz-60);sunSpr.material.opacity=Math.max(0,Math.min(1,Math.sin(a)*3+.3))*(wx.rain>.5?.35:1);sunSpr.material.color.copy(C_SUN).lerp(C_SUNSET,gld);
+  moonSpr.position.set(cx+Math.cos(a)*150,-Math.sin(a)*42+4,cz-60);moonSpr.material.opacity=Math.max(0,Math.min(1,-Math.sin(a)*3))*(1-d);moonHalo.position.copy(moonSpr.position);moonHalo.material.opacity=moonSpr.material.opacity*.45;
 }
 // lumière du jour (0 la nuit, 1 en plein jour) et lueur dorée de l'aube et du crépuscule
 function daylight(h){return Math.max(0,Math.min(1,Math.sin((h-6)/12*Math.PI)*1.7))}
@@ -55,6 +56,7 @@ function phaseName(h){return h>=5&&h<8?'AUBE':h>=8&&h<17.5?'JOUR':h>=17.5&&h<20.
 
 function updateDayNight(dt){
   if(!started)return;
+  if(!(S.hour>=0&&S.hour<24))S.hour=22; // sécurité : une heure invalide plongerait toute la ville dans le noir
   // passage rapide vers le moment demandé (touche N), sinon l'horloge avance doucement
   if(dnSkip!=null){const left=((dnSkip-S.hour)%24+24)%24,step=Math.min(left,dt*6);S.hour=(S.hour+step)%24;if(left<.01)dnSkip=null}
   else S.hour=(S.hour+dt*24/(DAY_MIN*60))%24;

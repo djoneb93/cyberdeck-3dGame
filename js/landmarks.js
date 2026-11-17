@@ -16,7 +16,7 @@ function landmark(id,x,z,w,d,h,v,P){
     for(let i=0;i<3;i++)box(.1,.1,d+.1,'#ffb547',x+w/2+.02,.9+i*.9,z,null,true); // bandes de signalisation
     return true}
   if(id==='bunker'){ // béton brutaliste aux murs inclinés, encadrement de porte, bandes de danger, périscopes
-    const rb=w/Math.SQRT2,rt=rb*.8;const m=new THREE.Mesh(new THREE.CylinderGeometry(rt,rb,h,4,1),[photoMat('brick',w/2,h/2,.62)||facadeMat(1,w/4,h/8),roofMat,roofMat]); // brique sombre, plus discrètem.rotation.y=Math.PI/4;m.position.set(x,h/2,z);scene.add(m);camBlockers.push(m);
+    const rb=w/Math.SQRT2,rt=rb*.8;const m=new THREE.Mesh(new THREE.CylinderGeometry(rt,rb,h,4,1),[photoMat('brick',w/2,h/2,.62)||facadeMat(1,w/4,h/8),roofMat,roofMat]); /* brique sombre, plus discrète */m.rotation.y=Math.PI/4;m.position.set(x,h/2,z);scene.add(m);camBlockers.push(m);
     const fz=z+w/2;box(3.4,h,.7,'#34282a',x,h/2,fz-.45);box(3.6,.3,.9,'#2e3138',x,h+.1,fz-.45);
     for(let i=0;i<12;i++)box(.3,.22,.05,i%2?'#ffb547':'#15171c',x-1.65+i*.3,.12,fz+.17);
     [[-1.2,.9],[1.4,-.6],[.2,-1.4]].forEach(([a,b])=>{box(.12,1.4,.12,'#5a6472',x+a,h+.7,z+b);box(.4,.14,.14,'#3a414c',x+a+.14,h+1.4,z+b)});

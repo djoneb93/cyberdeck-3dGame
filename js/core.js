@@ -5,7 +5,7 @@ const $=id=>document.getElementById(id);
 const SAVE_KEY='neobxl-voxel-save-v1';
 
 /* ===================== ÉTAT ===================== */
-const NEW_STATE=()=>({flags:{},friend:{},rep:0,frags:[],met:{},q:{},mems:[],px:47.2,pz:62.6,ry:0,mapv:5});
+const NEW_STATE=()=>({flags:{},friend:{},rep:0,frags:[],met:{},q:{},mems:[],px:47.2,pz:62.6,ry:0,hour:22,mapv:5});
 let S=NEW_STATE();
 function save(){try{localStorage.setItem(SAVE_KEY,JSON.stringify(S))}catch(e){}}
 function loadSave(){try{const r=localStorage.getItem(SAVE_KEY);return r?JSON.parse(r):null}catch(e){return null}}
