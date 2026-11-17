@@ -203,6 +203,7 @@ $('prompt').addEventListener('click',interact);
 const clock=new THREE.Clock();let tAcc=0,saveT=0;
 const camDir=new THREE.Vector3();
 function updateCamera(dt){
+  if(cineCam(dt))return; // menu principal ou cinématique : la caméra est pilotée
   yaw=lerp(yaw,yawT,Math.min(1,dt*8));pitch=lerp(pitch,pitchT,Math.min(1,dt*8));dist=lerp(dist,distT,Math.min(1,dt*8));
   focus.x=lerp(focus.x,player.position.x,Math.min(1,dt*7));focus.z=lerp(focus.z,player.position.z,Math.min(1,dt*7));focus.y=lerp(focus.y,player.position.y+1.5,Math.min(1,dt*5));
   camDir.set(Math.sin(yaw)*Math.cos(pitch),Math.sin(pitch),Math.cos(yaw)*Math.cos(pitch));
@@ -253,13 +254,12 @@ function setupFX(){
 function placePlayer(){const y0=zoneY();player.position.set(S.px,y0,S.pz);player.userData.ry=S.ry||0;focus.set(S.px,y0+1.5,S.pz);yaw=yawT=0}
 function begin(fresh){
   if(fresh){S=NEW_STATE();save()}
-  placePlayer();drawBoard();
+  cine=null;placePlayer();drawBoard();
   $('intro').hidden=true;overlayOpen=false;started=true;
+  if(fresh||!S.flags.woke){S.flags.woke=true;save();playWake();return}
   ['hudL','hudR','cam','help'].forEach(id=>$(id).hidden=false);
   updateHUD();
-  if(fresh||!S.flags.woke){S.flags.woke=true;save();setTimeout(()=>openDlg('wake'),500)}
-}
-function showEnding(n){
+}function showEnding(n){
   const friends=Object.keys(S.met).filter(k=>k!=='neura'&&(S.friend[k]||0)>=2).length;
   if(n===2){$('endLbl').textContent='Fin du chapitre 2 · Alliés';$('endH').textContent='Un nouveau nom : le Dr Eliane Vex';
     $('endP').textContent='Tu as aidé la Zone Zéro, et la Zone Zéro se souvient de toi. Quelque part sous le Bazar, la co-conceptrice de Léthé travaille sur Mnémosyne. Le chapitre 3 reste à écrire.'}
@@ -275,18 +275,10 @@ function start(hotData){
   if(saved){if(saved.mapv!==3){const n=NEW_STATE();saved.px=n.px;saved.pz=n.pz;saved.ry=0;saved.mapv=3}S=Object.assign(NEW_STATE(),saved);for(const k in S.q){const q=S.q[k];if(q.ep==null){q.ep=q.won?1:0;q.wins=q.won?1:0}}}
   setupFX();buildWorld();spawn();buildLife();buildTaxi();buildTraffic();makeMarkers();makeRain();setupWeather();resize();placePlayer();
   $('loading').remove();
-  const acts=$('introActs');
-  if(hotData&&hotData.S&&hotData.running){begin(false);}
-  else{
-    if(saved&&saved.flags&&saved.flags.woke){
-      const c=document.createElement('button');c.type='button';c.className='pri';c.textContent='Continuer';c.onclick=()=>begin(false);acts.appendChild(c);
-      const n=document.createElement('button');n.type='button';n.textContent='Nouvelle partie';n.onclick=()=>begin(true);acts.appendChild(n);
-    }else{const c=document.createElement('button');c.type='button';c.className='pri';c.textContent='Ouvrir les yeux';c.onclick=()=>begin(true);acts.appendChild(c)}
-    $('intro').hidden=false;
-  }
-  try{window.claude&&window.claude.hot&&window.claude.hot.snapshot&&window.claude.hot.snapshot(()=>({S,running:started}))}catch(e){}
+  if(hotData&&hotData.S&&hotData.running)begin(false);else showMenu();  try{window.claude&&window.claude.hot&&window.claude.hot.snapshot&&window.claude.hot.snapshot(()=>({S,running:started}))}catch(e){}
   frame();
 }
-const boot=()=>{try{if(window.claude&&window.claude.hot&&window.claude.hot.ready)window.claude.hot.ready(start);else start(window.claude&&window.claude.hot&&window.claude.hot.data||{})}catch(e){start({})}};
+const boot=()=>{try{if(window.claude&&window.claude.hot&&window.claude.hot.ready)window.claude.hot.ready(start);else start(window.claude&&window.claude.hot&&window.claude.hot.data||{})}catch(e){console.error('Démarrage :',e)}};
 const fontWait=(document.fonts&&document.fonts.load)?Promise.race([document.fonts.load('8px Silkscreen'),new Promise(r=>setTimeout(r,1500))]):Promise.resolve();
-fontWait.then(boot,boot);
+// on attend que tous les scripts soient chargés (le menu est dans intro.js, chargé après ce fichier)
+if(document.readyState==='loading')addEventListener('DOMContentLoaded',()=>fontWait.then(boot,boot));else fontWait.then(boot,boot);

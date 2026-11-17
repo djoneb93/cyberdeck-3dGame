@@ -45,7 +45,7 @@
   <button type="button" id="camOut" aria-label="Dézoomer">−</button>
   <button type="button" id="camIn" aria-label="Zoomer">+</button>
 </div>
-<div id="help" class="panel" hidden><b>ZQSD</b> / flèches : marcher · <b>clic</b> au sol : aller<br><b>glisser</b> : tourner et incliner la caméra · <b>A</b> / <b>E</b> : pivoter<br><b>molette</b> : zoom · <b>Espace</b> : parler · <b>P</b> : pixels · <b>M</b> : météo</div>
+<div id="help" class="panel" hidden><b>ZQSD</b> / flèches : marcher · <b>clic</b> au sol : aller<br><b>glisser</b> : tourner et incliner la caméra · <b>A</b> / <b>E</b> : pivoter<br><b>molette</b> : zoom · <b>Espace</b> : parler · <b>P</b> : pixels · <b>M</b> : météo · <b>Échap</b> : pause</div>
 
 <div id="toasts"></div>
 <div id="fade"></div>
@@ -57,17 +57,36 @@
   </div>
 </div>
 
-<div id="intro" class="ov" hidden>
-  <div class="card panel cut">
-    <h1 class="logo">NEO<b>-</b>BXL</h1>
-    <div class="lbl">Chapitres 1 et 2 · Réveil, Alliés · prototype jouable</div>
-    <p>Bruxelles, 2089. Tu ouvres les yeux dans ta planque de la Zone Zéro. Ton dernier souvenir date de 2086. Entre les deux, il n'y a rien : trois ans effacés.</p>
-    <p>Parle aux gens du quartier, gagne leur confiance et recolle les morceaux.</p>
-    <div class="keys"><b>ZQSD</b> ou flèches : marcher · <b>clic / tap</b> au sol : se déplacer<br><b>glisser</b> : tourner et incliner la caméra · <b>A / E</b> : pivoter · <b>molette</b> ou <b>+ −</b> : zoom<br><b>Espace</b> : parler, continuer · <b>1 2 3</b> : choisir une réponse</div>
-    <div class="acts" id="introActs"></div>
+<div id="intro" class="ov menu" hidden>
+  <div class="menuBox">
+    <h1 class="logo glitchy">NEO<b>-</b>BXL</h1>
+    <div class="lbl">Bruxelles · 2089 · Chapitres 1 et 2</div>
+    <p>Tu ouvres les yeux dans ta planque de la Zone Zéro. Ton dernier souvenir date de 2086. Entre les deux : trois ans effacés.</p>
+    <div class="acts menuActs" id="introActs"></div>
+    <div class="keys panel" id="menuKeys" hidden><b>ZQSD</b> ou flèches : marcher · <b>clic / tap</b> au sol : se déplacer<br><b>glisser</b> : tourner et incliner la caméra · <b>A / E</b> : pivoter · <b>molette</b> ou <b>+ −</b> : zoom<br><b>Espace</b> : parler, examiner, continuer · <b>1 2 3</b> : choisir une réponse<br><b>M</b> : météo · <b>P</b> : taille des pixels · <b>Échap</b> : pause</div>
   </div>
 </div>
 
+<div id="pause" class="ov" hidden>
+  <div class="card panel cut">
+    <div class="lbl">Pause</div>
+    <h2>NEO-BXL</h2>
+    <div class="acts menuActs"><button type="button" class="pri" id="pResume">Reprendre</button><button type="button" id="pMenu">Menu principal</button><button type="button" id="pQuit">Quitter le jeu</button></div>
+    <div class="keys">Ta partie est sauvegardée automatiquement.</div>
+  </div>
+</div>
+
+<div id="quit" class="ov" hidden>
+  <div class="card panel cut">
+    <h2>À bientôt dans la Zone Zéro</h2>
+    <p>Ta partie est sauvegardée dans ce navigateur. Tu peux fermer cet onglet.</p>
+    <div class="acts"><button type="button" class="pri" id="qBack">Retour au menu</button></div>
+  </div>
+</div>
+
+<div id="logoFlash" hidden><div><div class="big glitchy">NEO<b>-</b>BXL</div><div class="sub">BRUXELLES · 2089</div></div></div>
+<div id="cine" hidden><div id="cineTxt"></div></div>
+<button type="button" id="cineSkip" hidden>Passer ▸</button>
 <div id="ending" class="ov" hidden>
   <div class="card panel cut">
     <div class="lbl" id="endLbl">Fin du chapitre 1</div>
@@ -102,5 +121,6 @@
 <script src="js/story.js"></script>
 <script src="js/entities.js"></script>
 <script src="js/game.js"></script>
+<script src="js/intro.js"></script>
 </body>
 </html>
