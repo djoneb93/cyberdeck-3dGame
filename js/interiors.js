@@ -413,6 +413,8 @@ function updateInteriors(dt){
 // Les lumières restent allumées (les retirer obligerait à recompiler tous les matériaux). À la sortie, tout réapparaît.
 let isoHidden=[];
 function isolateRoom(R){
-  isoHidden.forEach(o=>o.visible=true);isoHidden=[];if(!R)return;
+  isoHidden.forEach(o=>o.visible=true);isoHidden=[];
+  camera.far=R?Math.hypot(R.w,R.d)+9:220;camera.updateProjectionMatrix(); /* distance d’affichage : la pièce, pas plus loin */
+  if(!R)return;
   scene.children.forEach(o=>{if(!o.visible||o.isLight||o===player||R.own.has(o))return;o.visible=false;isoHidden.push(o)});
 }
