@@ -1,5 +1,5 @@
-// La moto : une hoverbike de 2089. Monocoque profilée rouge laqué et noir carbone, roues sans moyeu (des anneaux qui tournent
-// dans leurs carénages), cœur à fusion visible sous le réservoir, bandeaux de lumière qui suivent les lignes du carénage,
+// La moto : une hoverbike de 2089. Monocoque profilée gris anthracite et noir carbone, roues sans moyeu couchées à plat
+// (des patins de sustentation, comme les voitures), cœur à fusion visible sous le réservoir, bandeaux de lumière qui suivent les lignes du carénage,
 // phare en fente, double propulseur à plasma et bulle fumée. Elle plane à quelques centimètres du sol.
 // Près d'elle, E pour monter dessus : on roule deux fois plus vite qu'à pied. E de nouveau pour descendre.
 // Si on s'en éloigne, le bouton « Moto » la ramène à sa place de stationnement, devant la planque (une case réservée, rien ne la gêne).
@@ -14,7 +14,7 @@ function motoModel(){
   // ── livrée peinte, calée sur le profil du carénage (x de -1,1 à 1,0 ; y de 0,3 à 1,1) ──
   const lc=document.createElement('canvas');lc.width=512;lc.height=224;const L=lc.getContext('2d');
   const X=x=>(x+1.1)/2.1*512,Y=y=>(1.1-y)/.8*224;
-  let gr=L.createLinearGradient(0,0,0,224);gr.addColorStop(0,'#ff3b62');gr.addColorStop(.45,'#c3123f');gr.addColorStop(1,'#5a0720');L.fillStyle=gr;L.fillRect(0,0,512,224);
+  let gr=L.createLinearGradient(0,0,0,224);gr.addColorStop(0,'#6a6e78');gr.addColorStop(.45,'#34363e');gr.addColorStop(1,'#16171c');L.fillStyle=gr;L.fillRect(0,0,512,224);
   // partie basse en carbone noir, découpe en biseau
   L.fillStyle='#101116';L.beginPath();L.moveTo(0,Y(.64));L.lineTo(X(-.2),Y(.6));L.lineTo(X(.3),Y(.66));L.lineTo(X(.62),Y(.6));L.lineTo(512,Y(.66));L.lineTo(512,224);L.lineTo(0,224);L.fill();
   L.globalAlpha=.18;L.strokeStyle='#3a3d48';for(let i=-30;i<60;i++){L.beginPath();L.moveTo(i*10,224);L.lineTo(i*10+60,Y(.62));L.stroke()}L.globalAlpha=1; // tissage carbone
@@ -28,8 +28,8 @@ function motoModel(){
   for(let i=0;i<14;i++){L.fillStyle='#f4f4ee';L.fillRect(X(-.3)+i*4,Y(.56),i%3?2:1,10)} // code-barres
   L.fillStyle='#ffd23f';for(let i=0;i<4;i++){L.beginPath();const x0=X(-1.02)+i*11;L.moveTo(x0,Y(.6));L.lineTo(x0+6,Y(.6));L.lineTo(x0+12,Y(.56));L.lineTo(x0+6,Y(.52));L.lineTo(x0,Y(.52));L.lineTo(x0+6,Y(.56));L.fill()} // chevrons
   const lt=new THREE.CanvasTexture(lc);lt.repeat.set(1/2.1,1/.8);lt.offset.set(1.1/2.1,-.3/.8);
-  const paint=new THREE.MeshPhongMaterial({map:lt,shininess:110,specular:0x99707a,emissive:0x1a0208}),
-    red=new THREE.MeshPhongMaterial({color:0xc3123f,shininess:110,specular:0x99707a,emissive:0x1a0208}),
+  const paint=new THREE.MeshPhongMaterial({map:lt,shininess:110,specular:0x8a92a4,emissive:0x060608}),
+    red=new THREE.MeshPhongMaterial({color:0x2c2e36,shininess:110,specular:0x8a92a4,emissive:0x060608}),
     carbon=new THREE.MeshPhongMaterial({color:0x15161c,shininess:60,specular:0x3a3d48}),
     metal=new THREE.MeshPhongMaterial({color:0x6f7682,shininess:120,specular:0xffffff}),
     rubber=new THREE.MeshPhongMaterial({color:0x0c0d10,shininess:12}),
@@ -50,22 +50,17 @@ function motoModel(){
   const core=add(new THREE.CylinderGeometry(.085,.085,.24,20),cyan,0,.3,0);core.rotation.x=Math.PI/2;
   for(let i=-2;i<=2;i++){const r=add(new THREE.TorusGeometry(.1,.018,6,20),metal,0,.3,i*.05)}
   const cg=add(new THREE.PlaneGeometry(.5,.5),new THREE.MeshBasicMaterial({map:glowTex,color:0x39e6ff,transparent:true,opacity:.5,blending:THREE.AdditiveBlending,depthWrite:false}),0,.3,0);cg.rotation.x=0;
-  // ── roues sans moyeu : l'anneau tourne dans son carénage, les bras le tiennent par l'intérieur ──
+  // ── roues sans moyeu couchées à plat : l'anneau tourne, les bras le tiennent par l'intérieur ──
   const R=.34,WY=.12;
-  const wheels=[.78,-.78].map((x,k)=>{const w=new THREE.Group();w.position.set(x,WY,0);g.add(w);
+  const wheels=[.78,-.78].map((x,k)=>{const hd=new THREE.Group();hd.position.set(x,WY,0);hd.rotation.x=Math.PI/2;g.add(hd);const w=new THREE.Group();hd.add(w); /* roues couchées à plat : des patins de sustentation, comme les voitures */
     w.add(new THREE.Mesh(new THREE.TorusGeometry(R,.068,12,40),rubber));
     const rim=new THREE.Mesh(new THREE.TorusGeometry(R-.07,.028,8,40),metal);w.add(rim);
     [-1,1].forEach(z=>{const lr=new THREE.Mesh(new THREE.TorusGeometry(R-.045,.008,4,48),cyan);lr.position.z=z*.05;w.add(lr)});
     for(let i=0;i<10;i++){const a=i/10*Math.PI*2,d=new THREE.Mesh(new THREE.BoxGeometry(.05,.012,.13),i%2?pink:cyan);d.position.set(Math.cos(a)*(R-.1),Math.sin(a)*(R-.1),0);d.rotation.z=a+Math.PI/2;w.add(d)} // repères qui tournent
-    // carénage en arc au-dessus de la roue, avec liseré
-    const a0=k?Math.PI*.38:Math.PI*.12,a1=k?Math.PI*.88:Math.PI*.62,s=new THREE.Shape();
-    s.absarc(0,0,R+.13,a0,a1,false);s.absarc(0,0,R+.08,a1,a0,true);
-    const sh=add(new THREE.ExtrudeGeometry(s,{depth:.2,bevelEnabled:true,bevelThickness:.02,bevelSize:.02,bevelSegments:2,curveSegments:24}),red,x,WY,-.1);
-    [-1,1].forEach(z=>{const e=add(new THREE.TorusGeometry(R+.135,.007,4,32,a1-a0),k?pink:cyan,x,WY,z*.125);e.rotation.z=a0});
     return w});
   // fourche avant inclinée et bras oscillant arrière, accrochés à la jante intérieure
-  [-1,1].forEach(z=>{bar([.62,.9,z*.13],[.66,.36,z*.13],.05,metal);bar([.66,.36,z*.13],[.78+(R-.07)*Math.cos(2.2),WY+(R-.07)*Math.sin(2.2),z*.13],.04,carbon);
-    bar([-.22,.38,z*.13],[-.78+(R-.07)*Math.cos(.95),WY+(R-.07)*Math.sin(.95),z*.13],.06,carbon);bar([-.3,.3,z*.13],[-.62,.2,z*.13],.035,metal)});
+  [-1,1].forEach(z=>{bar([.62,.9,z*.13],[.66,.36,z*.13],.05,metal);bar([.66,.36,z*.13],[.6,WY+.03,z*.13],.04,carbon);
+    bar([-.22,.38,z*.13],[-.58,WY+.03,z*.13],.06,carbon);bar([-.3,.3,z*.13],[-.56,WY+.02,z*.13],.035,metal)});
   // ── bandeaux de lumière qui épousent le carénage ──
   [-1,1].forEach(z=>{const Z=z*.216;
     tube([[.99,.58,Z],[.75,.63,Z],[.4,.67,Z],[0,.62,Z],[-.4,.6,Z],[-.8,.68,Z],[-1.06,.75,Z]],.009,cyan);

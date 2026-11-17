@@ -35,7 +35,7 @@ function updateMinimap(dt){
   const px=x=>R+(x-c.x)*k*s,pz=zz=>R+(zz-c.z)*k*s;
   g.clearRect(0,0,cv.width,cv.height);g.save();g.beginPath();g.arc(R,R,R-1,0,7);g.clip();g.fillStyle='#07090e';g.fillRect(0,0,cv.width,cv.height);
   g.imageSmoothingEnabled=false;g.drawImage(mmBase,px(0),pz(0),mmBase.width*s,mmBase.height*s);
-  if(typeof moto!=='undefined'&&moto){g.fillStyle='#ff3b62';g.fillRect(px(moto.position.x)-3,pz(moto.position.z)-3,6,6)}
+  if(typeof moto!=='undefined'&&moto){g.fillStyle='#c8ccd6';g.fillRect(px(moto.position.x)-3,pz(moto.position.z)-3,6,6)}
   if(typeof taxi!=='undefined'&&taxi){g.fillStyle='#ffe14d';g.fillRect(px(taxi.g.position.x)-3,pz(taxi.g.position.z)-3,6,6)}
   const va=Math.atan2(-Math.cos(yaw),-Math.sin(yaw)),a=player.userData.ry||0; // le regard de la caméra, puis toi
   g.translate(px(c.x),pz(c.z));g.fillStyle='rgba(57,230,255,.2)';g.beginPath();g.moveTo(0,0);g.arc(0,0,30,va-.5,va+.5);g.fill();
