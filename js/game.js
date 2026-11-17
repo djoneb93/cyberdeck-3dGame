@@ -280,7 +280,7 @@ $('endClose').onclick=()=>{$('ending').hidden=true;overlayOpen=false};
 function start(hotData){
   const saved=(hotData&&hotData.S)||loadSave();
   if(saved){if(saved.mapv!==5){const n=NEW_STATE();saved.px=n.px;saved.pz=n.pz;saved.ry=0;saved.roof=false;saved.mapv=5}S=Object.assign(NEW_STATE(),saved);for(const k in S.q){const q=S.q[k];if(q.ep==null){q.ep=q.won?1:0;q.wins=q.won?1:0}}}
-  setupFX();buildWorld();buildPerimeter();spawn();buildLife();buildTaxi();buildTraffic();buildInteriors();registerBenches();buildMoto();buildMinimap();makeMarkers();makeRain();setupWeather();setupDayNight();resize();placePlayer();
+  setupFX();buildWorld();buildPerimeter();spawn();buildLife();buildTaxi();buildTraffic();buildInteriors();registerBenches();buildMoto();buildMinimap();registerNoodles();makeMarkers();makeRain();setupWeather();setupDayNight();resize();placePlayer();
   $('loading').remove();
   if(hotData&&hotData.S&&hotData.running)begin(false);else showMenu();  try{window.claude&&window.claude.hot&&window.claude.hot.snapshot&&window.claude.hot.snapshot(()=>({S,running:started}))}catch(e){}
   frame();
@@ -344,3 +344,9 @@ function viewCam(dt){if(!viewShot)return false;const V=viewShot;V.t+=dt;const T=
   const a=Math.PI/2-1.1+e*2.9,cx=ROOF.x,cz=ROOF.z,cy=ROOF.y+3+e*5,dx=Math.cos(a),dz=Math.sin(a);
   camera.position.set(cx-dx*3,cy,cz-dz*3);camera.lookAt(cx+dx*45,ROOF.y*.35,cz+dz*45);if(k>=1)endView();return true}
 ['keydown','pointerdown'].forEach(ev=>addEventListener(ev,()=>{if(viewShot&&viewShot.t>.4)endView()}));
+
+/* ===================== LE STAND NOUILLES ZÉRO (gare) ===================== */
+const NOODLE_LINES=['« Un ramen noir ? Bouillon de seiche, nouilles maison. Le meilleur de la Zone Zéro, et le moins cher. »','Le cuisinier pose un bol fumant devant toi. « Comme d’habitude, hein ? » Tu ne savais pas que tu avais une habitude.',
+  '« Les voyageurs du TGV passent tous par ici avant de partir. Enfin… ceux qui partent vraiment. »','« Kurogane ? Ils viennent manger ici aussi. Les nouilles, ça ne fait pas de politique. »','Le gyoza est brûlant. Le cuisinier rit : « Souffle d’abord, petit. Ça fait trois ans que je te le dis. »'];
+let noodleK=0;
+function registerNoodles(){if(!NOODLE_POS)return;OBJECTS.push({id:'o_noodles',x:NOODLE_POS.x,z:NOODLE_POS.z,r:1.5,label:'Commander des nouilles',dyn:()=>NOODLE_LINES[noodleK++%NOODLE_LINES.length]})}

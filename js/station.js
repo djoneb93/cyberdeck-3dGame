@@ -1,5 +1,6 @@
 // La gare Zéro en détail : quais surélevés, verrière, escalier, tableau des départs, horloge, distributeurs, kiosque.
 'use strict';
+let NOODLE_POS=null; // le stand Nouilles Zéro (pour l’objet « Commander »)
 
 let departBoard=null,stationClock=null;
 const DESTS=[['NOVA PRIME','QUAI 3'],['ROUILLEBOURG','QUAI 4'],['RING 14 · BADLANDS','QUAI 3'],['TOUR KUROGANE','QUAI 4'],['NÉCROPOLE NORD','QUAI 3'],['DOCKS NOIRS','QUAI 4']];
@@ -38,9 +39,27 @@ function buildStation(){
   stationClock={c:cc,t:ct,s:''};drawStationClock();
   // distributeurs de billets et kiosque à nouilles, côté est
   [[GX+GHW+.6,GZ0+2],[GX+GHW+.6,GZ0+3]].forEach(([x,z])=>{box(.6,1.6,.7,'#2a313c',x,.8,z);box(.04,.5,.45,'#39e6ff',x-.32,1.15,z,null,true);box(.04,.08,.3,'#ffb547',x-.32,.7,z,null,true)});
-  box(2.2,2.2,1.6,'#3a1c20',GX+GHW+3.4,1.1,GZ1-1.1);box(2.4,.12,1.9,'#ff4fa3',GX+GHW+3.4,2.25,GZ1-1.1,null,true);
-  box(2,.6,.05,'#ffb547',GX+GHW+3.4,1.7,GZ1-.28,null,true);box(1.8,.1,.4,'#4a3526',GX+GHW+3.4,1,GZ1-.2);
-  sign('NOUILLES ZÉRO','#ffb547',GX+GHW+3.4,2.65,GZ1-.25,0,false,false,.05);
+  // le stand Nouilles Zéro : ouvert sur la rue, comptoir, cuisinier, marmite fumante, menu lumineux, lanternes, tabourets
+  { const X=GX+GHW+3.4,Z0=GZ1-1.9,ZF=GZ1-.3;
+    box(2.2,2.2,.1,'#3a1c20',X,1.1,Z0+.05);[-1,1].forEach(s=>box(.1,2.2,1.6,'#3a1c20',X+s*1.05,1.1,Z0+.8));box(2.4,.08,1.9,'#2a1418',X,2.22,Z0+.8);
+    box(2.4,.12,.12,'#ff4fa3',X,2.25,ZF+.18,null,true);sign('NOUILLES ZÉRO','#ffb547',X,2.65,ZF+.05,0,false,false,.05);
+    box(2.1,1,.36,'#4a3526',X,.5,ZF-.1);box(2.2,.06,.5,'#6a4a32',X,1.03,ZF-.06);box(2.1,.03,.03,'#ffb547',X,.98,ZF+.1,null,true); // comptoir
+    // menu lumineux au fond, étagère de bols, marmite et vapeur
+    const mc=document.createElement('canvas');mc.width=128;mc.height=48;const mg=mc.getContext('2d');mg.fillStyle='#160806';mg.fillRect(0,0,128,48);mg.font='bold 10px monospace';
+    [['RAMEN NOIR','4¢'],['GYOZA','3¢'],['ONDES COLA','2¢']].forEach(([a,b],i)=>{mg.fillStyle='#ffb547';mg.fillText(a,6,14+i*13);mg.fillStyle='#7dffb0';mg.fillText(b,104,14+i*13)});
+    const menu=new THREE.Mesh(new THREE.PlaneGeometry(1.4,.55),new THREE.MeshBasicMaterial({map:new THREE.CanvasTexture(mc)}));menu.position.set(X+.2,1.75,Z0+.11);scene.add(menu);
+    box(.9,.04,.25,'#4a3526',X-.55,1.35,Z0+.25);for(let i=0;i<4;i++)box(.14,.08,.14,'#e8e4d8',X-.9+i*.22,1.41,Z0+.25);
+    box(.5,.08,.4,'#2a2e36',X+.5,1.06,Z0+.6);const pot=new THREE.Mesh(new THREE.CylinderGeometry(.18,.16,.28,14),mat('#8a929c'));pot.position.set(X+.5,1.24,Z0+.6);scene.add(pot);box(.3,.03,.3,'#ff6a2a',X+.5,1.1,Z0+.6,null,true);
+    const sm=new THREE.PointsMaterial({color:0xe8ecf4,size:1.4,map:glowTex,transparent:true,opacity:.22,depthWrite:false,blending:THREE.AdditiveBlending});
+    { const N=14,pos=new Float32Array(N*3),sp=[];for(let i=0;i<N;i++){pos[i*3]=X+.5;pos[i*3+1]=1.4+Math.random()*1.4;pos[i*3+2]=Z0+.6;sp.push(.3+Math.random()*.4)}
+      const gg=new THREE.BufferGeometry();gg.setAttribute('position',new THREE.BufferAttribute(pos,3));scene.add(new THREE.Points(gg,sm));LM.steam.push({gg,pos,sp,x:X+.5,z:Z0+.6,y:1.4}) }
+    // lanternes rouges accrochées au toit, tabourets devant le comptoir
+    [-.85,.85].forEach(dx=>{box(.02,.25,.02,'#111',X+dx,2.05,ZF+.1);box(.22,.28,.22,'#ff3b4e',X+dx,1.8,ZF+.1,null,true)});
+    [-.6,0,.6].forEach(dx=>{box(.3,.05,.3,'#ff4fa3',X+dx,.7,ZF+.45,null,true);box(.05,.68,.05,'#8a929c',X+dx,.34,ZF+.45);FURN.push([X+dx,ZF+.45,.18])});
+    // le cuisinier, derrière le comptoir, et un client accoudé
+    const chef=makeChar({...randomSpec(),top:'#e8e8e4',coat:'#e8e8e4',hs:'cap',capC:'#f4f4ee'});chef.position.set(X+.1,0,Z0+.75);chef.userData.ry=0;
+    NOODLE_POS={x:X,z:ZF+.9};
+  }
   box(.7,1.7,.6,'#1e3a4a',GX+GHW+1.8,.85,GZ1-.6);box(.5,1.1,.05,'#7dffb0',GX+GHW+1.8,1,GZ1-.28,null,true); // distributeur de boissons
   // voyageurs qui attendent sur les quais (décor)
   [[-1,z0+1.3,Math.PI/2],[-1,z0+3.5,Math.PI/2],[1,z0+3.6,-Math.PI/2],[1,z0+7.2,-Math.PI/2],[1,z0+1.2,Math.PI]].forEach(([s,z,ry])=>{const m=makeChar(randomSpec());const px=GX+s*(s<0?2.2:1.9);m.position.set(px,PY+.12,z);m.userData.ry=ry;if(s<0)ZONES.quai.blocks.push([px,z,.14,.2])});

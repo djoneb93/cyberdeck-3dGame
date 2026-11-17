@@ -3,7 +3,7 @@
 // Si on s'en éloigne, le bouton « Moto » la ramène à sa place de stationnement, devant la planque (une case réservée, rien ne la gêne).
 'use strict';
 
-const MOTO_PARK={x:44.7,z:68.45,ry:0},MOTO_SPEED=1.5;
+const MOTO_PARK={x:44.7,z:68.45,ry:0},MOTO_SPEED=2; // à moto, deux fois plus vite qu’à pied
 let moto=null,riding=false;
 
 function motoModel(){
@@ -38,6 +38,14 @@ function motoModel(){
     const ring=new THREE.Mesh(new THREE.TorusGeometry(.2,.012,4,24),mat('#39e6ff',true));w.add(ring);
     for(let i=0;i<5;i++){const sp=box(.03,.36,.02,'#2a2e36',0,0,0,w);sp.rotation.z=i*Math.PI/5}return w});
   const gl=new THREE.Mesh(new THREE.PlaneGeometry(2.4,1.2),new THREE.MeshBasicMaterial({map:glowTex,color:0x39e6ff,transparent:true,opacity:.3,blending:THREE.AdditiveBlending,depthWrite:false}));gl.rotation.x=-Math.PI/2;gl.position.y=-.25;g.add(gl);
+  // touches cyberpunk : liserés néon le long du carénage, anneaux de sustentation sous les roues, ailerons lumineux, propulseur plasma, affichage holographique
+  [-1,1].forEach(z=>{box(.85,.02,.02,'#ff4fa3',.2,.97,z*.17,g,true);box(.5,.02,.02,'#39e6ff',-.6,.79,z*.17,g,true);
+    const fin=box(.32,.03,.16,'#39e6ff',-.88,.82,z*.2,g,true);fin.rotation.z=.5;fin.rotation.x=z*.4});
+  [.74,-.74].forEach(x=>{const r=new THREE.Mesh(new THREE.TorusGeometry(.33,.025,6,32),mat('#39e6ff',true));r.rotation.x=Math.PI/2;r.position.set(x,.08,0);g.add(r)});
+  const th=new THREE.Mesh(new THREE.CylinderGeometry(.08,.11,.16,14),mat('#ff4fa3',true));th.rotation.z=Math.PI/2;th.position.set(-1.04,.55,0);g.add(th);
+  const fl=new THREE.Sprite(new THREE.SpriteMaterial({map:glowTex,color:0xff4fa3,transparent:true,opacity:.7,blending:THREE.AdditiveBlending,depthWrite:false}));fl.scale.set(.8,.5,1);fl.position.set(-1.22,.55,0);g.add(fl);g.userData.flame=fl;
+  const hc=document.createElement('canvas');hc.width=64;hc.height=32;const hg=hc.getContext('2d');hg.strokeStyle='#39e6ff';hg.strokeRect(1,1,62,30);hg.fillStyle='#39e6ff';hg.font='bold 12px monospace';hg.fillText('NEO 88',6,14);hg.fillRect(6,20,40,4);
+  const holo=new THREE.Mesh(new THREE.PlaneGeometry(.26,.13),new THREE.MeshBasicMaterial({map:new THREE.CanvasTexture(hc),transparent:true,opacity:.75,side:THREE.DoubleSide,blending:THREE.AdditiveBlending,depthWrite:false}));holo.position.set(.52,1.2,0);holo.rotation.y=-Math.PI/2;holo.rotation.x=-.3;g.add(holo);
   g.userData.wheels=wheels;return g}
 
 function buildMoto(){
@@ -76,6 +84,7 @@ function updateMoto(dt){
     const turn=((want-moto.rotation.y+Math.PI*3)%(Math.PI*2))-Math.PI;moto.rotation.x=Math.max(-.25,Math.min(.25,turn*.8)); // on penche dans les virages
   }else{motoLast=null;moto.rotation.x=0}
   moto.position.y=.28+Math.sin(tAcc*2.4)*.04; // elle plane
+  if(moto.userData.flame){const go=riding&&player.userData.moving;moto.userData.flame.scale.set(go?1.3+Math.random()*.3:.6,go?.6:.4,1);moto.userData.flame.material.opacity=go?.9:.45} // le propulseur s’allume quand on roule
   if(btn){const far=!riding&&!zoneOf()&&Math.hypot(player.position.x-MOTO_PARK.x,player.position.z-MOTO_PARK.z)>6&&Math.hypot(player.position.x-moto.position.x,player.position.z-moto.position.z)>6;
     const show=started&&far&&$('hudL')&&!$('hudL').hidden;if(btn.hidden===show)btn.hidden=!show}
 }
