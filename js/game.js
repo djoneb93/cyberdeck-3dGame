@@ -340,9 +340,15 @@ function danceStep(dt){const ud=player.userData;
 let viewShot=null;
 function startView(){if(viewShot)return;viewShot={t:0,hud:['hudL','hudR','help','cam','prompt'].filter(id=>!$(id).hidden)};viewShot.hud.forEach(id=>$(id).hidden=true);overlayOpen=true;target=null}
 function endView(){if(!viewShot)return;viewShot.hud.forEach(id=>$(id).hidden=false);viewShot=null;overlayOpen=false}
-function viewCam(dt){if(!viewShot)return false;const V=viewShot;V.t+=dt;const T=18,k=Math.min(1,V.t/T),e=k*k*(3-2*k);
-  const a=Math.PI/2-1.1+e*2.9,cx=ROOF.x,cz=ROOF.z,cy=ROOF.y+3+e*5,dx=Math.cos(a),dz=Math.sin(a);
-  camera.position.set(cx-dx*3,cy,cz-dz*3);camera.lookAt(cx+dx*45,ROOF.y*.35,cz+dz*45);if(k>=1)endView();return true}
+// plan « observer la vue » : au bord du toit, le regard plonge sur les rues en contrebas, balaie vers la gauche, puis vers la droite, et revient
+function viewCam(dt){if(!viewShot)return false;const V=viewShot;V.t+=dt;const T=22,t=V.t,sm=x=>{x=Math.max(0,Math.min(1,x));return x*x*(3-2*x)};
+  const base=Math.atan2(44-ROOF.z,W*.6-ROOF.x), /* face au cœur de la ville */
+    yaw=base-1.15*sm(t/5)+2.3*sm((t-5)/10)-1.15*sm((t-16)/5),
+    lean=sm(t/3), // on s'avance jusqu'au bord
+    ex=Math.cos(base),ez=Math.sin(base),edge=Math.min(ROOF.hw,ROOF.hd)-.4,
+    out=edge*.3+(edge+1.6-edge*.3)*lean,cx=ROOF.x+ex*out,cz=ROOF.z+ez*out,cy=ROOF.y+3.2-.6*lean+Math.sin(t*.7)*.05, /* on passe au-dessus du parapet */
+    d=24+5*Math.sin(t*.35),ty=ROOF.y*(.65-.55*lean); // le regard descend vers les rues
+  camera.position.set(cx,cy,cz);camera.lookAt(cx+Math.cos(yaw)*d,Math.max(.5,ty),cz+Math.sin(yaw)*d);if(t>=T)endView();return true}
 ['keydown','pointerdown'].forEach(ev=>addEventListener(ev,()=>{if(viewShot&&viewShot.t>.4)endView()}));
 
 /* ===================== LE STAND NOUILLES ZÉRO (gare) ===================== */

@@ -2,6 +2,7 @@
 'use strict';
 
 const $=id=>document.getElementById(id);
+const DEV_KEYS=/[?&]dev(=|&|$)/.test(location.search); // touches de test (M météo, N jour/nuit) : seulement avec ?dev dans l'adresse
 const SAVE_KEY='neobxl-voxel-save-v1';
 
 /* ===================== ÉTAT ===================== */

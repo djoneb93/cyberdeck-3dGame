@@ -81,7 +81,7 @@ function updateDayNight(dt){
 }
 function skipPhase(){const fw=p=>((p-S.hour)%24+24)%24,next=PHASES.filter(([p])=>fw(p)>.5).sort((x,y)=>fw(x[0])-fw(y[0]))[0];
   dnSkip=next[0];toast('Le temps passe… · '+next[1],'')}
-addEventListener('keydown',e=>{if(e.code!=='KeyN'||dlgOpen||overlayOpen||!started)return;skipPhase()});
+addEventListener('keydown',e=>{if(!DEV_KEYS||e.code!=='KeyN'||dlgOpen||overlayOpen||!started)return;skipPhase()});
 
 // l'heure s'affiche sous la météo
 const _meteoHUD=updateMeteoHUD;

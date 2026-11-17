@@ -63,6 +63,6 @@ function updateMeteoHUD(){
   const el=$('meteo');if(!el)return;const w=WEATHERS[weatherIdx],left=SLOT-(Date.now()%SLOT),h=Math.floor(left/3600e3),m=Math.floor(left%3600e3/60000);
   el.innerHTML='<span class="mi">'+w.ico+'</span><span><b>'+w.n+'</b><i>'+(weatherPreview!=null?'aperçu · M pour continuer':'change dans '+(h?h+' h ':'')+String(m).padStart(2,'0')+' min')+'</i></span>';
 }
-addEventListener('keydown',e=>{if(e.code!=='KeyM'||dlgOpen||overlayOpen||!started)return;
+addEventListener('keydown',e=>{if(!DEV_KEYS||e.code!=='KeyM'||dlgOpen||overlayOpen||!started)return;
   const real=wHash(Math.floor(Date.now()/SLOT))%WEATHERS.length,next=((weatherPreview!=null?weatherPreview:real)+1)%WEATHERS.length;
   weatherPreview=next===real?null:next;updateWeather(0);updateMeteoHUD()});
