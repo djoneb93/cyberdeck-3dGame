@@ -224,11 +224,30 @@ function buildWorld(){
   for(let x=2;x<=11;x++){wb(1,2.6,1,x+.5,1.3,2.5);if(x!==6&&x!==7)box(1,1,1,wallC,x+.5,.5,9.5)}
   for(let z=3;z<=8;z++){wb(1,1.6,1,2.5,.8,z+.5);wb(1,1.6,1,11.5,.8,z+.5)}
   box(10,.08,1.04,'#3a4256',7,2.64,2.5);
-  box(1.8,1,.06,'#13305a',4.5,1.7,3.02,null,true);box(.06,1,.08,'#2c3140',4.5,1.7,3.04);
-  sign('BXL 2086','#ff4fa3',8.7,2.1,3.03,0,false,false,.045);
+  // la fenêtre : la ville de nuit derrière la vitre (immeubles, fenêtres allumées, pluie sur le verre), avec son cadre et sa croisée
+  { const c=document.createElement('canvas');c.width=128;c.height=72;const t=new THREE.CanvasTexture(c);
+    const draw=tt=>{const g=c.getContext('2d'),gr=g.createLinearGradient(0,0,0,72);gr.addColorStop(0,'#05060f');gr.addColorStop(.7,'#24133a');gr.addColorStop(1,'#3a1a48');g.fillStyle=gr;g.fillRect(0,0,128,72);
+      for(let i=0;i<12;i++){const bx=i*11,bh=26+((i*37)%30);g.fillStyle='#0a0c16';g.fillRect(bx,72-bh,10,bh);for(let y=72-bh+3;y<70;y+=4)for(let x=bx+2;x<bx+9;x+=3)if((x*7+y*3+i)%5===0){g.fillStyle=['#ffcf7a','#6fe8ff','#ff6fb3'][(x+y)%3];g.fillRect(x,y,1,2)}}
+      const fx=(tt*14)%160-16;g.fillStyle='#ff4fa3';g.fillRect(fx,18,3,1);g.fillStyle='#eaf6ff';g.fillRect(fx+3,18,1,1); // une voiture volante qui passe
+      g.fillStyle='rgba(180,210,255,.35)';for(let i=0;i<14;i++)g.fillRect((i*29)%128,((i*17+tt*40)%80)-8,1,5)};
+    draw(0);const m=new THREE.Mesh(new THREE.PlaneGeometry(1.7,.92),new THREE.MeshBasicMaterial({map:t}));m.position.set(4.5,1.7,3.03);scene.add(m);
+    box(1.86,.06,.08,'#2c3140',4.5,2.19,3.04);box(1.86,.06,.08,'#2c3140',4.5,1.21,3.04);box(.06,1,.08,'#2c3140',3.6,1.7,3.04);box(.06,1,.08,'#2c3140',5.4,1.7,3.04);box(.04,1,.06,'#2c3140',4.5,1.7,3.05);
+    LM.live=LM.live||[];LM.live.push({k:0,t,draw}) }
+  // une petite photo encadrée (au lieu de la grande affiche) : un coucher de soleil sur la ville, deux silhouettes ; « BXL 2086 » écrit au dos
+  { const c=document.createElement('canvas');c.width=48;c.height=36;const g=c.getContext('2d'),gr=g.createLinearGradient(0,0,0,36);gr.addColorStop(0,'#ff9a5a');gr.addColorStop(.6,'#c8506a');gr.addColorStop(1,'#3a2040');g.fillStyle=gr;g.fillRect(0,0,48,36);
+    g.fillStyle='#ffe0a0';g.beginPath();g.arc(30,20,6,0,7);g.fill();g.fillStyle='#24142e';for(let i=0;i<7;i++)g.fillRect(i*7,22-((i*13)%9),6,20);
+    g.fillStyle='#120a18';[[14,0],[19,1]].forEach(([x,o])=>{g.beginPath();g.arc(x,23-o,2,0,7);g.fill();g.fillRect(x-2,25-o,4,9)});g.fillStyle='rgba(255,240,220,.12)';g.fillRect(0,0,48,36);
+    box(.62,.48,.04,'#e8e2d6',8.7,1.95,3.03);const ph=new THREE.Mesh(new THREE.PlaneGeometry(.52,.39),new THREE.MeshBasicMaterial({map:new THREE.CanvasTexture(c)}));ph.position.set(8.7,1.95,3.055);scene.add(ph) }
   box(2,.4,3,'#3b3027',4,.2,4.5);box(1.85,.22,2.8,'#d9d4c8',4,.5,4.5);box(1.9,.16,1.6,'#2a6f7a',4,.66,5.1);box(.9,.14,.45,'#f2efe8',4,.66,3.4);
   box(3,.1,.9,'#4a3526',9.5,.8,3.5);[8.1,10.9].forEach(x=>box(.1,.8,.8,'#4a3526',x,.4,3.5));
-  box(.9,.6,.08,'#1a1e27',9.5,1.2,3.35);box(.8,.5,.02,'#3dff9a',9.5,1.2,3.4,null,true);box(.5,.05,.25,'#2a2e36',9.5,.87,3.7);
+  box(.9,.6,.08,'#1a1e27',9.5,1.2,3.35);box(.5,.05,.25,'#2a2e36',9.5,.87,3.7);
+  { // l'écran du terminal : des lignes de code vertes qui défilent, un curseur qui clignote
+    const c=document.createElement('canvas');c.width=96;c.height=60;const t=new THREE.CanvasTexture(c);t.magFilter=THREE.NearestFilter;
+    const WD=['let','fn','if','mem','0x3F','LETHE','scan','->','{ }','ret','KUROGANE','=>','0110','await','NEURA','load'];
+    const draw=tt=>{const g=c.getContext('2d');g.fillStyle='#03140a';g.fillRect(0,0,96,60);const off=Math.floor(tt*3);g.font='7px monospace';
+      for(let r=0;r<8;r++){const n=off+r;let x=2+(n*7%3)*6;for(let k=0;k<4;k++){const w=WD[(n*5+k*3)%WD.length];g.fillStyle=k===0?'#7dffb0':(w==='LETHE'||w==='KUROGANE')?'#ff6a6a':'#3dff9a';g.fillText(w,x,7+r*7);x+=w.length*4.3+4;if(x>90)break}}
+      if(Math.floor(tt*2)%2){g.fillStyle='#7dffb0';g.fillRect(4,54,5,2)}};
+    draw(0);const m=new THREE.Mesh(new THREE.PlaneGeometry(.8,.5),new THREE.MeshBasicMaterial({map:t}));m.position.set(9.5,1.2,3.4);scene.add(m);LM.live=LM.live||[];LM.live.push({k:0,t,draw}) }
   box(.5,.1,.5,'#3a3f4c',9.5,.45,4.5);box(.5,.5,.08,'#3a3f4c',9.5,.75,4.78);box(.08,.45,.08,'#3a3f4c',9.5,.22,4.5);
   // (la plante de ce coin a laissé sa place à l'escalier en colimaçon, voir js/interiors.js)
   box(3,.02,2.4,'#3b2a4a',6.5,.015,6.2);

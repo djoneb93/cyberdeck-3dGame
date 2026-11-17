@@ -12,7 +12,7 @@ const NPC_DEF=[
 const OBJECTS=[
   {id:'o_terminal',x:9.5,z:3.7,r:1.3,label:'Examiner le terminal'},
   {id:'o_bed',x:4,z:4.3,r:1.4,label:'Examiner le lit'},
-  {id:'o_poster',x:8.7,z:3.2,r:1.1,label:'Regarder l’affiche'},
+  {id:'o_poster',x:8.7,z:3.2,r:1.1,label:'Regarder la photo encadrée'},
   {id:'o_board',x:6.7,z:3.3,r:1.4,label:'Consulter le tableau d’enquête',dyn:()=>{
     if(!S.frags.length)return 'Un tableau de liège. Des punaises, une ficelle rouge, et au centre une photo de toi, floue. Tu as dû t’en servir, avant. Pour enquêter sur qui ?';
     const L={contrat:'Contrat Kurogane (Vasko, Gare Zéro)',implant:'Cicatrice d’implant (Doc Ferrant, Bazar Néon)',dossier:'Dossier classé (Sergent Okoro, Laverie 24/7)'};

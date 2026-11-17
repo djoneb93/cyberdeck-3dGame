@@ -81,6 +81,7 @@ function updateLandmarks(dt){
   LM.lasers.forEach(o=>{o.l.rotation.z=Math.sin(tAcc*.9+o.k*1.6)*.9;o.l.rotation.y=tAcc*.6+o.k*Math.PI/2;o.l.material.opacity=.15+.3*kick});
   const ch=Math.floor(tAcc*6)%3;LM.chase.forEach(gs=>gs.forEach((g,i)=>g.forEach(b=>b.visible=i!==ch)));
   LM.pulse.forEach((b,i)=>b.visible=Math.sin(tAcc*2+i)>-.6);
+  if(LM.live)LM.live.forEach(l=>{l.k+=dt;if(l.k>.12){l.k=0;l.draw(tAcc);l.t.needsUpdate=true}}); // écrans et fenêtre animés de la planque
   if(LM.porthole)LM.porthole.rotation.z-=dt*4;if(LM.spin)LM.spin.forEach(s=>s.dr.rotation.z-=dt*s.sp);
   LM.sirens.forEach((s,i)=>s.visible=Math.floor(tAcc*4+i*2)%4<2);
   LM.steam.forEach(v=>{const p=v.pos;for(let i=0;i<v.sp.length;i++){p[i*3+1]+=v.sp[i]*dt;p[i*3]+=Math.sin(tAcc+i)*.004;if(p[i*3+1]>v.y+3.5){p[i*3+1]=v.y;p[i*3]=v.x}}v.gg.attributes.position.needsUpdate=true});

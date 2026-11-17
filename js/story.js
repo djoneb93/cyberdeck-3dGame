@@ -95,7 +95,7 @@ const DLG={
   lou_wait:{n1:{s:'lou',t:'Le set commence bientôt. Va faire ce que t’as à faire, je bouge pas.'}},
   o_terminal:{n1:{s:'nar',t:'Ton terminal. Dernière connexion : 14 mars 2086. Mot de passe requis. Tu ne t’en souviens pas.'}},
   o_bed:{n1:{s:'nar',t:'Tu as assez dormi. Trois jours, d’après ce qu’on dirait.'}},
-  o_poster:{n1:{s:'nar',t:'Une affiche : « BXL 2086 ». La dernière année dont tu te souviens.'}},
+  o_poster:{n1:{s:'nar',t:'Une petite photo encadrée : un coucher de soleil sur la ville, deux silhouettes. Au dos, au feutre : « BXL 2086 ». La dernière année dont tu te souviens.'}},
   o_moto:{n1:{s:'nar',t:'Ta moto. Batterie à plat, carénage rayé. Un problème pour plus tard.'}},
   o_atomium:{n1:{s:'nar',t:'Une réplique chromée de l’Atomium. Sur une des sphères, quelqu’un a tagué une phalène cyan.'}},
   o_holo:{n1:{s:'nar',t:'Lou « Néon », vingt mètres de lumière au-dessus de la place. Ce soir, elle joue au Club Ondes.'}}
