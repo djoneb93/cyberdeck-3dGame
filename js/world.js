@@ -33,7 +33,7 @@ function tower(x,z,w,d,h,v,neon,place){
 // écran publicitaire animé (un canevas qui change de réclame toutes les quelques secondes)
 const ADS=[['ONDES COLA','#ff4fa3','#2a0a20'],['NEURA v4 · TA MÉMOIRE, EN MIEUX','#7dffb0','#06201a'],['KUROGANE · VOTRE SÉCURITÉ','#ff3b4e','#1a0608'],['LOU NÉON · CLUB ONDES','#c88bff','#160a28'],['NOUILLES ZÉRO · 24/7','#ffb547','#201406']];
 function adScreen(x,y,z,ry,w,h){const c=document.createElement('canvas');c.width=128;c.height=Math.round(128*h/w);const t=new THREE.CanvasTexture(c);t.minFilter=THREE.LinearFilter;
-  const m=new THREE.Mesh(new THREE.PlaneGeometry(w,h),new THREE.MeshBasicMaterial({map:t,fog:false}));m.position.set(x,y,z);m.rotation.y=ry;scene.add(m);
+  const m=new THREE.Mesh(new THREE.PlaneGeometry(w,h),new THREE.MeshBasicMaterial({map:t,fog:false,polygonOffset:true,polygonOffsetFactor:-2,polygonOffsetUnits:-4}));m.position.set(x+Math.sin(ry)*.08,y,z+Math.cos(ry)*.08);m.rotation.y=ry;scene.add(m);
   box(w+.2,h+.2,.08,'#14181f',x-Math.sin(ry)*.05,y,z-Math.cos(ry)*.05).rotation.y=ry;
   const a={c,t,i:Math.floor(rnd()*ADS.length),k:rnd()*4};adScreens.push(a);drawAd(a);return m}
 function drawAd(a){const g=a.c.getContext('2d'),[txt,fg,bg]=ADS[a.i%ADS.length],W2=a.c.width,H2=a.c.height;
@@ -59,7 +59,7 @@ function buildWorld(){
   // ciel : dégradé nocturne avec la lueur de la ville à l'horizon, et des étoiles
   const skc=document.createElement('canvas');skc.width=2;skc.height=256;const sg=skc.getContext('2d'),sgr=sg.createLinearGradient(0,0,0,256);
   sgr.addColorStop(0,'#020309');sgr.addColorStop(.36,'#070a18');sgr.addColorStop(.47,'#1c1236');sgr.addColorStop(.5,'#3a1a48');sgr.addColorStop(.53,'#160d22');sgr.addColorStop(1,'#05060a');sg.fillStyle=sgr;sg.fillRect(0,0,2,256);
-  const sky=new THREE.Mesh(new THREE.SphereGeometry(200,24,16),new THREE.MeshBasicMaterial({map:new THREE.CanvasTexture(skc),side:THREE.BackSide,fog:false,depthWrite:false}));sky.position.set(W/2,0,H/2);sky.renderOrder=-1;scene.add(sky);
+  const sky=skyMesh=new THREE.Mesh(new THREE.SphereGeometry(200,24,16),new THREE.MeshBasicMaterial({map:new THREE.CanvasTexture(skc),side:THREE.BackSide,fog:false,depthWrite:false}));sky.position.set(W/2,0,H/2);sky.renderOrder=-1;scene.add(sky);
   const sp=[];for(let i=0;i<500;i++){const a=rnd()*Math.PI*2,e=.18+rnd()*1.3;sp.push(W/2+Math.cos(a)*Math.cos(e)*190,Math.sin(e)*190,H/2+Math.sin(a)*Math.cos(e)*190)}
   const sgeo=new THREE.BufferGeometry();sgeo.setAttribute('position',new THREE.Float32BufferAttribute(sp,3));
   scene.add(new THREE.Points(sgeo,new THREE.PointsMaterial({color:0xcfd8ff,size:1.3,sizeAttenuation:false,fog:false,transparent:true,opacity:.7})));
@@ -191,7 +191,7 @@ function buildWorld(){
   sign('DOCKS NOIRS','#8fb7ff',13.6,6.2,UZ(-.03),0,true,true,.12);[11.8,15.4].forEach(x=>box(.16,6.2,.16,'#2a3140',x,3.1,UZ(-.03)));
 
   // ===== gare Zéro : viaduc qui file au loin derrière la ville, halle voûtée, rame =====
-  const RY=2.6,ZS=-112;
+  const RY=2.6,ZS=-150;
   box(1.5,.3,GZ1-ZS,'#2a3a48',GX,RY,(ZS+GZ1)/2);box(.06,.04,GZ1-ZS,'#ff4fa3',GX,RY+.17,(ZS+GZ1)/2,null,true);
   PILLARS.forEach(z=>box(.5,RY,.5,'#1c2a36',GX,RY/2,Math.floor(z)+.5));
   box(2.4,.4,.4,'#ff3b4e',GX,RY+.3,GZ1-.3,null,true);
@@ -203,20 +203,8 @@ function buildWorld(){
   sign('GARE ZÉRO','#ffb547',GX,8.2,GZ1+.2,0,true,true,.14);
   sign('QUAI 3','#ffb547',GX+GHW+.3,2.6,GZ0+4,Math.PI/2,true,false,.07,true);
   glow(GX,(GZ0+GZ1)/2,6,'#ffb547',.22);
-  // rame futuriste : profil arrondi extrudé, nez profilés aux deux bouts, bandeau de fenêtres lumineux
-  train=new THREE.Group();scene.add(train);
-  const LEN=20.4,PW=.68,PH=1.15,PR=.46,prof=new THREE.Shape();
-  prof.moveTo(-PW,.05);prof.lineTo(PW,.05);prof.lineTo(PW,PH-PR);prof.quadraticCurveTo(PW,PH,PW-PR,PH);prof.lineTo(-PW+PR,PH);prof.quadraticCurveTo(-PW,PH,-PW,PH-PR);prof.closePath();
-  const tMat=new THREE.MeshLambertMaterial({color:0x9aa4b2,emissive:0x0c1016}),tDark=new THREE.MeshLambertMaterial({color:0x1a2230});
-  const car=(z0,z1)=>{const g=new THREE.ExtrudeGeometry(prof,{depth:z1-z0-.12,bevelEnabled:false,curveSegments:6});const m=new THREE.Mesh(g,tMat);m.position.z=z0+.06;train.add(m);
-    const L=z1-z0-.5,zc=(z0+z1)/2;[-1,1].forEach(s=>{box(.03,.3,L,'#ffe9b0',s*(PW+.005),.72,zc,train,true);box(.03,.05,z1-z0-.2,'#ff4fa3',s*(PW+.005),.22,zc,train,true)});box(.5,.03,L,'#39e6ff',0,PH+.01,zc,train,true)};
-  for(let k=0;k<4;k++)car(-LEN+2.6+k*3.8,-LEN+6.4+k*3.8);
-  const nose=(zb,dir)=>{const n=new THREE.Mesh(new THREE.SphereGeometry(1,20,14,0,Math.PI*2,0,Math.PI/2),tMat);n.rotation.x=dir*Math.PI/2;n.scale.set(PW,2.5,PH*.5);n.position.set(0,PH*.5+.03,zb);train.add(n);
-    const g=new THREE.Mesh(new THREE.SphereGeometry(1,16,10,0,Math.PI*2,0,Math.PI/2),tDark);g.rotation.x=dir*Math.PI/2;g.scale.set(PW*.86,2.05,PH*.3);g.position.set(0,PH*.66,zb);train.add(g);
-    const b=new THREE.Mesh(new THREE.ExtrudeGeometry(prof,{depth:.9,bevelEnabled:false,curveSegments:6}),tMat);b.position.z=dir>0?zb-.9:zb;train.add(b)};
-  nose(-.2-2.4+.5,1);nose(-LEN+.2+2.4-.5,-1);
-  box(.5,.1,.06,'#eaf6ff',0,.45,.15,train,true);box(.4,.08,.06,'#ff3b4e',0,.45,-LEN-.15,train,true);
-  train.position.set(GX,RY+.15,ZS);
+  buildStation();
+  train=buildTrain(RY,ZS);
 
   // voitures du périphérique
   for(let k=0;k<12;k++){const g=carModel(pick(['#2a3a5a','#6a2a3a','#2a2a30','#d8dee8','#2f5a4a','#4a3a6a']),pick(['#39e6ff','#ff4fa3','#7dffb0','#ffb547']),0,.3,0,0,false);
@@ -333,14 +321,3 @@ function buildHome(){
   cat.userData.body=body;
 }
 
-const carSph=new THREE.SphereGeometry(1,18,10);
-function carModel(body,glowC,x,y,z,ry,parked,noGlow){
-  const g=new THREE.Group();g.position.set(x,y,z);g.rotation.y=ry;scene.add(g);
-  const b=new THREE.Mesh(carSph,new THREE.MeshLambertMaterial({color:body}));b.scale.set(1.45,.32,.64);b.position.y=.36;g.add(b);
-  const k=new THREE.Mesh(carSph,new THREE.MeshLambertMaterial({color:0x4fb8e0,emissive:0x0e2a3a}));k.scale.set(.72,.3,.5);k.position.set(-.12,.56,0);g.add(k);
-  box(.5,.06,1.7,body,-1.05,.42,0,g);box(.06,.3,.06,body,-1.22,.58,0,g);
-  box(.05,.07,.74,'#eaf6ff',1.43,.38,0,g,true);box(.05,.07,.86,'#ff3b4e',-1.43,.42,0,g,true);
-  box(2.1,.04,.46,glowC,0,.1,0,g,true);
-  if(!noGlow){const gp=new THREE.Mesh(new THREE.PlaneGeometry(3.2,1.8),new THREE.MeshBasicMaterial({map:glowTex,color:glowC,transparent:true,opacity:.42,blending:THREE.AdditiveBlending,depthWrite:false}));gp.rotation.x=-Math.PI/2;gp.position.y=-y+.05;g.add(gp)}
-  return g;
-}

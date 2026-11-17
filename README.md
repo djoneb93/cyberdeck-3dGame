@@ -21,7 +21,7 @@ puis ouvre http://localhost:8765/.
 
 - **ZQSD** ou flèches : marcher · **clic** au sol : aller
 - **glisser** : tourner et incliner la caméra · **A / E** : pivoter · **molette** : zoom
-- **Espace** : parler, examiner, continuer · **1 2 3** : choisir une réponse · **P** : taille des pixels
+- **Espace** : parler, examiner, continuer · **1 2 3** : choisir une réponse · **P** : taille des pixels · **M** : aperçu de la météo suivante
 
 ## Contenu
 
@@ -40,7 +40,12 @@ et partagent la même portée globale.
 - `js/core.js` : état de la partie, sauvegarde, noms et couleurs des personnages.
 - `js/map.js` : la carte (grille, avenues, lieux, tours, port, gare, planque, collisions, étapes des histoires).
 - `js/render.js` : moteur 3D, matériaux, façades, enseignes, sprites pixel des personnages.
-- `js/world.js` : construction du monde (sol, ciel, bâtiments, port, gare et rame, véhicules, immeuble de la planque).
+- `js/world.js` : construction du monde (sol, ciel, bâtiments, port, viaduc, immeuble de la planque).
+- `js/vehicles.js` : voitures flottantes (berline, sportive, utilitaire), taxi, rame TGV.
+- `js/station.js` : la gare Zéro en détail (quais, verrière, tableau des départs, horloge, kiosque).
+- `js/life.js` : la ville vivante (enseignes verticales, liserés néon, projecteurs, drones, vapeur, fenêtres).
+- `js/taxi.js` : le taxi volant et sa visite commentée de la ville.
+- `js/weather.js` : la météo, qui change toutes les 3 heures (touche M : aperçu).
 - `js/story.js` : dialogues du jeu et moteur des histoires des contacts (Ink).
 - `js/entities.js` : personnages, objets à examiner, passants, voitures, marqueurs.
 - `js/game.js` : déplacement, interactions, HUD, boucle de jeu, démarrage.

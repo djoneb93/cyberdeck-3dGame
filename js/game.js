@@ -13,6 +13,7 @@ function blocked(x,z){
 function distTo(o){const p=o.mesh?o.mesh.position:o;return Math.hypot(p.x-player.position.x,p.z-player.position.z)}
 
 function updatePlayer(dt){
+  if(taxiRide)return; // dans le taxi : c'est lui qui te déplace
   let mx=0,mz=0;
   if(!dlgOpen&&!overlayOpen){
     const f=(keys.KeyW||keys.ArrowUp?1:0)-(keys.KeyS||keys.ArrowDown?1:0);
@@ -40,13 +41,14 @@ function lerpAngle(a,b,t){let d=((b-a+Math.PI)%(Math.PI*2)+Math.PI*2)%(Math.PI*2
 
 /* ===================== INTERACTIONS ===================== */
 function nearest(){
+  if(taxiRide)return {kind:'taxi',label:'Descendre du taxi'};
   let best=null,bd=1e9;
   npcs.forEach(n=>{const d=S.roof?99:distTo(n);if(d<1.9&&d<bd){bd=d;best={kind:'npc',n,label:'Parler à '+(S.met[n.id]?NAMES[n.id]:'???')}}});
   for(const id in S.q){const q=S.q[id];if(!q.active||q.b>=3)continue;const s=SPOTS[id][q.b];if(!!s.roof!==!!S.roof)continue;const d=distTo(s);if(d<1.5&&d<bd+.6){bd=d-.6;best={kind:'spot',id,label:'Enquêter · '+spotLab(id,q.b)}}}
   OBJECTS.forEach(o=>{if(!!o.roof!==!!S.roof)return;const d=distTo(o);if(d<o.r&&d<bd-.4){bd=d;best={kind:'obj',o,label:o.label}}});
   return best;
 }
-function interact(){const t=nearest();if(!t)return;if(t.kind==='npc')talkTo(t.n);else if(t.kind==='spot')openDlg(beatDlg(t.id));else if(t.o.act)t.o.act();else openDlg(t.o.dyn?{n1:{s:'nar',t:t.o.dyn()}}:t.o.id)}
+function interact(){const t=nearest();if(!t)return;if(t.kind==='taxi'){endRide();return}if(t.kind==='npc')talkTo(t.n);else if(t.kind==='spot')openDlg(beatDlg(t.id));else if(t.o.act)t.o.act();else openDlg(t.o.dyn?{n1:{s:'nar',t:t.o.dyn()}}:t.o.id)}
 // monter sur le toit / redescendre : fondu au noir, puis on réapparaît de l'autre côté de la porte
 function goRoof(up){const f=$('fade');f.style.opacity=1;overlayOpen=true;target=null;pendingTalk=null;
   setTimeout(()=>{S.roof=up;const p=up?{x:ROOF.x+1.9,z:ROOF.z-.45}:FP('roofs',1.6,0);player.position.set(p.x,up?ROOF.y:0,p.z);player.userData.ry=up?0:0;
@@ -159,7 +161,7 @@ function openFiche(k){
 function closeFiche(){$('fiche').hidden=true;overlayOpen=false}
 $('ficheClose').onclick=closeFiche;
 $('fiche').addEventListener('click',e=>{if(e.target===$('fiche'))closeFiche()});
-function toast(t,cls){const d=document.createElement('div');d.className='toast panel '+cls;d.textContent=t;$('toasts').appendChild(d);setTimeout(()=>d.remove(),2600)}
+function toast(t,cls,ms){const d=document.createElement('div');d.className='toast panel '+cls;d.textContent=t;$('toasts').appendChild(d);setTimeout(()=>d.remove(),ms||(t.length>40?5200:2600))}
 
 const FRAG_OF={vasko:'contrat',doc:'implant',okoro:'dossier'};
 function questTarget(id){
@@ -187,15 +189,7 @@ function updateLabels(){
 }
 $('prompt').addEventListener('click',interact);
 
-/* ===================== PLUIE ===================== */
-let rain;
-function makeRain(){const N=1500,pos=new Float32Array(N*6);rain={N,pos,sp:new Float32Array(N)};
-  for(let i=0;i<N;i++){const x=(Math.random()-.5)*40,y=Math.random()*16,z=(Math.random()-.5)*40;pos.set([x,y,z,x+.05,y+.5,z],i*6);rain.sp[i]=15+Math.random()*8}
-  const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.BufferAttribute(pos,3));
-  rain.mesh=new THREE.LineSegments(g,new THREE.LineBasicMaterial({color:0x8fb8e8,transparent:true,opacity:.3}));scene.add(rain.mesh)}
-function updateRain(dt){const p=rain.pos;for(let i=0;i<rain.N;i++){const o=i*6,dy=rain.sp[i]*dt;p[o+1]-=dy;p[o+4]-=dy;p[o]-=dy*.1;p[o+3]-=dy*.1;
-  if(p[o+1]<0){const x=(Math.random()-.5)*40,z=(Math.random()-.5)*40,y=14+Math.random()*3;p[o]=x;p[o+1]=y;p[o+2]=z;p[o+3]=x+.05;p[o+4]=y+.5;p[o+5]=z}}
-  rain.mesh.geometry.attributes.position.needsUpdate=true;rain.mesh.position.set(focus.x,focus.y-1.5,focus.z)}
+/* (la pluie et la météo sont dans js/weather.js) */
 
 /* ===================== BOUCLE ===================== */
 const clock=new THREE.Clock();let tAcc=0,saveT=0;
@@ -218,7 +212,7 @@ function frame(){
   updateWalkers(dt);
   npcs.forEach(n=>{const d=distTo(n);let want=n.baseRy;if(d<3.2||talking===n)want=Math.atan2(player.position.x-n.mesh.position.x,player.position.z-n.mesh.position.z);
     n.mesh.userData.ry=lerpAngle(n.mesh.userData.ry,want,Math.min(1,dt*5));});
-  updateCity(dt);flyers.forEach(f=>{f.g.position.x+=f.v*dt;if(f.g.position.x>W+14)f.g.position.x=-14;if(f.g.position.x<-14)f.g.position.x=W+14;f.g.position.y+=Math.sin(tAcc*1.5+f.v)*.004});
+  updateCity(dt);updateStation(dt);updateLife(dt);updateTaxi(dt);updateWeather(dt);flyers.forEach(f=>{f.g.position.x+=f.v*dt;if(f.g.position.x>W+14)f.g.position.x=-14;if(f.g.position.x<-14)f.g.position.x=W+14;f.g.position.y+=Math.sin(tAcc*1.5+f.v)*.004});
   beacons.forEach(b=>b.visible=Math.sin(tAcc*3)>-.2);updateMarkers();
   if(cat)cat.userData.body.scale.y=1+Math.sin(tAcc*2.2)*.06;
   if(holo){holo.position.y=holo.userData.baseY+Math.sin(tAcc*1.3)*.08;const hm=holo.userData.plane.material;hm.opacity=.45+Math.sin(tAcc*9)*.04+(Math.random()<.02?-.25:0);holo.userData.moving=false;}
@@ -244,7 +238,7 @@ function setupFX(){
   try{
     if(THREE.EffectComposer&&THREE.UnrealBloomPass){
       composer=new THREE.EffectComposer(renderer);composer.addPass(new THREE.RenderPass(scene,camera));
-      bloom=new THREE.UnrealBloomPass(new THREE.Vector2(lw,lh),1.0,.55,.62);composer.addPass(bloom);
+      bloom=new THREE.UnrealBloomPass(new THREE.Vector2(lw,lh),1.15,.55,.6);composer.addPass(bloom);
     }
   }catch(e){composer=null}
 }
@@ -271,7 +265,7 @@ $('endClose').onclick=()=>{$('ending').hidden=true;overlayOpen=false};
 function start(hotData){
   const saved=(hotData&&hotData.S)||loadSave();
   if(saved){if(saved.mapv!==3){const n=NEW_STATE();saved.px=n.px;saved.pz=n.pz;saved.ry=0;saved.mapv=3}S=Object.assign(NEW_STATE(),saved);for(const k in S.q){const q=S.q[k];if(q.ep==null){q.ep=q.won?1:0;q.wins=q.won?1:0}}}
-  setupFX();buildWorld();spawn();makeMarkers();makeRain();resize();placePlayer();
+  setupFX();buildWorld();spawn();buildLife();buildTaxi();makeMarkers();makeRain();setupWeather();resize();placePlayer();
   $('loading').remove();
   const acts=$('introActs');
   if(hotData&&hotData.S&&hotData.running){begin(false);}

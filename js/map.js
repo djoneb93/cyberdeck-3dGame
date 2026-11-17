@@ -91,6 +91,10 @@ const PILLARS=[];for(let z=-110;z<GZ0-1;z+=3.84){if(!onRoadV((z-MO)/MS))PILLARS.
 PILLARS.forEach(z=>{if(z>=0)solid[I(Math.floor(GX),Math.floor(z))]=1});
 for(let k=0;k<=8;k+=2){const z=Math.floor(GZ0+(GZ1-GZ0)*k/8);solid[I(Math.floor(GX-GHW),z)]=1;solid[I(Math.floor(GX+GHW),z)]=1}
 fill(solid,Math.floor(GX),Math.floor(GZ0),Math.floor(GX),Math.floor(GZ1),1);
+fill(solid,Math.floor(GX-2.3),Math.floor(GZ1-3.4),Math.floor(GX-1.1),Math.floor(GZ1-.2),1); // escalier du quai ouest
+[[GX+GHW+.6,GZ0+2],[GX+GHW+.6,GZ0+3],[GX+GHW+.24,(GZ0-.6+GZ1)/2+2],[GX+GHW+.24,(GZ0-.6+GZ1)/2-2],[GX+GHW+1.8,GZ1-.6]].forEach(([x,z])=>{solid[I(Math.floor(x),Math.floor(z))]=1}); // distributeurs, piliers du tableau
+fill(solid,Math.floor(GX+GHW+2.3),Math.floor(GZ1-1.9),Math.floor(GX+GHW+4.5),Math.floor(GZ1-.3),1); // kiosque
+solid[I(Math.floor(UX(AVE[2])+2.3),Math.floor(UZ(.93)))]=1;solid[I(Math.floor(UX(AVE[2])+2.3),Math.floor(UZ(.93)-.7))]=1; // station de taxis
 // planque
 fill(tile,2+HX,2+HZ,11+HX,9+HZ,3);
 const hs=(x,z)=>{solid[I(x+HX,z+HZ)]=1},hf=(x0,z0,x1,z1)=>fill(solid,x0+HX,z0+HZ,x1+HX,z1+HZ,1);

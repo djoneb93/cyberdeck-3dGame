@@ -17,7 +17,7 @@ function resize(){const [lw,lh]=lowSize();renderer.setSize(lw,lh,false);camera.a
   if(composer){composer.setSize(lw,lh)}if(mirror)mirror.getRenderTarget().setSize(lw,lh)}
 addEventListener('resize',resize);
 
-scene.add(new THREE.HemisphereLight(0x5a6ab0,0x0a0a16,0.8));
+const hemi=new THREE.HemisphereLight(0x5a6ab0,0x0a0a16,0.8);scene.add(hemi);
 const moon=new THREE.DirectionalLight(0x7a8cff,0.3);moon.position.set(-20,40,30);scene.add(moon);
 
 const matCache={};
@@ -44,7 +44,7 @@ const facades=PALS.map((pal,vi)=>{
 });
 const roofMat=new THREE.MeshLambertMaterial({color:0x1a1f2b});
 const camBlockers=[];
-function facadeMat(v,rx,ry){const f=facades[v%facades.length];const t=nearestTex(f.c,true),te=nearestTex(f.e,true);t.repeat.set(rx,ry);te.repeat.set(rx,ry);return new THREE.MeshLambertMaterial({map:t,emissive:0xffffff,emissiveMap:te,emissiveIntensity:.5})}
+function facadeMat(v,rx,ry){const f=facades[v%facades.length];const t=nearestTex(f.c,true),te=nearestTex(f.e,true);t.repeat.set(rx,ry);te.repeat.set(rx,ry);return new THREE.MeshLambertMaterial({map:t,emissive:0xffffff,emissiveMap:te,emissiveIntensity:.72})}
 
 function signTexture(text,color,vertical){
   const c=document.createElement('canvas');const g=c.getContext('2d');const F='16px Silkscreen, monospace';g.font=F;
@@ -60,8 +60,11 @@ const glowTex=(()=>{const c=document.createElement('canvas');c.width=c.height=32
 const shadowTex=(()=>{const c=document.createElement('canvas');c.width=c.height=16;const g=c.getContext('2d');const gr=g.createRadialGradient(8,8,0,8,8,8);gr.addColorStop(0,'rgba(0,0,0,.75)');gr.addColorStop(1,'rgba(0,0,0,0)');g.fillStyle=gr;g.fillRect(0,0,16,16);return new THREE.CanvasTexture(c)})();
 function glow(x,z,r,color,op){const m=new THREE.Mesh(new THREE.PlaneGeometry(r*2,r*2),new THREE.MeshBasicMaterial({map:glowTex,color,transparent:true,opacity:op||.5,blending:THREE.AdditiveBlending,depthWrite:false}));m.rotation.x=-Math.PI/2;m.position.set(x,.04,z);scene.add(m);return m}
 function sign(text,color,x,y,z,ry,both,light,k,vertical){
-  const s=signTexture(text,color,vertical);k=k||.085;
-  const mk=r=>{const m=new THREE.Mesh(new THREE.PlaneGeometry(s.w*k,s.h*k),new THREE.MeshBasicMaterial({map:s.tex,fog:false}));m.position.set(x,y,z);m.rotation.y=r;scene.add(m)};
+  const s=signTexture(text,color,vertical);k=k||.085;const w=s.w*k,h=s.h*k;
+  // l'enseigne est montée sur un caisson sombre, et dessinée « par-dessus » : aucune texture ne peut la traverser
+  const back=box(w+.08,h+.08,both?.06:.05,'#07090e',x,y,z);back.rotation.y=ry;
+  const sm=new THREE.MeshBasicMaterial({map:s.tex,fog:false,polygonOffset:true,polygonOffsetFactor:-2,polygonOffsetUnits:-4});
+  const mk=r=>{const m=new THREE.Mesh(new THREE.PlaneGeometry(w,h),sm);m.position.set(x+Math.sin(r)*.045,y,z+Math.cos(r)*.045);m.rotation.y=r;scene.add(m)};
   mk(ry);if(both)mk(ry+Math.PI);
   if(light!==false){const l=new THREE.PointLight(color,2.4,12,1.6);l.position.set(x+Math.sin(ry)*1.4,y-.6,z+Math.cos(ry)*1.4);scene.add(l)}
 }

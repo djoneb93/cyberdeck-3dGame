@@ -84,7 +84,7 @@ function updateWalkers(dt){
 }
 function updateCity(dt){
   // rame de la gare Zéro : arrive de loin par le viaduc, s'arrête à quai, puis repart au loin derrière la ville
-  if(train){const cyc=40,s0=(tAcc%cyc)/cyc,ease=x=>x*x*(3-2*x),STOP=GZ1-.6,FAR=-112;
+  if(train){const cyc=40,s0=(tAcc%cyc)/cyc,ease=x=>x*x*(3-2*x),STOP=GZ1-.6,FAR=-140;
     train.position.z=s0<.35?FAR+(STOP-FAR)*ease(s0/.35):s0<.6?STOP:STOP-(STOP-FAR+30)*Math.pow((s0-.6)/.4,2)}
   clubBeams.forEach(b=>{b.g.rotation.z=Math.sin(tAcc*1.3+b.k*2)*.6;b.g.rotation.x=Math.cos(tAcc*.9+b.k)*.25});
   hazards.forEach(h=>h.visible=Math.sin(tAcc*4)>0);
