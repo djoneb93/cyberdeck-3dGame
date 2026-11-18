@@ -101,7 +101,7 @@ function enterRoom(id,ent){const R=ROOMS[id];leaveMoto();
   if(id==='bunker'&&S.rep<10){openDlg({n1:{s:'nar',t:'La porte blindée ne bouge pas. Une caméra pivote vers toi, te détaille, puis se détourne. Ici, on n’ouvre qu’aux visages connus de la Zone Zéro (réputation « Visage connu »).'}});return}
   fadeThen(()=>{S.roof='in_'+id;const sp=(ent&&ent.spawn)||R.o.spawn||[0,R.d/2-2.2];player.position.set(R.cx+sp[0],IY,R.cz+sp[1]);player.userData.ry=ent&&ent.ry!=null?ent.ry:Math.PI;player.userData.jy=0;player.userData.jv=0;
   target=null;pendingTalk=null;yaw=yawT=0;distT=Math.min(distT,6.5);pitchT=Math.max(pitchT,.45);focus.set(player.position.x,IY+1.5,player.position.z);save();toast(IN_NAMES[id],'')})}
-function exitRoom(id,to){const o=IN_DEF[id];fadeThen(()=>{S.roof=false;const p=to||o.exit||FP(id,1.7,0);player.position.set(p.x,0,p.z);player.userData.ry=p.ry!=null?p.ry:FACE_RY[PL[id].face];doorArmed=false;
+function exitRoom(id,to){const o=IN_DEF[id];fadeThen(()=>{S.roof=o.exitZone||false;if(o.exitZone&&typeof ISLE!=='undefined')ISLE.level=GROUND; /* (le bunker de l’île ressort sur l’île) */const p=to||o.exit||FP(id,1.7,0);player.position.set(p.x,o.exitZone?zoneY():0,p.z);player.userData.ry=p.ry!=null?p.ry:FACE_RY[PL[id].face];doorArmed=false;
   target=null;pendingTalk=null;focus.set(p.x,1.5,p.z);save()})}
 
 // ---------- les pièces ----------

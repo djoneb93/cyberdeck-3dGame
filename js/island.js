@@ -71,6 +71,7 @@ function buildIsland(){ISLE.built=true;const X=ISLE.x,Z=ISLE.z,add=(o)=>{scene.a
   OBJECTS.push({id:'o_isle_holo',x:X+1.8,z:Z,r:1.4,zone:'ile',label:'Regarder la fontaine holographique',dyn:()=>'Une colonne de lumière qui tourne lentement. Des noms défilent dedans : les gens qui vivent ici. Le tien n’y est pas. Pas encore.'});
   // ---- le retour : depuis le ponton, on rappelle le yacht ----
   OBJECTS.push({id:'o_isle_back',x:ISLE.pier.x+.4,z:ISLE.pier.z,r:1.5,zone:'ile',label:'Rentrer en ville · Neo-Mouette',act:()=>boardBack()});
+  developIsland(); /* js/island_dev.js */
 }
 function updateIsland(dt){if(!ISLE.built)return;if(ISLE.holo)ISLE.holo.rotation.y+=dt*.4;if(ISLE.lamp)ISLE.lamp.visible=Math.floor(tAcc*1.5)%2===0}
 // arrivée et départ

@@ -8,7 +8,7 @@ function lodBuild(){LOD.list=[];const s=new THREE.Sphere();scene.updateMatrixWor
   scene.traverse(o=>{if(!(o.isMesh||o.isSprite||o.isPoints)||o.isInstancedMesh||!o.geometry)return;
     let p=o;while(p){if(p===player)return;p=p.parent}
     if(!o.geometry.boundingSphere)o.geometry.computeBoundingSphere();s.copy(o.geometry.boundingSphere).applyMatrix4(o.matrixWorld);
-    if(s.radius>2.5||s.center.y<-30)return; // les grands volumes restent ; les pièces intérieures ont leur propre réglage
+    if(o.userData.noLod||s.radius>2.5||s.center.y<-30)return; // les grands volumes restent ; les pièces intérieures ont leur propre réglage
     LOD.list.push({o,r:s.radius,c:o.geometry.boundingSphere.center.clone()})})}
 function updateLOD(){if(!started)return;if(!LOD.list){lodBuild();return}
   const L=LOD.list,n=L.length,step=Math.ceil(n/6),cp=camera.position,far=zoneOf()&&String(zoneOf()).startsWith('in_')?1e9:LOD.far; // un sixième de la liste par image

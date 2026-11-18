@@ -252,3 +252,8 @@ body.glitch #c{animation:glitch .42s steps(2) 1}
 /* touches personnalisables */
 #keyMap{display:grid;gap:4px;margin-top:6px}.kmRow{display:flex;justify-content:space-between;align-items:center;gap:10px}.kmRow span{color:var(--fg)}
 .kmRow button{min-width:150px;padding:5px 10px;text-transform:none}.kmRow button.wait{border-color:var(--pink);color:var(--pink)}
+/* clavier de la porte du K-SITE 0 */
+#keypad{z-index:30}.kp{width:min(320px,100%);justify-items:center;text-align:center}
+#kpScreen{font:700 34px var(--f-m);letter-spacing:.2em;color:#ff3b4e;background:#0a0204;border:1px solid #ff3b4e66;padding:8px 14px;text-shadow:0 0 10px #ff3b4e}
+#kpMsg{font:12px var(--f-m);color:var(--dim)!important;min-height:2.4em}
+.kpGrid{display:grid;grid-template-columns:repeat(3,64px);gap:8px}.kpGrid button{height:52px;font-size:20px;padding:0}

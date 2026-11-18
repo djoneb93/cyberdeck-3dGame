@@ -104,6 +104,7 @@ function updateMinimap(dt){
   if(!inRoom&&!z)mmLast={x:player.position.x,z:player.position.z};const c=inRoom||!mmLast?(mmLast||{x:W/2,z:H/2}):mmLast; // dans une pièce : la carte reste là où tu es entré
   const px=x=>R+(x-c.x)*k*s,pz=zz=>R+(zz-c.z)*k*s;
   g.clearRect(0,0,cv.width,cv.height);g.save();g.beginPath();g.arc(R,R,R-1,0,7);g.clip();g.fillStyle='#07090e';g.fillRect(0,0,cv.width,cv.height);
+  if(z==='ile'){drawIsleMinimap(g,R);g.restore();g.strokeStyle='rgba(57,230,255,.6)';g.lineWidth=2;g.beginPath();g.arc(R,R,R-1,0,7);g.stroke();g.fillStyle='#cfe8ff';g.font='bold 10px monospace';g.textAlign='center';g.fillText('N',R,12);$('mmLabel').textContent='Néo-Récif';return} /* sur l’île : son plan */
   g.imageSmoothingEnabled=false;g.drawImage(mmBase,px(0),pz(0),mmBase.width*s,mmBase.height*s);
   if(typeof moto!=='undefined'&&moto){g.fillStyle='#c8ccd6';g.fillRect(px(moto.position.x)-3,pz(moto.position.z)-3,6,6)}
   if(typeof taxi!=='undefined'&&taxi){g.fillStyle='#ffe14d';g.fillRect(px(taxi.g.position.x)-3,pz(taxi.g.position.z)-3,6,6)}
@@ -131,6 +132,7 @@ function drawBigMap(){if(!bmOpen||!mmBase)return;const {cv,k,ox,oy}=bmFit(),g=cv
   g.textAlign='center';g.font='bold 12px Rajdhani, sans-serif';
   for(const id in PL){const P=PLACE[id];if(!P)continue;const p=PL[id];g.fillStyle='#000a';const t=P.n,tw=g.measureText(t).width+10;g.fillRect(X(p.x)-tw/2,Z(p.z)-8,tw,16);g.fillStyle=P.c;g.fillText(t,X(p.x),Z(p.z)+4)}
   g.fillStyle='#7dffb0';g.fillText('TA PLANQUE',X(HX+7),Z(HZ+6)+4);
+  g.fillStyle='#39e6ff';g.textAlign='left';g.fillText('◀ NÉO-RÉCIF · île au large (yacht de la Marina)',ox+6,Z(ISLE.z)-30);g.fillStyle='#7dffb0';g.fillText('MARINA ZÉRO',X(1),Z(MARINA.pz)+18);g.textAlign='center';
   [[METRO_E,'MÉTRO'],[METRO_W,'MÉTRO']].forEach(([m,t])=>{g.fillStyle='#39e6ff';g.beginPath();g.arc(X(m.x),Z(m.z),5,0,7);g.fill();g.fillText(t,X(m.x),Z(m.z)-9)});
   // pistes en cours (dans une pièce : à la porte du lieu)
   for(const id in S.q){const q=S.q[id];if(!q.active||q.b>=3)continue;let s=spotOf(id,q.b);const z=s.zone&&String(s.zone).slice(3);if(z&&PL[z])s=FP(z,1.2,0);else if(z==='metro')s=METRO_E;
