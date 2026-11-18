@@ -35,7 +35,7 @@
 <div id="prompt" class="panel" hidden></div>
 
 <div id="dlg" class="panel" hidden>
-  <div id="dlgName"></div>
+  <img id="dlgPic" src="assets/img/neura.png" alt="" hidden><div id="dlgName"></div>
   <div id="dlgText"></div>
   <div id="dlgChoices"></div>
   <div id="dlgNext">E / CLIC ▸</div>
@@ -51,12 +51,26 @@
 
 <div id="toasts"></div>
 <div id="mmWrap"><canvas id="minimap" width="170" height="170" hidden></canvas><div id="mmLabel"></div></div>
-<div id="phone" class="panel" hidden>
-  <div class="phTop"><span id="phTime">22:00</span><span>NEO-NET ▂▄▆</span></div>
-  <div class="phTitle">Téléphone</div>
-  <button type="button" id="phMap" class="phApp"><b>Mini-carte</b><i id="phMapState">masquée</i></button>
-  <div id="phMusic" class="phApp"><b>Baladeur</b><i id="phTrack">Néons sous la pluie</i><div class="phCtl"><button type="button" id="phPlay">▶</button><button type="button" id="phNext">⏭</button></div></div>
-  <button type="button" id="phClose" class="phClose">Ranger · F</button>
+<div id="phone" hidden>
+  <div class="phDev">
+    <i class="phBtn a"></i><i class="phBtn b"></i><i class="phBtn c"></i>
+    <div class="phScr">
+      <div class="phTop"><span id="phTime">22:00</span><span class="phNotch"></span><span class="phSig">NEO-NET <b>▂▄▆</b> ▮▮▮▯</span></div>
+      <section id="phHome">
+        <div class="phHero"><img src="assets/img/neura.png" alt="NEURA"><div><div class="phOS">NEURA OS · v4</div><div id="phHint">Bonne nuit, Zone Zéro.</div></div></div>
+        <div class="phGrid">
+          <button type="button" data-app="map"><i class="ic">◎</i>Carte</button>
+          <button type="button" data-app="music"><i class="ic">♫</i>Musique</button>
+          <button type="button" data-app="sound"><i class="ic">◖◗</i>Son</button>
+          <button type="button" data-app="contacts"><i class="ic">☍</i>Contacts</button>
+          <button type="button" data-app="neura"><i class="ic">◉</i>NEURA</button>
+          <button type="button" data-app="moto"><i class="ic">⏣</i>Moto</button>
+        </div>
+      </section>
+      <section id="phApp" hidden><div class="phHead"><button type="button" id="phBack" aria-label="Retour">◂</button><b id="phAppT"></b></div><div id="phBody"></div></section>
+      <button type="button" id="phClose" class="phHomeBar">Ranger · F</button>
+    </div>
+  </div>
 </div>
 <div id="fade"></div>
 

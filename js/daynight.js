@@ -86,4 +86,4 @@ addEventListener('keydown',e=>{if(!DEV_KEYS||e.code!=='KeyN'||dlgOpen||overlayOp
 // l'heure s'affiche sous la météo
 const _meteoHUD=updateMeteoHUD;
 updateMeteoHUD=function(){_meteoHUD();const el=$('meteo');if(!el||S.hour==null)return;const h=S.hour,hh=Math.floor(h),mm=Math.floor((h-hh)*60);
-  el.insertAdjacentHTML('beforeend','<span class="clock"><b>'+String(hh).padStart(2,'0')+':'+String(mm).padStart(2,'0')+'</b> '+phaseName(h)+' · N</span>')};
+  el.insertAdjacentHTML('beforeend','<span class="clock"><b>'+String(hh).padStart(2,'0')+':'+String(mm).padStart(2,'0')+'</b> '+phaseName(h)+(DEV_KEYS?' · N':'')+'</span>')};

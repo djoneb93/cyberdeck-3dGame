@@ -94,7 +94,7 @@ function showNode(k){
   node=cur[k];if(node.fx)applyFx(node.fx);if(node.vfx)vfx(node.vfx);
   const s=node.s;$('dlg').style.setProperty('--k',COLORS[s]);
   $('dlgName').textContent=s==='nar'?'':(s==='you'?'Toi':(S.met[s]?NAMES[s]:'???'));
-  $('dlgName').hidden=s==='nar';
+  $('dlgName').hidden=s==='nar';$('dlgPic').hidden=s!=='neura'; /* le visage de NEURA quand elle parle */
   $('dlgText').style.fontStyle=s==='nar'?'italic':'normal';
   full=node.t;shown=0;$('dlgText').textContent='';
   $('dlgChoices').innerHTML='';$('dlgNext').hidden=true;

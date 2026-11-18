@@ -395,7 +395,7 @@ function buildInteriors(){
 function updateInteriors(dt){
   checkDoors(dt);updatePits();
   if(rain&&typeof inPlanque==="function"&&inPlanque())rain.mesh.visible=false; // dans sa planque, on ne voit pas la pluie tomber
-  const z=zoneOf(),Z=z&&ZONES[z],R=Z&&Z.room?ROOMS[Z.room]:null;
+  const z=zoneOf(),Z=z&&ZONES[z],R=started&&Z&&Z.room?ROOMS[Z.room]:null; /* au menu principal, on voit toujours la ville */
   if(R!==inCur){inCur=R;isolateRoom(R);inLights.forEach((l,i)=>{if(!R){l.intensity=0;return}l.color.setHex(R.o.light[i]);l.intensity=i?1.1:1.6;l.position.set(R.cx+(i?R.w/4:-R.w/5),IY+R.h-.5,R.cz+(i?R.d/5:-R.d/5))})}
   if(!R)return;
   if(distT>8)distT=8; // la caméra reste près de la pièce

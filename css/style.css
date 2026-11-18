@@ -150,11 +150,58 @@ body.glitch #c{animation:glitch .42s steps(2) 1}
 #mmWrap{position:fixed;right:12px;bottom:70px;z-index:5;pointer-events:none}
 #minimap{display:block;width:170px;height:170px;border-radius:50%;background:#07090e;image-rendering:pixelated;box-shadow:0 0 18px rgba(57,230,255,.15)}
 #mmLabel{font:11px var(--f-m);color:#39e6ff;text-align:center;margin-top:3px;letter-spacing:.06em}
-#phone{position:fixed;left:50%;bottom:16px;transform:translateX(-50%);width:230px;z-index:20;padding:12px;border-radius:22px;border:2px solid #39e6ff55;background:#0b0e16ee;display:grid;gap:10px}
-#phone .phTop{display:flex;justify-content:space-between;font:11px var(--f-m);color:var(--dim)}
-#phone .phTitle{font:700 15px var(--f-d);letter-spacing:.08em;color:var(--fg)}
-#phone .phApp{display:grid;gap:3px;text-align:left;padding:10px;border-radius:12px;border:1px solid #ffffff22;background:#ffffff08;color:var(--fg)}
-#phone .phApp.on{border-color:#39e6ff;background:rgba(57,230,255,.1)}
-#phone .phApp i{font:12px var(--f-m);color:var(--dim);font-style:normal}
-#phone .phCtl{display:flex;gap:8px;margin-top:6px}#phone .phCtl button{flex:1}
-#phone .phClose{justify-self:center}
+/* le téléphone : NEURA OS, boîtier néon, écran à trame */
+#phone{position:fixed;left:50%;bottom:calc(14px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);z-index:20;animation:phIn .28s cubic-bezier(.2,.9,.3,1.2)}
+@keyframes phIn{from{transform:translate(-50%,40px);opacity:0}to{transform:translate(-50%,0);opacity:1}}
+#phone .phDev{position:relative;width:min(290px,calc(100vw - 32px));padding:9px;border-radius:30px;background:linear-gradient(150deg,#2a2e38,#0c0e14 45%,#1b1e27);
+  box-shadow:0 0 0 1px #39e6ff66,0 0 22px #39e6ff33,0 0 60px #ff4fa31f,0 18px 40px #000a,inset 0 1px 0 #ffffff22}
+#phone .phDev::before{content:"";position:absolute;inset:3px;border-radius:27px;border:1px solid #ff4fa344;pointer-events:none}
+#phone .phBtn{position:absolute;width:3px;border-radius:2px;background:linear-gradient(#39e6ff,#1a6c7a)}#phone .phBtn.a{right:-3px;top:90px;height:46px}#phone .phBtn.b{left:-3px;top:80px;height:30px}#phone .phBtn.c{left:-3px;top:118px;height:30px}
+#phone .phScr{position:relative;overflow:hidden;border-radius:22px;min-height:440px;max-height:min(560px,calc(100vh - 60px));display:flex;flex-direction:column;gap:10px;padding:8px 12px 10px;
+  background:radial-gradient(120% 70% at 50% 0%,#12263a 0%,#090d16 55%,#06080e 100%);color:var(--fg)}
+#phone .phScr::after{content:"";position:absolute;inset:0;pointer-events:none;background:repeating-linear-gradient(0deg,#ffffff06 0 1px,transparent 1px 3px),linear-gradient(90deg,#39e6ff0a 1px,transparent 1px) 0 0/22px 22px}
+#phone .phTop{display:flex;justify-content:space-between;align-items:center;font:600 11px var(--f-m);color:var(--fg)}
+#phone .phTop b{color:var(--cyan);font-weight:600}#phone .phSig{color:var(--dim);font-size:10px}
+#phone .phNotch{width:64px;height:16px;border-radius:0 0 10px 10px;background:#000;margin-top:-8px;box-shadow:inset 0 -1px 0 #39e6ff44}
+#phone section{display:flex;flex-direction:column;gap:12px;flex:1;min-height:0}
+#phone section[hidden]{display:none}
+#phone .phHero{display:flex;gap:12px;align-items:center;padding:10px;border-radius:16px;background:linear-gradient(135deg,#39e6ff14,#ff4fa310);border:1px solid #39e6ff33}
+#phone .phHero img{width:64px;height:64px;border-radius:50%;object-fit:cover;flex:none;box-shadow:0 0 18px #39e6ff66;animation:phPulse 3.2s ease-in-out infinite}
+@keyframes phPulse{50%{box-shadow:0 0 30px #39e6ffaa;filter:brightness(1.2)}}
+#phone .phOS{font:600 10px var(--f-m);letter-spacing:.14em;color:var(--cyan);text-transform:uppercase}
+#phone #phHint{font:500 12.5px/1.35 var(--f-b);color:var(--fg);margin-top:3px}
+#phone .phGrid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px 8px;padding:4px 2px}
+#phone .phGrid button{position:relative;display:grid;justify-items:center;gap:6px;background:none;border:0;padding:0;color:var(--fg);font:600 12px var(--f-d);letter-spacing:.04em;cursor:pointer}
+#phone .ic{position:relative;display:grid;place-items:center;width:54px;height:54px;border-radius:16px;font:700 22px/1 var(--f-m);font-style:normal;color:var(--cyan);
+  background:linear-gradient(160deg,#1a2436,#0b101a);border:1px solid #39e6ff44;box-shadow:inset 0 1px 0 #ffffff18,0 4px 10px #0008;transition:transform .12s,box-shadow .12s}
+#phone .phGrid button:hover .ic,#phone .phGrid button:focus-visible .ic{transform:translateY(-2px);box-shadow:0 0 16px #39e6ff66,inset 0 1px 0 #ffffff22}
+#phone .phGrid button:nth-child(2n) .ic{color:var(--pink);border-color:#ff4fa344}
+#phone .phGrid button.on .ic::after{content:"";position:absolute;top:-3px;right:-3px;width:9px;height:9px;border-radius:50%;background:#7dffb0;box-shadow:0 0 8px #7dffb0}
+#phone .phHead{display:flex;align-items:center;gap:10px;font:700 17px var(--f-d);letter-spacing:.08em;text-transform:uppercase}
+#phone #phBack{width:32px;height:32px;border-radius:10px;padding:0;font-size:16px}
+#phone #phBody{display:flex;flex-direction:column;gap:10px;overflow-y:auto;min-height:0;padding-right:2px}
+#phone .phRow{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:12px;border-radius:14px;background:#ffffff08;border:1px solid #ffffff18;font:500 13px var(--f-b)}
+#phone .phSw{width:46px;height:26px;border-radius:13px;padding:3px;background:#2a3140;border:1px solid #ffffff22;position:relative}
+#phone .phSw i{display:block;width:18px;height:18px;border-radius:50%;background:#8296a4;transition:transform .15s}
+#phone .phSw.on{background:#39e6ff33;border-color:var(--cyan)}#phone .phSw.on i{transform:translateX(20px);background:var(--cyan);box-shadow:0 0 10px var(--cyan)}
+#phone .phNote{font:12px/1.45 var(--f-b);color:var(--dim);margin:0}
+#phone .phNow{display:flex;align-items:center;gap:12px;padding:12px;border-radius:14px;background:linear-gradient(135deg,#ff4fa31a,#39e6ff12);border:1px solid #ff4fa344}
+#phone .phNow b{display:block;font:700 15px/1.2 var(--f-d)}#phone .phNow span{font:11px var(--f-m);color:var(--dim)}#phone .phNow>div:nth-child(2){flex:1}
+#phone .phEq{display:flex;align-items:flex-end;gap:2px;height:28px}#phone .phEq i{width:4px;height:6px;background:var(--pink);border-radius:1px}
+#phone .phEq.on i{animation:phEq .9s ease-in-out infinite}#phone .phEq.on i:nth-child(2){animation-delay:-.3s}#phone .phEq.on i:nth-child(3){animation-delay:-.6s}#phone .phEq.on i:nth-child(4){animation-delay:-.15s}#phone .phEq.on i:nth-child(5){animation-delay:-.45s}
+@keyframes phEq{50%{height:26px}}
+#phone .phBig{width:42px;height:42px;border-radius:50%;padding:0;font-size:15px;border-color:var(--pink);color:var(--pink)}
+#phone .phList{display:grid;gap:4px}#phone .phList button{display:flex;gap:10px;text-align:left;padding:9px 10px;border-radius:10px;background:#ffffff06;border:1px solid transparent;font:500 13px var(--f-b);color:var(--fg)}
+#phone .phList button i{font-style:normal;color:var(--dim);width:12px}#phone .phList button.on{border-color:#39e6ff66;background:#39e6ff14}#phone .phList button.on i{color:var(--cyan)}
+#phone .phSl{display:grid;gap:6px;padding:10px 12px;border-radius:12px;background:#ffffff08;border:1px solid #ffffff14;font:500 13px var(--f-b)}
+#phone .phSl span{display:flex;justify-content:space-between}#phone .phSl b{font:600 12px var(--f-m);color:var(--cyan)}#phone .phSl input{width:100%;accent-color:var(--cyan)}
+#phone .phCt{display:flex;align-items:center;gap:10px;text-align:left;padding:9px 10px;border-radius:12px;background:#ffffff08;border:1px solid #ffffff14}
+#phone .phCt>i{display:grid;place-items:center;width:34px;height:34px;border-radius:50%;flex:none;font:700 15px var(--f-d);font-style:normal;color:#06080e}
+#phone .phCt>span{flex:1;display:grid}#phone .phCt b{font:700 14px var(--f-d)}#phone .phCt em{font:11px var(--f-m);font-style:normal;color:var(--dim)}#phone .phCt .hearts{color:var(--pink)}#phone .phCt u{text-decoration:none;color:var(--dim)}
+#phone .phNeura{display:grid;justify-items:center;gap:2px;padding:6px 0}#phone .phNeura img{width:120px;height:120px;border-radius:50%;object-fit:cover;box-shadow:0 0 34px #39e6ff66;animation:phPulse 3.2s ease-in-out infinite}
+#phone .phNeura b{font:700 20px var(--f-d);letter-spacing:.2em;color:var(--cyan);margin-top:6px}#phone .phNeura span{font:11px var(--f-m);color:var(--dim)}
+#phone .phCard{padding:10px 12px;border-radius:12px;background:#ffffff08;border-left:3px solid var(--cyan);font:13px/1.45 var(--f-b)}#phone .phCard em{display:block;font:600 10px var(--f-m);font-style:normal;letter-spacing:.12em;text-transform:uppercase;color:var(--dim);margin-bottom:3px}
+#phone .phWide{padding:12px;border-radius:12px;border-color:var(--cyan);color:var(--cyan);font:700 14px var(--f-d);letter-spacing:.06em}
+#phone .phHomeBar{margin-top:auto;align-self:center;padding:5px 16px;border-radius:12px;font:600 11px var(--f-m);color:var(--dim);background:#ffffff0a;border:1px solid #ffffff1a}
+#dlgPic{position:absolute;right:14px;top:-34px;width:68px;height:68px;border-radius:50%;object-fit:cover;box-shadow:0 0 18px #39e6ff88;border:1px solid #39e6ff66}
+#dlgPic[hidden]{display:none}
