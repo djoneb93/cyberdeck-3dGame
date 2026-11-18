@@ -88,7 +88,7 @@ function buildPerimeter(){
     const t=R.it[kind];if(!t||!free(x,z,t==='tree'?.5:t==='bench'?.6:.25))continue;
     if(t==='tree')tree(x,z);else if(t==='lamp')lamp(x,z,R.ax,dx,dz);else if(t==='bench')bench(x,z,R.ax,dx,dz);else if(t==='bin')bin(x,z)}});
   // ---- garde-corps le long du quai et des pontons : on ne tombe pas à l'eau ----
-  const pierGap=z=>PIERS.some(p=>z>p-.3&&z<p+2.3);
+  const pierGap=z=>PIERS.some(p=>z>p-.3&&z<p+2.3)||(z+1.2>67.75&&z<69.75); /* (et l’entrée du ponton de la Marina Zéro) */
   for(let z=.3;z<75.8;z+=1.2){if(pierGap(z))continue;B('#3a4048',false,9.82,.5,z,.06,1,.06);B('#5a6470',false,9.82,1,z+.6,.05,.05,1.2);B('#5a6470',false,9.82,.55,z+.6,.03,.03,1.2)}
   PIERS.forEach(p=>{[p-.02,p+2.02].forEach(zz=>{for(let x=2.6;x<9.6;x+=1.2){B('#3a4048',false,x,.62,zz,.05,.9,.05);B('#5a6470',false,x+.6,1.06,zz,1.2,.05,.05)}});
     B('#5a6470',false,2.05,1.06,p+1,.05,.05,2.1);for(let zz=p;zz<=p+2;zz+=1)B('#3a4048',false,2.05,.62,zz,.05,.9,.05);B('#ffb547',true,2.05,1.1,p+1,.08,.04,.4)});
