@@ -48,7 +48,7 @@ function updatePlayer(dt){
     ud.ry=Math.atan2(mx,mz);ud.moving=moved>sp*.2;
   }else ud.moving=false;
   const J=player.userData;if(J.jv||J.jy){J.jv=(J.jv||0)-22*dt;J.jy=Math.max(0,(J.jy||0)+J.jv*dt);if(J.jy===0)J.jv=0}
-  player.position.y=zoneY()+(J.jy||0)+(riding?.58:0)+(boatRide?.5:0)+stairLift(); // en selle, un peu plus haut ; sur le pont du bateau
+  player.position.y=zoneY()+(J.jy||0)+(riding?.58:0)+(boatRide?1.22:0)+stairLift(); // en selle, un peu plus haut ; sur le pont du bateau
   if(!boatRide){S.px=player.position.x;S.pz=player.position.z;S.ry=ud.ry} /* en mer, la sauvegarde garde le ponton */
 }
 const lerp=(a,b,t)=>a+(b-a)*t;
