@@ -85,7 +85,7 @@ IN_DEF.metro={w:32,d:12,h:4.4,trim:'#39e6ff',light:[0xcfe8ff,0x39e6ff],fog:0x0a1
       const pud=new THREE.Mesh(new THREE.CircleGeometry(1.3,24),new THREE.MeshPhongMaterial({color:0x2a3a4a,transparent:true,opacity:.6,shininess:160,specular:0xbfe0ff,depthWrite:false}));pud.rotation.x=-Math.PI/2;pud.scale.set(1.4,1,1);pud.position.set(s*11.4,.015,2);fx.add(pud);
       const n=40,pos=new Float32Array(n*3);for(let i=0;i<n;i++){pos[i*3]=s*(12.6+Math.random()*3.4);pos[i*3+1]=Math.random()*4;pos[i*3+2]=.9+Math.random()*2.2}
       const gg=new THREE.BufferGeometry();gg.setAttribute('position',new THREE.BufferAttribute(pos,3));const dr=new THREE.Points(gg,new THREE.PointsMaterial({color:0xcfe6ff,size:.06,transparent:true,opacity:.7,depthWrite:false}));dr.userData.s=s;fx.add(dr)});
-    R.anims.push({k:0,every:true,f:t=>{const on=!!(wx&&wx.rain>.08);fx.visible=on;if(!on)return;wt.offset.y=(t*.9)%1;
+    R.anims.push({k:0,every:true,f:t=>{const on=!!(wx&&wx.rain>.08);fx.visible=on;if(!on)return;wt.offset.y=1-(t*.9)%1; /* l’eau descend les marches */
       fx.children.forEach(o=>{if(!o.isPoints)return;const p=o.geometry.attributes.position;for(let i=0;i<p.count;i++){const lx=Math.abs(p.getX(i)),floor=lx>12.4?(lx-12.4)/.4*.42:0;let y=p.getY(i)-.12;if(y<floor){y=floor+3+Math.random()*1.2}p.setY(i,y)}p.needsUpdate=true})}});
     // ---- annonces sonores : un carillon à l’arrivée et au départ de la rame ----
     let lastC=0;R.anims.push({k:0,every:true,f:t=>{const c=t%30;if(zoneOf()==='in_metro'){if(lastC<3&&c>=3)metroAnnounce('Rame de la ligne M en approche, station Zone Zéro. Veuillez vous éloigner de la bordure du quai.');

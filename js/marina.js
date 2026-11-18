@@ -72,10 +72,19 @@ function buildMarina(){
   // portique d'entrée, sur le quai
   [-1,1].forEach(s=>box(.25,3.4,.25,'#20262e',10.1,1.7,z0+s*1.15));box(.3,.5,2.6,'#20262e',10.1,3.5,z0);
   sign('MARINA ZÉRO · NEO-MOUETTE','#7dffb0',10.25,3.5,z0,Math.PI/2,true,true,.04);
-  // kiosque à billets : cabine vitrée, guichetière, écran des départs
-  box(1.6,2.4,1.7,'#20262e',11.8,1.2,65.8);box(1.5,1.1,.04,'#9fd8ff',11.8,1.6,66.66,null,true).material=new THREE.MeshBasicMaterial({color:0x9fd8ff,transparent:true,opacity:.25});
-  box(1.8,.12,1.9,'#7dffb0',11.8,2.46,65.8,null,true);sign('BILLETS','#7dffb0',11.8,2.75,66.7,0,false,true,.03);
-  const agent=makeChar({...randomSpec(Math.random),coat:'#1e5a8a'});agent.position.set(11.8,0,66.2);agent.userData.ry=0;
+  // billetterie : un guichet ouvert sur le ponton (mur du fond, côtés, comptoir, auvent), éclairé, avec la guichetière derrière
+  box(1.7,2.4,.1,'#20262e',11.8,1.2,64.95);[10.95,12.65].forEach(x=>box(.1,2.4,1.7,'#20262e',x,1.2,65.8)); // fond et côtés
+  box(1.7,1.0,.14,'#2a3140',11.8,.5,66.6);box(1.9,.06,.42,'#c8d0d8',11.8,1.03,66.62); // comptoir et sa tablette inox
+  box(2.0,.1,2.2,'#20262e',11.8,2.45,65.9);box(2.04,.05,.05,'#7dffb0',11.8,2.38,67.0,null,true); // auvent et liseré lumineux
+  box(1.5,.03,1.4,'#fff0d0',11.8,2.38,65.8,null,true); // plafonnier
+  const kg=new THREE.Sprite(new THREE.SpriteMaterial({map:glowTex,color:0xfff0d0,transparent:true,opacity:.45,blending:THREE.AdditiveBlending,depthWrite:false}));kg.scale.set(2.4,2.4,1);kg.position.set(11.8,1.7,65.9);scene.add(kg);
+  const dc=document.createElement('canvas');dc.width=128;dc.height=64;const dg=dc.getContext('2d');dg.fillStyle='#04121a';dg.fillRect(0,0,128,64);dg.fillStyle='#7dffb0';dg.font='bold 11px monospace';
+  ['NEO-MOUETTE','TOUR DE LA BAIE','DÉPART : À QUAI','TARIF : OFFERT'].forEach((l,i)=>dg.fillText(l,6,14+i*14));
+  const ds=new THREE.Mesh(new THREE.PlaneGeometry(.9,.45),new THREE.MeshBasicMaterial({map:new THREE.CanvasTexture(dc)}));ds.position.set(11.8,1.75,65.02);scene.add(ds); // écran des départs, au fond
+  box(.3,.2,.25,'#15171c',12.3,1.15,66.55);box(.2,.12,.02,'#39e6ff',12.3,1.2,66.69,null,true); // terminal de paiement
+  [-.4,.1].forEach((dx,i)=>box(.22,.02,.3,'#f0ead8',11.8+dx,1.07,66.5+i*.05)); // billets posés sur le comptoir
+  sign('BILLETS','#7dffb0',11.8,2.75,67.0,0,false,true,.03);
+  const agent=makeChar({...randomSpec(Math.random),coat:'#1e5a8a',hs:'cap'});agent.position.set(11.8,0,65.85);agent.userData.ry=0; // la guichetière, face au ponton
   [[11,65],[12,65],[11,66],[12,66]].forEach(([x,z])=>solid[I(x,z)]=1);
   [64.6,66.7,70.6].forEach(z=>{const b=new THREE.Mesh(new THREE.CylinderGeometry(.16,.2,.45,10),mat('#2a2e36'));b.position.set(9.9,.22,z);scene.add(b);FURN.push([9.9,z,.2])}); // bollards
   // passagers qui attendent sur le ponton (ils montent avec toi)
