@@ -46,7 +46,7 @@ function buildStation(){
     box(2.1,1,.36,'#4a3526',X,.5,ZF-.1);box(2.2,.06,.5,'#6a4a32',X,1.03,ZF-.06);box(2.1,.03,.03,'#ffb547',X,.98,ZF+.1,null,true); // comptoir
     // menu lumineux au fond, étagère de bols, marmite et vapeur
     const mc=document.createElement('canvas');mc.width=128;mc.height=48;const mg=mc.getContext('2d');mg.fillStyle='#160806';mg.fillRect(0,0,128,48);mg.font='bold 10px monospace';
-    [['RAMEN NOIR','4¢'],['GYOZA','3¢'],['ONDES COLA','2¢']].forEach(([a,b],i)=>{mg.fillStyle='#ffb547';mg.fillText(a,6,14+i*13);mg.fillStyle='#7dffb0';mg.fillText(b,104,14+i*13)});
+    [['RAMEN NOIR','8 ED'],['GYOZA','5 ED'],['ONDES COLA','3 ED']].forEach(([a,b],i)=>{mg.fillStyle='#ffb547';mg.fillText(a,6,14+i*13);mg.fillStyle='#7dffb0';mg.fillText(b,92,14+i*13)});
     const menu=new THREE.Mesh(new THREE.PlaneGeometry(1.4,.55),new THREE.MeshBasicMaterial({map:new THREE.CanvasTexture(mc)}));menu.position.set(X+.2,1.75,Z0+.11);scene.add(menu);
     box(.9,.04,.25,'#4a3526',X-.55,1.35,Z0+.25);for(let i=0;i<4;i++)box(.14,.08,.14,'#e8e4d8',X-.9+i*.22,1.41,Z0+.25);
     box(.5,.08,.4,'#2a2e36',X+.5,1.06,Z0+.6);const pot=new THREE.Mesh(new THREE.CylinderGeometry(.18,.16,.28,14),mat('#8a929c'));pot.position.set(X+.5,1.24,Z0+.6);scene.add(pot);box(.3,.03,.3,'#ff6a2a',X+.5,1.1,Z0+.6,null,true);

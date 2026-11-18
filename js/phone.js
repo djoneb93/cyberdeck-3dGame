@@ -8,7 +8,7 @@ function togglePhone(force){phoneOpen=force!=null?force:!phoneOpen;$('phone').hi
 addEventListener('keydown',e=>{if(e.code!=='KeyF'||!started||dlgOpen||cine||!$('pause').hidden||!$('intro').hidden||!$('settings').hidden)return;if(overlayOpen&&!phoneOpen)return;e.preventDefault();togglePhone()});
 addEventListener('keydown',e=>{if(!phoneOpen)return;if(e.code==='Escape'||e.code==='Backspace'){e.stopImmediatePropagation();e.preventDefault();if(phApp)phOpen(null);else togglePhone(false)}},true);
 const TRACKS={calm:'Néons sous la pluie',club:'Nuit au club Ondes',lofi:'Pluie sur Midi (lo-fi)',drive:'Autoroute néon',bar:'Cocktail au Néon Noir',arcade:'Pixel Rush (arcade)',bazar:'Souk de minuit (Bazar)'},TRACK_ORDER=Object.keys(TRACKS);
-const PH_APPS={msgs:'Messages',map:'Carte',music:'Musique',sound:'Son',contacts:'Contacts',journal:'Journal',neura:'NEURA',photo:'Photo',moto:'Moto · garage'};
+const PH_APPS={help:'Aide',msgs:'Messages',map:'Carte',music:'Musique',sound:'Son',contacts:'Contacts',journal:'Journal',neura:'NEURA',photo:'Photo',moto:'Moto · garage'};
 const NEURA_TIPS=['Entre dans un lieu en marchant simplement dans sa porte.','À moto, tu vas deux fois plus vite. E pour monter, E pour descendre.',
   'Le taxi volant t’emmène où tu veux dans la Zone Zéro.','Le métro relie l’ancien commissariat à l’arrière de la tour des Toits.','Le club Ondes n’ouvre que la nuit, de 20 h à 5 h.',
   'Du toit de la tour des Toits, la vue sur la ville est imprenable.','Le stand Nouilles Zéro, à la gare, sert le meilleur ramen noir du quartier.','Si tu es coincé, le bouton « Débloquer » te dégage.'];
@@ -36,6 +36,8 @@ function renderPhone(){
       rows+='<div class="phJr"><b style="color:'+COLORS[id]+'">'+phEsc(NAMES[id])+'</b><em>'+friendLabel(S.friend[id]||0)+'</em><ul>'+(li||'<li>Pas encore commencé.</li>')+'</ul></div>'});
     const mem=[...(S.frags||[]).map(f=>FRAG_NAMES[f]),...(S.mems||[]).map(k=>MEMS[k]?'Souvenir · '+NAMES[k]:null).filter(Boolean)];
     h='<div class="phCard"><em>Souvenirs retrouvés</em>'+(mem.length?mem.map(phEsc).join('<br>'):'Aucun pour l’instant.')+'</div>'+(rows||'<p class="phNote">Ton journal se remplit à mesure que tu rencontres des gens.</p>');}
+  else if(phApp==='help'){h='<button type="button" class="phWide" data-act="unstuck">Me débloquer</button><p class="phNote">Si ton personnage est coincé dans un décor, ce bouton le replace sur un endroit libre, juste à côté.</p>'+
+    '<div class="phCard"><em>Tes touches</em>'+KEY_ACTIONS.map(([a,l])=>'<b>'+keyName(keyOf(a))+'</b> · '+l).join('<br>')+'<br><b>Flèches</b> · marcher</div><p class="phNote">Tu peux changer les touches dans Réglages → Commandes.</p>'}
   else if(phApp==='photo'){let ph=[];try{ph=JSON.parse(localStorage.getItem('neobxl-photos')||'[]')}catch(_){}
     h='<button type="button" class="phWide" data-act="camera">Ouvrir l’appareil photo</button><p class="phNote">L’interface disparaît : tourne la caméra, zoome, puis Espace pour déclencher. La photo s’enregistre ici et sur ton ordinateur.</p>'+
       (ph.length?'<div class="phGal">'+ph.map((u,i)=>'<button type="button" data-photo="'+i+'"><img src="'+u+'" alt="Photo '+(i+1)+'"></button>').join('')+'</div>':'');}
@@ -62,11 +64,14 @@ function renderPhone(){
   B.innerHTML=h;
 }
 $('phone').addEventListener('click',e=>{const t=e.target.closest('button');if(!t)return;
+  if(t.dataset.app==='sac'){togglePhone(false);toggleInv(true);return}
+  if(t.dataset.app==='settings'){togglePhone(false);openSettings();overlayOpen=true;renderKeySettings();return}
   if(t.dataset.app)return phOpen(t.dataset.app);
   const a=t.dataset.act;
   if(a==='map'){S.minimap=!S.minimap;save();$('minimap').hidden=!S.minimap}
   else if(a==='play'){S.walkman=!S.walkman;save();if(typeof audioInit==='function')audioInit()}
   else if(a==='recall'){recallMoto()}
+  else if(a==='unstuck'){togglePhone(false);unstuck();return}
   else if(a==='bigmap'){togglePhone(false);openBigMap();return}
   else if(a==='wpclear'){S.wp=null;save()}
   else if(a==='camera'){togglePhone(false);startPhoto();return}
@@ -102,6 +107,11 @@ function updateMinimap(dt){
   g.imageSmoothingEnabled=false;g.drawImage(mmBase,px(0),pz(0),mmBase.width*s,mmBase.height*s);
   if(typeof moto!=='undefined'&&moto){g.fillStyle='#c8ccd6';g.fillRect(px(moto.position.x)-3,pz(moto.position.z)-3,6,6)}
   if(typeof taxi!=='undefined'&&taxi){g.fillStyle='#ffe14d';g.fillRect(px(taxi.g.position.x)-3,pz(taxi.g.position.z)-3,6,6)}
+  // les gens à aller voir (petit bonhomme à leur couleur) et les pistes en cours (losange) ; s'ils sont dans un lieu, on les montre à sa porte
+  const atDoor=(z,x,zz)=>{if(!z)return {x,z:zz};if(z==='roof')return {x:ROOF.x,z:ROOF.z};if(z==='in_metro')return METRO_E;const id=String(z).slice(3);return PL[id]?FP(id,1.2,0):{x,z:zz}};
+  const edge=(x,z)=>{let wx=px(x)-R,wz=pz(z)-R;const L=Math.hypot(wx,wz),M=R-9;if(L>M){wx*=M/L;wz*=M/L}return [R+wx,R+wz]};
+  npcs.forEach(n=>{if(!questTarget(n.id))return;const p=atDoor(n.zone,n.mesh.position.x,n.mesh.position.z),[qx,qz]=edge(p.x,p.z);g.fillStyle=COLORS[n.id];g.beginPath();g.arc(qx,qz-4,2.6,0,7);g.fill();g.fillRect(qx-2.5,qz-1,5,6);g.strokeStyle='#000';g.lineWidth=1;g.strokeRect(qx-2.5,qz-1,5,6)});
+  for(const id in S.q){const q=S.q[id];if(!q.active||q.b>=3)continue;const s=spotOf(id,q.b),p=atDoor(s.zone||(s.roof?'roof':null),s.x,s.z),[qx,qz]=edge(p.x,p.z);g.save();g.translate(qx,qz);g.rotate(Math.PI/4);g.fillStyle=COLORS[id];g.fillRect(-3.5,-3.5,7,7);g.strokeStyle='#fff';g.strokeRect(-3.5,-3.5,7,7);g.restore()}
   if(S.wp){let wx=px(S.wp.x)-R,wz=pz(S.wp.z)-R;const L=Math.hypot(wx,wz),M=R-10;if(L>M){wx*=M/L;wz*=M/L}g.fillStyle='#ffb547';g.beginPath();g.arc(R+wx,R+wz,L>M?4:6,0,7);g.fill()} // le repère (au bord si loin)
   const va=Math.atan2(-Math.cos(yaw),-Math.sin(yaw)),a=player.userData.ry||0; // le regard de la caméra, puis toi
   g.translate(px(c.x),pz(c.z));g.fillStyle='rgba(57,230,255,.2)';g.beginPath();g.moveTo(0,0);g.arc(0,0,30,va-.5,va+.5);g.fill();

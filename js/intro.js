@@ -71,5 +71,5 @@ addEventListener('keydown',e=>{
 // ---- paramètres : deux onglets, Commandes et Son (ouverts depuis le menu principal ou la pause) ----
 function openSettings(tab){$('settings').hidden=false;setTab(tab||'keys')}
 function setTab(t){$('setKeys').hidden=t!=='keys';$('soundSet').hidden=t!=='sound';$('tabKeys').classList.toggle('on',t==='keys');$('tabSound').classList.toggle('on',t==='sound')}
-$('tabKeys').onclick=()=>setTab('keys');$('tabSound').onclick=()=>setTab('sound');$('setClose').onclick=()=>{$('settings').hidden=true};
+$('tabKeys').onclick=()=>setTab('keys');$('tabSound').onclick=()=>setTab('sound');$('setClose').onclick=()=>{$('settings').hidden=true;if(started&&$('pause').hidden&&$('intro').hidden)overlayOpen=false};
 $('pSettings').onclick=()=>openSettings();

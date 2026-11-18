@@ -68,6 +68,9 @@
           <button type="button" data-app="photo"><i class="ic">◘</i>Photo</button>
           <button type="button" data-app="moto"><i class="ic">⏣</i>Moto</button>
           <button type="button" data-app="sound"><i class="ic">◖◗</i>Son</button>
+          <button type="button" data-app="sac"><i class="ic">▣</i>Sac</button>
+          <button type="button" data-app="help"><i class="ic">?</i>Aide</button>
+          <button type="button" data-app="settings"><i class="ic">⚙</i>Réglages</button>
         </div>
       </section>
       <section id="phApp" hidden><div class="phHead"><button type="button" id="phBack" aria-label="Retour">◂</button><b id="phAppT"></b></div><div id="phBody"></div></section>
@@ -76,6 +79,8 @@
   </div>
 </div>
 <div id="fade"></div>
+<div id="shop" class="ov" hidden><div class="card panel cut" id="shopBox"></div></div>
+<div id="inv" class="ov" hidden><div class="card panel cut"><div class="lbl">Ton sac · touche I</div><div id="invBody"></div><div class="acts"><button type="button" class="pri" id="invClose">Fermer · Échap</button></div></div></div>
 <div id="bigMap" class="ov" hidden><div class="bmBox panel cut"><div class="bmHead"><b>Carte · Zone Zéro</b><span id="bmTip">Touche un endroit pour y poser un repère.</span><button type="button" id="bmClear">Effacer le repère</button><button type="button" class="pri" id="bmClose">Fermer · Échap</button></div><canvas id="bmCv" width="920" height="760"></canvas></div></div>
 <div id="photoUI" hidden><div class="pfFrame"><i></i><i></i><i></i><i></i></div><div class="pfTop"><span class="rec">● NEURA CAM</span><span id="pfInfo"></span></div><div class="pfBar"><button type="button" id="pfShot" class="pri">Déclencher · Espace</button><button type="button" id="pfExit">Quitter · Échap</button></div><div id="pfFlash"></div></div>
 
@@ -110,7 +115,8 @@
   <div class="card panel cut">
     <div class="lbl">Paramètres</div>
     <div class="tabs"><button type="button" id="tabKeys" class="on">Commandes</button><button type="button" id="tabSound">Son</button></div>
-    <div id="setKeys" class="keys"><b>ZQSD</b> ou flèches : marcher · <b>clic / tap</b> au sol : se déplacer<br><b>glisser</b> : tourner et incliner la caméra · <b>A / R</b> : pivoter · <b>molette</b> ou <b>+ −</b> : zoom<br><b>E</b> : parler, examiner, s’asseoir, monter sur la moto, continuer un dialogue · <b>F</b> : téléphone (mini-carte, baladeur) · <b>1 2 3</b> : choisir une réponse<br><b>F</b> : téléphone · <b>P</b> : taille des pixels · <b>Échap</b> : pause<br>On entre dans les lieux en marchant dans leur porte.</div>
+    <div id="setKeys" class="keys"><b>Flèches</b> : marcher (toujours actives) · <b>clic / tap</b> au sol : se déplacer · <b>glisser</b> : tourner et incliner la caméra · <b>molette</b> ou <b>+ −</b> : zoom<br><b>1 2 3</b> : choisir une réponse · <b>Échap</b> : pause, fermer · On entre dans les lieux en marchant dans leur porte.<br>
+      Le <b>téléphone</b> regroupe tout le reste : contacts, carte, musique, journal, moto, sac, et « Débloquer » si tu es coincé.<div class="lbl" style="margin-top:10px">Tes touches · clique pour changer</div><div id="keyMap"></div></div>
     <div class="sound" id="soundSet" hidden>
       <label>Volume général <input type="range" id="volMaster" min="0" max="1" step="0.05"></label>
       <label>Musique <input type="range" id="volMusic" min="0" max="1" step="0.05"></label>
@@ -152,6 +158,7 @@
 <script src="https://cdn.jsdelivr.net/npm/inkjs@2.2.3/dist/ink.min.js"></script>
 <script src="js/data/app-data.js"></script>
 <script src="js/core.js"></script>
+<script src="js/keys.js"></script>
 <script src="js/map.js"></script>
 <script src="js/render.js"></script>
 <script src="js/world.js"></script>
@@ -178,6 +185,8 @@
 <script src="js/haunts.js"></script>
 <script src="js/marina.js"></script>
 <script src="js/harbor.js"></script>
+<script src="js/economy.js"></script>
+<script src="js/vignettes.js"></script>
 <script src="js/game.js"></script>
 <script src="js/intro.js"></script>
 </body>
