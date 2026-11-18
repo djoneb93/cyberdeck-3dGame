@@ -5,7 +5,7 @@
 
 // ---- K-SITE 0 : le bunker de Kurogane, sous la colline ----
 IN_NAMES.ksite='K-SITE 0 · bunker de Kurogane';
-const KS_DOOR=()=>({x:ISLE.x-12.5+2.7,z:ISLE.z+4.2,ry:Math.PI/2});
+const KS_DOOR=()=>({x:ISLE.bunker.x+2.1,z:ISLE.bunker.z,ry:Math.PI/2}); // on ressort en haut de l'escalier enterré
 IN_DEF.ksite={w:14,d:10,h:3.6,trim:'#ff2a3a',light:[0xff3040,0x39e6ff],fog:0x0a0608,entries:[],exitZone:'ile',get exit(){return KS_DOOR()},
   floor:canvasMat(32,32,(g,W,H)=>{g.fillStyle='#2a2c30';g.fillRect(0,0,W,H);g.fillStyle='#232528';g.fillRect(0,0,W,1);g.fillRect(0,0,1,H);for(let i=0;i<20;i++){g.fillStyle='rgba(0,0,0,.25)';g.fillRect(Math.random()*W,Math.random()*H,2,1)}},7,5),
   wall:null,
@@ -70,14 +70,12 @@ function developIsland(){const X=ISLE.x,Z=ISLE.z;
   [[X+4,Z-1,GROUND,'Parler à la pêcheuse',['« Néo-Récif, c’est une ville libre. On a construit les passerelles nous-mêmes, avec la ferraille des barges. »','« La nuit, on voit les néons de la Zone Zéro, là-bas. D’ici, on dirait presque que c’est joli. »']],
    [X-4,Z+1.5,GROUND,'Parler au gamin',['« T’es venu avec le yacht ? Moi je l’ai jamais pris. Je monte juste sur les passerelles et je compte les bateaux. »','« Le bunker ? Ma mère dit qu’il faut pas y aller. Moi je dis qu’il y a un trésor dedans. »']],
    [X+15,Z+2,GROUND,'Parler au gardien du ponton',['« Le Neo-Mouette fait la navette quand tu veux. Le capitaine ne pose pas de questions. »','« Les barges sans feux passent au large toutes les nuits. Elles vont vers le quai 9 de ta ville. »']],
-   [X-4.5,Z-7,LA,'Parler au guetteur',['« D’ici, je vois tout le large. Si une vedette de Kurogane approche, je sonne la cloche. »','« Tu vois la colline ? Il y a eu de la lumière dans le bunker, la semaine dernière. Personne n’en parle. »']],
+   [X-11.5,Z-11.4,LA,'Parler au guetteur',['« D’ici, je vois tout le large. Si une vedette de Kurogane approche, je sonne la cloche. »','« Tu vois la colline ? Il y a eu de la lumière dans le bunker, la semaine dernière. Personne n’en parle. »']],
    [X+8,Z+.5,LA,'Parler à la peintre',['« Je peins les passerelles en néon. Rose pour l’aube, cyan pour la nuit. »','« Tu veux un conseil ? Monte sur la passerelle haute au coucher du soleil. »']],
    [X+7.4,Z-1,LB,'Parler à l’ancien',['« J’ai travaillé pour Kurogane, avant. Au K-SITE. On effaçait des gens. Je n’en suis pas fier. »','« Le sujet 0447… il s’est enfui une nuit de tempête. On ne l’a jamais retrouvé. » Il te regarde un peu trop longtemps.']]].forEach(([x,z,lv,lab,talk],i)=>{
     OBJECTS.push({id:'o_isle_npc'+i,x,z:z+.8,zone:'ile',get r(){return atLvl(lv,1.2)},label:lab,dyn:lines(talk)})});
-  // les habitants des passerelles qui n'étaient pas encore là
-  [[X-4.5,Z-7,LA,Math.PI],[X+8,Z+.5,LA,0]].forEach(([x,z,y,ry])=>{const m=makeChar(randomSpec(Math.random));m.position.set(x,y,z);m.userData.ry=ry;ZONES.ile.blocks.push([x,z,.25,.25])});
   // la porte du bunker : le clavier, puis l'entrée
-  const door=OBJECTS.find(o=>o.id==='o_isle_bunker');if(door){delete door.dyn;Object.defineProperty(door,'label',{configurable:true,get(){return S.flags.ksite?'Entrer dans le K-SITE 0':'Taper le code de la porte blindée'}});
+  const door=OBJECTS.find(o=>o.id==='o_isle_bunker');if(door){delete door.dyn;Object.defineProperty(door,'label',{configurable:true,get(){return S.flags.ksite?'Entrer dans le K-SITE 0':'Descendre · taper le code de la porte'}});
     door.act=()=>{if(S.flags.ksite)enterRoom('ksite',{spawn:[0,3.6],ry:Math.PI});else openKeypad()}}
   // ---- l'île se voit de loin : feux au sommet des tours, halo violet, hologramme géant ----
   [[X-9,Z-7,24,0xff4fa3],[X+8,Z-7,32,0x39e6ff],[X-9,Z+7,20,0xb98cff],[X+8,Z+7,28,0xffb547]].forEach(([x,z,h,c])=>{const s=new THREE.Sprite(new THREE.SpriteMaterial({map:glowTex,color:c,transparent:true,opacity:.9,blending:THREE.AdditiveBlending,depthWrite:false,fog:false}));
