@@ -63,7 +63,7 @@ $('pMenu').onclick=()=>{save();togglePause(false);showMenu()};
 $('pQuit').onclick=()=>{togglePause(false);quitGame()};
 $('qBack').onclick=()=>{$('quit').hidden=true;showMenu()};
 addEventListener('keydown',e=>{
-  if(e.code==='Escape'&&!$('settings').hidden){$('settings').hidden=true;return} // Échap ferme d'abord les paramètres
+  if(e.code==='Escape'&&!$('settings').hidden){$('settings').hidden=true;if(started&&$('pause').hidden&&$('intro').hidden)overlayOpen=false;return} // Échap ferme d'abord les paramètres
   if(cine&&cine.mode==='wake'&&['Space','Enter','Escape'].includes(e.code)){e.preventDefault();skipWake();return}
   if(e.code!=='Escape'||!started||dlgOpen||!$('fiche').hidden||!$('ending').hidden||taxiRide||climb)return;
   e.preventDefault();togglePause($('pause').hidden);
