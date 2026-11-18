@@ -117,7 +117,7 @@ function updateMinimap(dt){
   g.translate(px(c.x),pz(c.z));g.fillStyle='rgba(57,230,255,.2)';g.beginPath();g.moveTo(0,0);g.arc(0,0,30,va-.5,va+.5);g.fill();
   g.rotate(-a+Math.PI);g.fillStyle='#39e6ff';g.beginPath();g.moveTo(0,-6);g.lineTo(5,5);g.lineTo(-5,5);g.closePath();g.fill();g.restore();
   g.strokeStyle='rgba(57,230,255,.6)';g.lineWidth=2;g.beginPath();g.arc(R,R,R-1,0,7);g.stroke();g.fillStyle='#cfe8ff';g.font='bold 10px monospace';g.textAlign='center';g.fillText('N',R,12);
-  $('mmLabel').textContent=inRoom?(IN_NAMES[z.slice(3)]||'Intérieur'):'Zone Zéro';
+  $('mmLabel').textContent=inRoom?(IN_NAMES[z.slice(3)]||'Intérieur'):z==='ile'?'Néo-Récif':'Zone Zéro';
 }
 
 // ---- carte plein écran : toute la Zone Zéro, les lieux, les pistes en cours ; un clic pose un repère ----

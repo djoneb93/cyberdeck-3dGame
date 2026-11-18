@@ -4,7 +4,7 @@
 /* ===================== DÉPLACEMENT ===================== */
 const R=.27;
 function blocked(x,z){
-  const zo=zoneOf();if(zo){const Z=ZONES[zo];if(Math.abs(x-Z.x)>Z.hw||Math.abs(z-Z.z)>Z.hd)return true;if(npcs.some(n=>n.zone===zo&&(n.mesh.position.x-x)**2+(n.mesh.position.z-z)**2<.36))return true;return Z.blocks.some(([cx,cz,hx,hz])=>Math.abs(x-cx)<hx+R&&Math.abs(z-cz)<hz+R)}
+  const zo=zoneOf();if(zo){const Z=ZONES[zo];if(Z.walk)return !Z.walk(x,z); /* l’île : sol, passerelles, toits */if(Math.abs(x-Z.x)>Z.hw||Math.abs(z-Z.z)>Z.hd)return true;if(npcs.some(n=>n.zone===zo&&(n.mesh.position.x-x)**2+(n.mesh.position.z-z)**2<.36))return true;return Z.blocks.some(([cx,cz,hx,hz])=>Math.abs(x-cx)<hx+R&&Math.abs(z-cz)<hz+R)}
   if(motoBlocks(x,z))return true; // la moto garée
   if(isSolid(x-R,z-R)||isSolid(x+R,z-R)||isSolid(x-R,z+R)||isSolid(x+R,z+R))return true;
   for(const n of npcs){const dx=n.mesh.position.x-x,dz=n.mesh.position.z-z;if(dx*dx+dz*dz<.36)return true}
@@ -123,7 +123,7 @@ function applyFx(fx){
   if(fx.friend)for(const k in fx.friend){const v=fx.friend[k];S.met[k]=true;S.friend[k]=(S.friend[k]||0)+v;toast((v>0?'♥ +':'♥ ')+v+' Amitié · '+NAMES[k],'fr')}
   if(fx.rep){S.rep=Math.max(0,S.rep+fx.rep);toast((fx.rep>0?'+':'')+fx.rep+' Réputation','rp')}
   if(fx.frag&&!S.frags.includes(fx.frag)){S.frags.push(fx.frag);toast('NEURA · souvenir retrouvé · '+FRAG_NAMES[fx.frag],'mem');drawBoard()}
-  if(fx.flag)S.flags[fx.flag]=true;
+  if(fx.flag)S.flags[fx.flag]=true;if(fx.call)fx.call();
   if(fx.quest){const o=S.q[fx.quest]||{};S.q[fx.quest]={active:true,b:0,sc:0,won:!!o.won,ep:o.ep||0,wins:o.wins||0};toast('Nouvelle histoire · '+title(fx.quest),'mem')}
   if(fx.beat){const [id,sc]=fx.beat,q=S.q[id];if(q&&q.active){q.sc+=sc;q.b++;toast(title(id)+' · piste '+q.b+' / 3','')}}
   if(fx.resolve){const id=fx.resolve,q=S.q[id];if(q&&q.active){q.active=false;const ep=q.ep||0;
@@ -229,7 +229,7 @@ function frame(){
   npcs.forEach(n=>{const d=distTo(n);let want=n.baseRy;if(d<3.2||talking===n)want=Math.atan2(player.position.x-n.mesh.position.x,player.position.z-n.mesh.position.z);
     n.mesh.userData.ry=lerpAngle(n.mesh.userData.ry,want,Math.min(1,dt*5));});
   updateCity(dt);updateStation(dt);updateLife(dt);updateTaxi(dt);updateTraffic(dt);updateStreets(dt);updateLandmarks(dt);updateWeather(dt);updateDoors(dt);updateFlyers(dt);updateDayNight(dt);updateShops();
-  beacons.forEach(b=>b.visible=Math.sin(tAcc*3)>-.2);updateMarkers();updateHaunts(dt);updateWaypoint();updateHarbor(dt);updateEconomy(dt);updateVignettes(dt);if(bmOpen&&Math.random()<.1)drawBigMap();
+  beacons.forEach(b=>b.visible=Math.sin(tAcc*3)>-.2);updateMarkers();updateHaunts(dt);updateWaypoint();updateHarbor(dt);updateEconomy(dt);updateVignettes(dt);updateIsland(dt);if(bmOpen&&Math.random()<.1)drawBigMap();
   if(cat)cat.userData.body.scale.y=1+Math.sin(tAcc*2.2)*.06;
   if(holo){holo.position.y=holo.userData.baseY+Math.sin(tAcc*1.3)*.08;const hm=holo.userData.plane.material;hm.opacity=.45+Math.sin(tAcc*9)*.04+(Math.random()<.02?-.25:0);holo.userData.moving=false;}
   updateCamera(dt);

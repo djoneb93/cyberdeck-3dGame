@@ -15,10 +15,22 @@ function buildHarbor(){
   const pick=[[2,62,30],[0,80,34],[5,70,28],[4,90,38]]; /* (pas le dernier ponton : son chemin passerait par le yacht) */
   pick.forEach(([i,T,far],k)=>{const b=moored[i];if(!b)return;const g=b.g,home={x:g.position.x,z:g.position.z,ry:g.rotation.y};
     const side=k%2?1:-1;harbor.push({b,g,home,ride:false,T,curve:seaPath(home.x,home.z,side,far),wait:12+k*20,t:0,out:false})});
-  OBJECTS.push({id:'o_boat',x:.5,z:MARINA.pz,r:1.6,get label(){return navDocked()?'Monter à bord du Neo-Mouette · tour en mer':'Le yacht est en mer'},
-    act:()=>{if(navDocked())boardBoat();else openDlg({n1:{s:'nar',t:'Le Neo-Mouette est parti faire le tour de la baie. Il revient bientôt à ce ponton.'}})}});
+  OBJECTS.push({id:'o_boat',x:.5,z:MARINA.pz,r:1.6,get label(){return navDocked()?'Monter à bord du Neo-Mouette':'Le yacht est en mer'},
+    act:()=>{if(navDocked())openDlg({n1:{s:'nar',t:'Le capitaine t’accueille sur la passerelle : « Où va-t-on ? »',ch:[
+        {t:'Le tour de la baie · 15 ED',fx:{call:()=>setTimeout(boardBoat,50)}},{t:'Cap sur l’île de Néo-Récif · 20 ED',fx:{call:()=>setTimeout(boardIsland,50)}},{t:'Pas maintenant.'}]}});
+      else openDlg({n1:{s:'nar',t:'Le Neo-Mouette est en mer. Il revient bientôt à ce ponton.'}})}});
+  // l'île (js/island.js) : si la partie a été sauvegardée là-bas, le yacht y attend
+  buildIsland();const y=harbor[0];if(S.roof==='ile'){y.at='ile';yacht.position.set(ISLE.dock.x,0,ISLE.dock.z);yacht.rotation.y=ISLE.dock.ry}
 }
-const navDocked=()=>{const h=harbor.find(h=>h.ride);return h&&!h.out&&!boatRide};
+const navDocked=()=>{const h=harbor.find(h=>h.ride);return h&&!h.out&&!boatRide&&h.at!=='ile'};
+// trajets vers l'île et retour (le yacht part de la Marina cap au nord, accoste l'île cap à l'ouest)
+const pathOf=P=>new THREE.CatmullRomCurve3(P.map(([a,b])=>new THREE.Vector3(a,0,b)),false,'catmullrom',.4);
+function boardIsland(){const h=harbor[0];if(!h||h.out||h.at==='ile'||boatRide)return;if(!pay(20)){openDlg({n1:{s:'nar',t:'« L’île, c’est 20 eddies l’aller-retour. » Tu n’as pas assez.'}});return}toast('−20 ED · Néo-Récif aller-retour','');
+  h.curve=pathOf([[MARINA.x,MARINA.z],[-4,60],[-14,52],[-40,46],[-70,40],[-92,35],[ISLE.dock.x,ISLE.dock.z]]);h.T=60;h.trip='ile';h.end=ISLE.dock;h.reverse=false;startRide(h,'Le Neo-Mouette met le cap sur le large. Au loin, une île brille dans la brume.')}
+function boardBack(){const h=harbor[0];if(!h||h.out||h.at!=='ile')return;
+  fadeThen(()=>{S.roof=false;h.curve=pathOf([[ISLE.dock.x,ISLE.dock.z],[-95,34.6],[-86,31],[-60,32],[-30,50],[-14,74],[-4,76],[MARINA.x,MARINA.z]]);h.T=60;h.trip='back';h.end=null;h.reverse=true;h.at=null;
+    boatRide={h,back:{x:2.2,z:MARINA.pz}};h.out=true;h.t=0;overlayOpen=true;target=null;distT=Math.max(distT,9);toast('Retour vers la Zone Zéro.','')})}
+function startRide(h,msg){leaveMoto();if(seated)standUp();fadeThen(()=>{boatRide={h,back:{x:player.position.x,z:player.position.z}};h.out=true;h.t=0;overlayOpen=true;target=null;pendingTalk=null;distT=Math.max(distT,9);toast(msg,'')})}
 function boardBoat(){const h=harbor.find(h=>h.ride);if(!h||h.out)return;leaveMoto();if(seated)standUp();
   fadeThen(()=>{boatRide={h,back:{x:player.position.x,z:player.position.z}};h.out=true;h.t=0;overlayOpen=true;target=null;pendingTalk=null;distT=Math.max(distT,9);
     toast('Tu montes à bord du Neo-Mouette avec les autres passagers. Les amarres sont larguées.','');if(typeof sfx==='function')try{sfx('door')}catch(_){}})}
@@ -60,9 +72,12 @@ function updateHarbor(dt){if(!buildHarbor.done){buildHarbor.done=true;buildHarbo
     const u=Math.min(1,h.t/h.T),e=u<.5?2*u*u:1-2*(1-u)*(1-u), /* démarre et accoste en douceur */s=Math.min(.999,e);
     const p=h.curve.getPointAt(s),tg=h.curve.getTangentAt(s);g.position.x=p.x;g.position.z=p.z;
     let want=Math.atan2(-tg.z,tg.x);if(s<.06&&!h.yacht)want+=Math.PI; // les bateaux de pêche sortent du quai en marche arrière (le yacht part droit devant)
-    if(u>=1){want=h.home.ry}
+    if(s<.06&&h.reverse)want+=Math.PI; // (le yacht quitte l'île en marche arrière)
+    if(u>=1){want=(h.end||h.home).ry}
     g.rotation.y=lerpAngle(g.rotation.y,want,Math.min(1,dt*1.6));
-    if(u>=1){h.out=false;h.t=0;g.position.set(h.home.x,g.position.y,h.home.z);h.wait=h.ride?1e9:35+Math.random()*40;if(h.ride&&boatRide)endBoatRide()}});
+    if(u>=1){h.out=false;h.t=0;const E=h.end||h.home;g.position.set(E.x,g.position.y,E.z);g.rotation.y=E.ry;h.wait=h.ride?1e9:35+Math.random()*40;
+      if(h.yacht){const trip=h.trip;h.trip=null;h.end=null;h.reverse=false;h.T=80;h.curve=yachtPath();if(trip==='ile'){h.at='ile';if(boatRide)arriveIsland()}else if(boatRide)endBoatRide()}
+      else if(h.ride&&boatRide)endBoatRide()}});
   if(boatRide){overlayOpen=true;const g=boatRide.h.g,a=g.rotation.y; // à l'arrière du yacht, face au sillage (pas de commandes pendant la traversée)
     onDeck(-6.6,0,player,1.22);player.userData.ry=a+Math.PI/2;player.userData.moving=false;player.userData.sit=false}
 }

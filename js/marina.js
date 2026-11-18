@@ -158,6 +158,6 @@ let waves=null;
 function buildWaves(){const W0=-70,W1=9.55,Z0=-25,Z1=105,geo=new THREE.PlaneGeometry(W1-W0,Z1-Z0,44,66);geo.rotateX(-Math.PI/2);geo.translate((W0+W1)/2,0,(Z0+Z1)/2);
   const m=new THREE.MeshPhongMaterial({color:0x1a4a68,transparent:true,opacity:.5,shininess:140,specular:0xbfe6ff,flatShading:true,depthWrite:false});
   waves=new THREE.Mesh(geo,m);waves.renderOrder=1;scene.add(waves);waves.userData.base=Float32Array.from(geo.attributes.position.array)}
-function updateWaves(){if(!waves)return;updateWaves.k=(updateWaves.k||0)+1;if(updateWaves.k%2)return; /* une image sur deux suffit */waves.visible=!zoneOf()||zoneOf()==='quai';if(!waves.visible)return;const p=waves.geometry.attributes.position,b=waves.userData.base,t=tAcc;
+function updateWaves(){if(!waves)return;updateWaves.k=(updateWaves.k||0)+1;if(updateWaves.k%2)return; /* une image sur deux suffit */waves.visible=!zoneOf()||zoneOf()==='quai'||zoneOf()==='ile';if(!waves.visible)return;const p=waves.geometry.attributes.position,b=waves.userData.base,t=tAcc;
   for(let i=0;i<p.count;i++){const x=b[i*3],z=b[i*3+2],calm=Math.min(1,Math.max(.25,(9.6-x)/14)); // plus calme le long du quai
     p.array[i*3+1]=.04+calm*(.045*Math.sin(x*.33+t*1.3)+.03*Math.sin(z*.47-t*1.05)+.018*Math.sin((x+z)*.9+t*2.1))}p.needsUpdate=true}
