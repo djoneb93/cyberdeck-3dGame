@@ -205,3 +205,33 @@ body.glitch #c{animation:glitch .42s steps(2) 1}
 #phone .phHomeBar{margin-top:auto;align-self:center;padding:5px 16px;border-radius:12px;font:600 11px var(--f-m);color:var(--dim);background:#ffffff0a;border:1px solid #ffffff1a}
 #dlgPic{position:absolute;right:14px;top:-34px;width:68px;height:68px;border-radius:50%;object-fit:cover;box-shadow:0 0 18px #39e6ff88;border:1px solid #39e6ff66}
 #dlgPic[hidden]{display:none}
+/* téléphone : messages, journal, galerie, garage */
+#phone .ic s{position:absolute;top:-5px;right:-5px;min-width:18px;height:18px;border-radius:9px;background:var(--pink);color:#fff;font:700 10px/18px var(--f-m);text-decoration:none;text-align:center;box-shadow:0 0 10px var(--pink)}
+#phone .phMsg{display:flex;gap:10px;padding:9px 10px;border-radius:12px;background:#ffffff08;border:1px solid #ffffff12}
+#phone .phMsg.new{border-color:#ff4fa366;background:#ff4fa30e}
+#phone .phMsg>i{flex:none;display:grid;place-items:center;width:32px;height:32px;border-radius:50%;overflow:hidden;font:700 14px var(--f-d);font-style:normal;color:#06080e}
+#phone .phMsg>i img{width:100%;height:100%;object-fit:cover}
+#phone .phMsg b{display:flex;justify-content:space-between;font:700 13px var(--f-d);letter-spacing:.03em}#phone .phMsg u{text-decoration:none;font:10px var(--f-m);color:var(--dim)}
+#phone .phMsg p{margin:2px 0 0;font:12.5px/1.4 var(--f-b);color:var(--fg)}
+#phone .phJr{padding:10px 12px;border-radius:12px;background:#ffffff08;border:1px solid #ffffff12}
+#phone .phJr b{font:700 14px var(--f-d)}#phone .phJr em{float:right;font:10px var(--f-m);font-style:normal;color:var(--dim)}
+#phone .phJr ul{margin:6px 0 0;padding:0;list-style:none;display:grid;gap:3px;font:12px/1.35 var(--f-b);color:var(--dim)}#phone .phJr li.ok{color:#7dffb0}#phone .phJr li.cur{color:var(--fg)}
+#phone .phGal{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}#phone .phGal button{padding:0;border-radius:8px;overflow:hidden;border:1px solid #ffffff22;aspect-ratio:16/10}#phone .phGal img{width:100%;height:100%;object-fit:cover;display:block}
+#phone .phSw2{display:flex;flex-wrap:wrap;gap:8px;margin:4px 0 10px}#phone .phSw2 button{width:26px;height:26px;border-radius:50%;padding:0;background:var(--c);border:2px solid #0008;box-shadow:0 0 8px var(--c)}
+#phone .phSw2 button.on{outline:2px solid #fff;outline-offset:2px}
+#phone .phGrid{gap:10px 8px}#phone .ic{width:50px;height:50px}
+/* carte plein écran */
+#bigMap{z-index:30}
+#bigMap .bmBox{width:min(980px,100%);padding:14px;display:grid;gap:10px;border-top:3px solid var(--cyan)}
+#bigMap .bmHead{display:flex;flex-wrap:wrap;gap:10px;align-items:center}#bigMap .bmHead b{font:700 20px var(--f-d);letter-spacing:.06em;text-transform:uppercase}
+#bigMap .bmHead span{flex:1;font:12px var(--f-m);color:var(--dim)}
+#bmCv{width:100%;height:auto;max-height:calc(100vh - 140px);object-fit:contain;image-rendering:pixelated;cursor:crosshair;background:#05070c;border:1px solid var(--line)}
+/* appareil photo */
+#photoUI{position:fixed;inset:0;z-index:25;pointer-events:none}
+#photoUI .pfFrame i{position:absolute;width:40px;height:40px;border:2px solid #ffffffcc}
+#photoUI .pfFrame i:nth-child(1){left:24px;top:24px;border-right:0;border-bottom:0}#photoUI .pfFrame i:nth-child(2){right:24px;top:24px;border-left:0;border-bottom:0}
+#photoUI .pfFrame i:nth-child(3){left:24px;bottom:24px;border-right:0;border-top:0}#photoUI .pfFrame i:nth-child(4){right:24px;bottom:24px;border-left:0;border-top:0}
+#photoUI .pfTop{position:absolute;top:30px;left:0;right:0;display:flex;justify-content:center;gap:18px;font:600 12px var(--f-m);color:#fff;text-shadow:0 1px 3px #000}
+#photoUI .rec{color:#ff4f6a;animation:pfRec 1.2s steps(1) infinite}@keyframes pfRec{50%{opacity:.3}}
+#photoUI .pfBar{position:absolute;bottom:34px;left:0;right:0;display:flex;justify-content:center;gap:10px;pointer-events:auto}
+#pfFlash{position:absolute;inset:0;background:#fff;opacity:0;pointer-events:none}#pfFlash.go{animation:pfFl .45s ease-out}@keyframes pfFl{0%{opacity:.85}100%{opacity:0}}

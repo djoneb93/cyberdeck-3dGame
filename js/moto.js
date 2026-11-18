@@ -33,7 +33,7 @@ function motoModel(){
     carbon=new THREE.MeshPhongMaterial({color:0x15161c,shininess:60,specular:0x3a3d48}),
     metal=new THREE.MeshPhongMaterial({color:0x6f7682,shininess:120,specular:0xffffff}),
     rubber=new THREE.MeshPhongMaterial({color:0x0c0d10,shininess:12}),
-    cyan=mat('#39e6ff',true),pink=mat('#ff3b8d',true),redL=mat('#ff1f3d',true),white=mat('#eaf6ff',true);
+    cyan=new THREE.MeshBasicMaterial({color:0x39e6ff}),pink=new THREE.MeshBasicMaterial({color:0xff3b8d}), /* à elle seule : le garage les recolore */redL=mat('#ff1f3d',true),white=mat('#eaf6ff',true);
   const add=(geo,m,x,y,z)=>{const o=new THREE.Mesh(geo,m);o.position.set(x||0,y||0,z||0);g.add(o);return o};
   const bar=(a,b,t,m)=>{const d=V(b[0]-a[0],b[1]-a[1],b[2]-a[2]),o=add(new THREE.BoxGeometry(d.length(),t,t),m,(a[0]+b[0])/2,(a[1]+b[1])/2,(a[2]+b[2])/2);
     o.quaternion.setFromUnitVectors(V(1,0,0),d.normalize());return o};
@@ -84,10 +84,18 @@ function motoModel(){
   // ── sustentation : halo cyan sous la caisse, disques sous chaque roue ──
   const gl=add(new THREE.PlaneGeometry(2.6,1.1),new THREE.MeshBasicMaterial({map:glowTex,color:0x39e6ff,transparent:true,opacity:.35,blending:THREE.AdditiveBlending,depthWrite:false}),0,-.26,0);gl.rotation.x=-Math.PI/2;
   [.78,-.78].forEach(x=>{const d=add(new THREE.PlaneGeometry(.8,.5),new THREE.MeshBasicMaterial({map:glowTex,color:0xff3b8d,transparent:true,opacity:.35,blending:THREE.AdditiveBlending,depthWrite:false}),x,-.25,0);d.rotation.x=-Math.PI/2});
-  g.userData.wheels=wheels;g.userData.flames=flames;g.userData.flame=flames[0];g.userData.core=cg;return g}
+  g.userData.wheels=wheels;g.userData.flames=flames;g.userData.flame=flames[0];g.userData.core=cg;
+  const A=[],Bm=[];g.traverse(o=>{const m=o.material;if(!m||!m.color)return;const hx=m.color.getHex();if(hx===0x39e6ff&&!A.includes(m))A.push(m);else if(hx===0xff3b8d&&!Bm.includes(m))Bm.push(m)});
+  g.userData.neonA=A;g.userData.neonB=Bm;g.userData.paint=[paint,red];return g}
+// garage : couleur des néons (principal, secondaire) et teinte de la carrosserie, gardées dans la sauvegarde
+const MOTO_NEON=[["Cyan","#39e6ff"],["Magenta","#ff3b8d"],["Vert acide","#7dffb0"],["Ambre","#ffb547"],["Violet","#b98cff"],["Blanc","#eaf6ff"],["Rouge","#ff2a3a"]],
+  MOTO_BODY=[["Gris-noir","#ffffff"],["Graphite bleuté","#9fb8ff"],["Rouge sang","#ff6a6a"],["Or","#ffd27a"],["Vert militaire","#a8c890"],["Blanc perle","#f0f4ff"]];
+function applyMotoStyle(){if(!moto)return;const st=S.motoStyle||{};const a=new THREE.Color(st.a||"#39e6ff"),b=new THREE.Color(st.b||"#ff3b8d"),bo=new THREE.Color(st.body||"#ffffff");
+  moto.userData.neonA.forEach(m=>m.color.copy(a));moto.userData.neonB.forEach(m=>m.color.copy(b));
+  const blanc=(st.body||"#ffffff")==="#f0f4ff";moto.userData.paint.forEach(m=>{m.color.copy(bo);if(blanc){m.color.multiplyScalar(2.4)}})}
 
 function buildMoto(){
-  moto=motoModel();parkMoto();
+  moto=motoModel();parkMoto();applyMotoStyle();
   // la place de stationnement : marquage au sol, et un « P » peint
   const P=MOTO_PARK;[[0,.62,2.6,.05],[0,-.62,2.6,.05],[1.3,0,.05,1.29],[-1.3,0,.05,1.29]].forEach(([dx,dz,w,d])=>box(w,.01,d,'#e8e8e4',P.x+dx,.014,P.z+dz));
   OBJECTS.push({id:'o_moto',get x(){return moto.position.x},get z(){return moto.position.z},r:1.5,get label(){return riding?'Descendre de la moto':'Monter sur la moto'},act:()=>riding?dismount():mount()});

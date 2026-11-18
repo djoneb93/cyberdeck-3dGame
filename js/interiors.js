@@ -416,5 +416,6 @@ function isolateRoom(R){
   isoHidden.forEach(o=>o.visible=true);isoHidden=[];
   camera.far=R?Math.hypot(R.w,R.d)+9:220;camera.updateProjectionMatrix(); /* distance d’affichage : la pièce, pas plus loin */
   if(!R)return;
-  scene.children.forEach(o=>{if(!o.visible||o.isLight||o===player||R.own.has(o))return;o.visible=false;isoHidden.push(o)});
+  const inside=o=>Math.abs(o.position.y-IY)<12&&Math.abs(o.position.x-R.cx)<R.w/2+1&&Math.abs(o.position.z-R.cz)<R.d/2+1; /* personnages et marqueurs venus dans la pièce */
+  scene.children.forEach(o=>{if(!o.visible||o.isLight||o===player||R.own.has(o)||inside(o))return;o.visible=false;isoHidden.push(o)});
 }

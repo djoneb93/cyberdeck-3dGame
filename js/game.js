@@ -4,7 +4,7 @@
 /* ===================== DÉPLACEMENT ===================== */
 const R=.27;
 function blocked(x,z){
-  const zo=zoneOf();if(zo){const Z=ZONES[zo];if(Math.abs(x-Z.x)>Z.hw||Math.abs(z-Z.z)>Z.hd)return true;return Z.blocks.some(([cx,cz,hx,hz])=>Math.abs(x-cx)<hx+R&&Math.abs(z-cz)<hz+R)}
+  const zo=zoneOf();if(zo){const Z=ZONES[zo];if(Math.abs(x-Z.x)>Z.hw||Math.abs(z-Z.z)>Z.hd)return true;if(npcs.some(n=>n.zone===zo&&(n.mesh.position.x-x)**2+(n.mesh.position.z-z)**2<.36))return true;return Z.blocks.some(([cx,cz,hx,hz])=>Math.abs(x-cx)<hx+R&&Math.abs(z-cz)<hz+R)}
   if(motoBlocks(x,z))return true; // la moto garée
   if(isSolid(x-R,z-R)||isSolid(x+R,z-R)||isSolid(x-R,z+R)||isSolid(x+R,z+R))return true;
   for(const n of npcs){const dx=n.mesh.position.x-x,dz=n.mesh.position.z-z;if(dx*dx+dz*dz<.36)return true}
@@ -58,8 +58,8 @@ function lerpAngle(a,b,t){let d=((b-a+Math.PI)%(Math.PI*2)+Math.PI*2)%(Math.PI*2
 function nearest(){
   if(taxiRide)return {kind:'taxi',label:'Descendre du taxi'};
   let best=null,bd=1e9;
-  npcs.forEach(n=>{const d=zoneOf()?99:distTo(n);if(d<1.9&&d<bd){bd=d;best={kind:'npc',n,label:'Parler à '+(S.met[n.id]?NAMES[n.id]:'???')}}});
-  for(const id in S.q){const q=S.q[id];if(!q.active||q.b>=3)continue;const s=SPOTS[id][q.b];if(itemZone(s)!==zoneOf())continue;const d=distTo(s);if(d<1.5&&d<bd+.6){bd=d-.6;best={kind:'spot',id,label:'Enquêter · '+spotLab(id,q.b)}}}
+  npcs.forEach(n=>{const d=npcZone(n)!==zoneOf()?99:distTo(n);if(d<1.9&&d<bd){bd=d;best={kind:'npc',n,label:'Parler à '+(S.met[n.id]?NAMES[n.id]:'???')}}});
+  for(const id in S.q){const q=S.q[id];if(!q.active||q.b>=3)continue;const s=spotOf(id,q.b);if(itemZone(s)!==zoneOf())continue;const d=distTo(s);if(d<1.5&&d<bd+.6){bd=d-.6;best={kind:'spot',id,label:'Enquêter · '+spotLab(id,q.b)}}}
   OBJECTS.forEach(o=>{if(itemZone(o)!==zoneOf())return;const d=distTo(o);if(d<o.r&&d<bd-.4){bd=d;best={kind:'obj',o,label:o.label}}});
   return best;
 }
@@ -195,7 +195,7 @@ const v3=new THREE.Vector3();
 function updateLabels(){
   npcs.forEach(n=>{
     const d=distTo(n);v3.set(n.mesh.position.x,2.05*(SPECS[n.id].scale||1),n.mesh.position.z).project(camera);
-    if(d>16||v3.z>1){n.label.hidden=true;return}
+    if(d>16||v3.z>1||npcZone(n)!==zoneOf()){n.label.hidden=true;return}
     n.label.hidden=false;n.label.style.left=((v3.x+1)/2*innerWidth)+'px';n.label.style.top=((1-v3.y)/2*innerHeight)+'px';
     const html=(questTarget(n.id)?'<em>◆</em>':'')+(S.met[n.id]?NAMES[n.id]:'???');if(n.label._h!==html){n.label.innerHTML=html;n.label._h=html}
   });
@@ -229,7 +229,7 @@ function frame(){
   npcs.forEach(n=>{const d=distTo(n);let want=n.baseRy;if(d<3.2||talking===n)want=Math.atan2(player.position.x-n.mesh.position.x,player.position.z-n.mesh.position.z);
     n.mesh.userData.ry=lerpAngle(n.mesh.userData.ry,want,Math.min(1,dt*5));});
   updateCity(dt);updateStation(dt);updateLife(dt);updateTaxi(dt);updateTraffic(dt);updateStreets(dt);updateLandmarks(dt);updateWeather(dt);updateDoors(dt);updateFlyers(dt);updateDayNight(dt);updateShops();
-  beacons.forEach(b=>b.visible=Math.sin(tAcc*3)>-.2);updateMarkers();
+  beacons.forEach(b=>b.visible=Math.sin(tAcc*3)>-.2);updateMarkers();updateHaunts(dt);updateWaypoint();if(bmOpen&&Math.random()<.1)drawBigMap();
   if(cat)cat.userData.body.scale.y=1+Math.sin(tAcc*2.2)*.06;
   if(holo){holo.position.y=holo.userData.baseY+Math.sin(tAcc*1.3)*.08;const hm=holo.userData.plane.material;hm.opacity=.45+Math.sin(tAcc*9)*.04+(Math.random()<.02?-.25:0);holo.userData.moving=false;}
   updateCamera(dt);

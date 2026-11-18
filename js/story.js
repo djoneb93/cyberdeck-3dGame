@@ -115,7 +115,7 @@ const epOf=id=>(S.q[id]&&S.q[id].ep)||0;
 const epCount=()=>window.inkjs?3:1;
 const epLeft=id=>epOf(id)<epCount();
 const title=(id,ep)=>EP_TITLES[id][ep==null?epOf(id):ep];
-const spotLab=(id,b)=>epOf(id)===0?SPOTS[id][b].lab:AREA[id][b];
+const spotLab=(id,b)=>spotOf(id,b).lab; /* lieux des pistes : js/haunts.js */
 function wins(){return Object.values(S.q).filter(q=>q.won).length}
 // --- moteur Ink ---
 let INK=null;
@@ -173,7 +173,7 @@ function makeMarkers(){
 }
 function updateMarkers(){
   Q_ORDER.forEach(id=>{const m=markers[id];if(!m)return;const q=S.q[id];
-    if(started&&q&&q.active&&q.b<3){const s=SPOTS[id][q.b];m.position.set(s.x,itemZone(s)?ZONES[itemZone(s)].y:0,s.z);m.visible=true;
+    if(started&&q&&q.active&&q.b<3){const s=spotOf(id,q.b);m.position.set(s.x,itemZone(s)?ZONES[itemZone(s)].y:0,s.z);m.visible=true;
       m.userData.gem.rotation.y=tAcc*2;m.userData.gem.position.y=1.7+Math.sin(tAcc*2.5)*.12;const k=1+Math.sin(tAcc*3)*.12;m.userData.ring.scale.set(k,k,k)}
     else m.visible=false});
 }

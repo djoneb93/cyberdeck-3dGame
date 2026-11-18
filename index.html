@@ -59,12 +59,15 @@
       <section id="phHome">
         <div class="phHero"><img src="assets/img/neura.png" alt="NEURA"><div><div class="phOS">NEURA OS · v4</div><div id="phHint">Bonne nuit, Zone Zéro.</div></div></div>
         <div class="phGrid">
+          <button type="button" data-app="msgs"><i class="ic">✉<s id="phBadge" hidden></s></i>Messages</button>
           <button type="button" data-app="map"><i class="ic">◎</i>Carte</button>
           <button type="button" data-app="music"><i class="ic">♫</i>Musique</button>
-          <button type="button" data-app="sound"><i class="ic">◖◗</i>Son</button>
           <button type="button" data-app="contacts"><i class="ic">☍</i>Contacts</button>
+          <button type="button" data-app="journal"><i class="ic">▤</i>Journal</button>
           <button type="button" data-app="neura"><i class="ic">◉</i>NEURA</button>
+          <button type="button" data-app="photo"><i class="ic">◘</i>Photo</button>
           <button type="button" data-app="moto"><i class="ic">⏣</i>Moto</button>
+          <button type="button" data-app="sound"><i class="ic">◖◗</i>Son</button>
         </div>
       </section>
       <section id="phApp" hidden><div class="phHead"><button type="button" id="phBack" aria-label="Retour">◂</button><b id="phAppT"></b></div><div id="phBody"></div></section>
@@ -73,6 +76,8 @@
   </div>
 </div>
 <div id="fade"></div>
+<div id="bigMap" class="ov" hidden><div class="bmBox panel cut"><div class="bmHead"><b>Carte · Zone Zéro</b><span id="bmTip">Touche un endroit pour y poser un repère.</span><button type="button" id="bmClear">Effacer le repère</button><button type="button" class="pri" id="bmClose">Fermer · Échap</button></div><canvas id="bmCv" width="920" height="760"></canvas></div></div>
+<div id="photoUI" hidden><div class="pfFrame"><i></i><i></i><i></i><i></i></div><div class="pfTop"><span class="rec">● NEURA CAM</span><span id="pfInfo"></span></div><div class="pfBar"><button type="button" id="pfShot" class="pri">Déclencher · Espace</button><button type="button" id="pfExit">Quitter · Échap</button></div><div id="pfFlash"></div></div>
 
 <div id="fiche" class="ov" hidden>
   <div class="card panel cut fiche">
@@ -164,11 +169,13 @@
 <script src="js/audio.js"></script>
 <script src="js/doors.js"></script>
 <script src="js/interiors.js"></script>
+<script src="js/port.js"></script>
 <script src="js/metro.js"></script>
 <script src="js/moto.js"></script>
 <script src="js/phone.js"></script>
 <script src="js/story.js"></script>
 <script src="js/entities.js"></script>
+<script src="js/haunts.js"></script>
 <script src="js/game.js"></script>
 <script src="js/intro.js"></script>
 </body>

@@ -180,7 +180,7 @@ const ray=new THREE.Raycaster(),ndc=new THREE.Vector2();
 function clickAt(cx,cy){
   ndc.set(cx/innerWidth*2-1,-(cy/innerHeight)*2+1);ray.setFromCamera(ndc,camera);
   const hits=ray.intersectObjects(npcs.map(n=>n.mesh.userData.hit));
-  if(hits.length&&!zoneOf()){const n=npcs.find(n=>n.mesh.userData.hit===hits[0].object);
+  const hn=hits.length&&npcs.find(n=>n.mesh.userData.hit===hits[0].object);if(hn&&npcZone(hn)===zoneOf()){const n=hn;
     if(distTo(n)<1.9){talkTo(n);return}
     target={x:n.mesh.position.x,z:n.mesh.position.z};pendingTalk=n;return}
   const d=ray.ray.direction,o=ray.ray.origin;if(d.y>=0)return;const t=(zoneY()-o.y)/d.y;
