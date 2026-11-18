@@ -237,6 +237,7 @@ function frame(){
   updateRain(dt);updateInteriors(dt);updateMoto(dt);updateAudio(dt);updateMinimap(dt);
   if(started)updateLabels();
   saveT+=dt;if(started&&saveT>4){saveT=0;save()}
+  updateLOD();
   if(composer)composer.render();else renderer.render(scene,camera);
 }
 
