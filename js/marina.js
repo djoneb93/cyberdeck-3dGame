@@ -76,8 +76,8 @@ function buildMarina(){
   box(1.7,2.4,.1,'#20262e',11.8,1.2,64.95);[10.95,12.65].forEach(x=>box(.1,2.4,1.7,'#20262e',x,1.2,65.8)); // fond et côtés
   box(1.7,1.0,.14,'#2a3140',11.8,.5,66.6);box(1.9,.06,.42,'#c8d0d8',11.8,1.03,66.62); // comptoir et sa tablette inox
   box(2.0,.1,2.2,'#20262e',11.8,2.45,65.9);box(2.04,.05,.05,'#7dffb0',11.8,2.38,67.0,null,true); // auvent et liseré lumineux
-  box(1.5,.03,1.4,'#fff0d0',11.8,2.38,65.8,null,true); // plafonnier
-  const kg=new THREE.Sprite(new THREE.SpriteMaterial({map:glowTex,color:0xfff0d0,transparent:true,opacity:.45,blending:THREE.AdditiveBlending,depthWrite:false}));kg.scale.set(2.4,2.4,1);kg.position.set(11.8,1.7,65.9);scene.add(kg);
+  box(1.2,.03,.5,'#a89a80',11.8,2.38,65.3,null,true); // plafonnier (lumière douce, au fond)
+  const kg=new THREE.Sprite(new THREE.SpriteMaterial({map:glowTex,color:0xfff0d0,transparent:true,opacity:.12,blending:THREE.AdditiveBlending,depthWrite:false}));kg.scale.set(1.6,1.0,1);kg.position.set(11.8,2.3,65.3);scene.add(kg);
   const dc=document.createElement('canvas');dc.width=128;dc.height=64;const dg=dc.getContext('2d');dg.fillStyle='#04121a';dg.fillRect(0,0,128,64);dg.fillStyle='#7dffb0';dg.font='bold 11px monospace';
   ['NEO-MOUETTE','TOUR DE LA BAIE','DÉPART : À QUAI','TARIF : OFFERT'].forEach((l,i)=>dg.fillText(l,6,14+i*14));
   const ds=new THREE.Mesh(new THREE.PlaneGeometry(.9,.45),new THREE.MeshBasicMaterial({map:new THREE.CanvasTexture(dc)}));ds.position.set(11.8,1.75,65.02);scene.add(ds); // écran des départs, au fond
