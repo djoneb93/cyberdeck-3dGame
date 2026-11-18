@@ -7,7 +7,7 @@ let phoneOpen=false,phApp=null;
 function togglePhone(force){phoneOpen=force!=null?force:!phoneOpen;$('phone').hidden=!phoneOpen;overlayOpen=phoneOpen;if(phoneOpen){target=null;pendingTalk=null;phOpen(null)}}
 addEventListener('keydown',e=>{if(e.code!=='KeyF'||!started||dlgOpen||cine||!$('pause').hidden||!$('intro').hidden||!$('settings').hidden)return;if(overlayOpen&&!phoneOpen)return;e.preventDefault();togglePhone()});
 addEventListener('keydown',e=>{if(!phoneOpen)return;if(e.code==='Escape'||e.code==='Backspace'){e.stopImmediatePropagation();e.preventDefault();if(phApp)phOpen(null);else togglePhone(false)}},true);
-const TRACKS={calm:'Néons sous la pluie',club:'Nuit au club Ondes',lofi:'Pluie sur Midi (lo-fi)',drive:'Autoroute néon',bar:'Cocktail au Néon Noir',arcade:'Pixel Rush (arcade)'},TRACK_ORDER=Object.keys(TRACKS);
+const TRACKS={calm:'Néons sous la pluie',club:'Nuit au club Ondes',lofi:'Pluie sur Midi (lo-fi)',drive:'Autoroute néon',bar:'Cocktail au Néon Noir',arcade:'Pixel Rush (arcade)',bazar:'Souk de minuit (Bazar)'},TRACK_ORDER=Object.keys(TRACKS);
 const PH_APPS={msgs:'Messages',map:'Carte',music:'Musique',sound:'Son',contacts:'Contacts',journal:'Journal',neura:'NEURA',photo:'Photo',moto:'Moto · garage'};
 const NEURA_TIPS=['Entre dans un lieu en marchant simplement dans sa porte.','À moto, tu vas deux fois plus vite. E pour monter, E pour descendre.',
   'Le taxi volant t’emmène où tu veux dans la Zone Zéro.','Le métro relie l’ancien commissariat à l’arrière de la tour des Toits.','Le club Ondes n’ouvre que la nuit, de 20 h à 5 h.',

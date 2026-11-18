@@ -73,7 +73,7 @@ function updateAudio(dt){
   if(!AUD.ctx)return;audT+=dt;if(audT<.1)return;const D=audT;audT=0;
   // la musique : menu et pause (morceau calme) · radio de la planque · club Ondes (morceau dansant) ; sinon, pas de musique
   const z=zoneOf(),club=z==='in_club',radio=!!S.radio&&inPlanque();
-  let mv=0;if(inMenu()||cine){mv=1;MUS.want="calm"}else if(club){mv=1;MUS.want="club"}else if(z==='in_bar'){mv=.75;MUS.want="bar"}else if(z==='in_arcade'){mv=.55;MUS.want="arcade"}else if(S.walkman){mv=.8;MUS.want=S.wmTrack||"calm"}else if(radio){mv=.6;MUS.want="calm"} // le baladeur du téléphone passe avant la radio
+  let mv=0;if(inMenu()||cine){mv=1;MUS.want="calm"}else if(club){mv=1;MUS.want="club"}else if(z==='in_bar'){mv=.75;MUS.want="bar"}else if(z==='in_arcade'){mv=.55;MUS.want="arcade"}else if(z==='in_market'){mv=.5;MUS.want="bazar"}else if(S.walkman){mv=.8;MUS.want=S.wmTrack||"calm"}else if(radio){mv=.6;MUS.want="calm"} // le baladeur du téléphone passe avant la radio
   AUD.N.mus.gain.setTargetAtTime(AUD.vol.music*mv,now(),.6);
   const on=ambienceOn();AUD.N.amb.gain.setTargetAtTime(on?AUD.vol.amb:0,now(),.8);AUD.N.room.gain.setTargetAtTime(on?AUD.vol.amb:0,now(),.8);
   if(!on)return;
@@ -113,7 +113,7 @@ function updateAudio(dt){
 const MUS={step:0,next:0,want:'calm',track:'calm',
   calm:{bpm:88,chords:[[57,60,64],[53,57,60],[48,52,55],[55,59,62]]},club:{bpm:124,chords:[[50,53,57],[46,50,53],[53,57,60],[48,52,55]]},
   lofi:{bpm:72,chords:[[53,57,60,64],[52,55,59,62],[50,53,57,60],[48,52,55,59]]},drive:{bpm:104,chords:[[52,55,59],[48,52,55],[55,59,62],[50,54,57]]},
-  bar:{bpm:92,chords:[[50,53,57,60],[55,59,62,65],[48,52,55,59],[57,61,64,67]]},arcade:{bpm:140,chords:[[60,64,67],[57,60,64],[53,57,60],[55,59,62]]}}; // bar : lounge jazzy ; arcade : chiptune // lofi : douce et lente ; drive : synthwave de route, rapide
+  bar:{bpm:92,chords:[[50,53,57,60],[55,59,62,65],[48,52,55,59],[57,61,64,67]]},arcade:{bpm:140,chords:[[60,64,67],[57,60,64],[53,57,60],[55,59,62]]},bazar:{bpm:96,chords:[[52,56,59],[53,57,60],[52,56,59],[50,53,57]]}}; // bar : lounge jazzy ; arcade : chiptune // lofi : douce et lente ; drive : synthwave de route, rapide
 const mtof=m=>440*Math.pow(2,(m-69)/12);
 function startMusic(){MUS.next=now()+.3;setInterval(()=>{if(!AUD.ctx||AUD.ctx.state!=='running')return;
   while(MUS.next<now()+.25){if(MUS.step%16===0&&MUS.track!==MUS.want){MUS.track=MUS.want;MUS.step=0} // on change de morceau au début d'une mesure
@@ -129,6 +129,13 @@ function drum(t,kind,lvl){const c=AUD.ctx,g=c.createGain();g.connect(AUD.N.mus);
   const d=kind==='hat'?.05:.18;g.gain.setValueAtTime((kind==='hat'?.035:.09)*lvl,t);g.gain.exponentialRampToValueAtTime(.001,t+d);if(kind!=='hat')g.connect(AUD.N.rev);s.start(t,Math.random());s.stop(t+d+.02)}
 function playStep(s,t){
   const T=MUS[MUS.track],bar=Math.floor(s/16)%4,ch=T.chords[bar],i=s%16,section=Math.floor(s/64)%4;
+  if(MUS.track==='bazar'){ // souk de minuit : bourdon grave, cordes pincées en mode oriental (mi phrygien), darbouka « doum-tek », clochettes
+    const SC=[0,1,4,5,7,8,10,12],root=52,mel=[0,1,2,1,4,3,2,1,0,2,4,5,4,2,1,0],ph=(s>>4)%4;
+    if(i===0){pad([root-12,root-5],t,60/T.bpm*4,.012)}
+    if(i%2===0&&(i%8!==6||ph%2)){const k=SC[(mel[(i/2+ph*3)%16]+(ph===3?2:0))%8];note('triangle',mtof(root+12+k),t,.22,.03,2600,true);note('sawtooth',mtof(root+12+k),t,.06,.006,1800)} // l'oud
+    if(i%4===1&&Math.random()<.45)note('sine',mtof(root+24+SC[Math.floor(Math.random()*8)]),t,.5,.012,5000,true); // clochettes
+    if(i===0||i===6||i===10)drum(t,'kick',.5);if(i===4||i===12)drum(t,'snare',.35);if(i===3||i===7||i===14||i===15)drum(t,'hat',.9); // doum… tek-tek
+    if(i%4===0)note('sine',mtof(ch[0]-24),t,.3,.08,300);return}
   if(MUS.track==='arcade'){ // chiptune de borne d'arcade : mélodie en carré, basse en triangle, batterie en bruit blanc
     const mel=[0,2,1,2,0,1,2,1];if(i%2===0)note('square',mtof(ch[mel[(i/2)%8]%3]+12+(i%8===6?12:0)),t,.11,.022,5000);
     if(i%4===0||i%4===3)note('triangle',mtof(ch[0]-12),t,.12,.09,2000);if(i%2===1)note('square',mtof(ch[(i>>1)%3]+24),t,.04,.008,6000);
