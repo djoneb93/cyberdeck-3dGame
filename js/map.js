@@ -65,7 +65,7 @@ for(let z=0;z<H;z++)for(let x=0;x<W;x++){
   const inRing=u>-.042&&u<1.042&&v>-.042&&v<1.042,inCity=u>-.006&&u<1.006&&v>-.006&&v<1.006;
   let t=0;
   if(inRing){if(!inCity)t=2;else{const d=Math.min(...AVE.map(a=>Math.min(Math.abs(u-a),Math.abs(v-a))));t=d<.025?2:d<.045?1:0}}
-  else if(u<=-.042&&v>-.042&&v<1.042&&x>0)t=x<9.5?5:4; // le port : bassin et quai
+  else if(u<=-.042&&v>-.042&&x>0&&x<18)t=x<9.5?5:4; // le port : bassin et quai (jusqu’au bord sud : on arrive directement à l’eau)
   else solid[i]=1;
   if(t===5)solid[i]=1;
   tile[i]=t;
@@ -86,7 +86,7 @@ for(const id in PL){const p=PL[id];if(id==='comm')continue;
 const ANNEX=[{x0:59.4,z0:32.3,x1:62.7,z1:35.3,h:3.4,face:'+z',n:'PHARMACIE',c:'#7cf29a',cross:true},{x0:74.7,z0:11.5,x1:77.9,z1:14.4,h:3.6,face:'-x',n:'CYBERCAFÉ',c:'#5ce1e6'}];
 ANNEX.forEach(a=>solidCells(a.x0,a.z0,a.x1,a.z1));
 // port : grue et conteneurs sur le quai
-const CRANE=[10.6,UZ(.4)],CONT=[12.2,UZ(.44),16.2,UZ(.56)];
+const CRANE=[10.6,UZ(.4)],CONT=[12.5,UZ(.44)-2,16.5,UZ(.56)-3.2]; /* les conteneurs, décalés pour laisser la place au marché de nuit */
 solid[I(Math.floor(CRANE[0]),Math.floor(CRANE[1]))]=1;solidCells(CONT[0],CONT[1],CONT[2],CONT[3]);
 // gare Zéro : halle voûtée sur la place, viaduc qui part vers le haut de la ville
 const GX=UX(.11),GZ0=UZ(.835),GZ1=UZ(.985),GHW=2.6;

@@ -166,7 +166,7 @@ function buildWorld(){
   }
 
   // ===== le port : quai, pontons, grue, conteneurs, bateaux =====
-  const qk=[];for(let z=UZ(-.04);z<UZ(1.04);z+=.9){if(!PIERS.some(p=>z>p-.5&&z<p+2))qk.push([9.6,.2,z,.2,.4,.6])}instBoxes(qk,'#3a4252');
+  const qk=[];for(let z=UZ(-.04);z<H;z+=.9){if(!PIERS.some(p=>z>p-.5&&z<p+2)&&!(z>67.4&&z<70.1))qk.push([9.6,.2,z,.2,.4,.6])}instBoxes(qk,'#3a4252');
   PIERS.forEach(pz=>{box(7.2,.12,1.9,'#4a3526',5.6,.06,pz+1);for(let x=2.5;x<9.5;x+=2.2){box(.2,.7,.2,'#2a1e14',x,.2,pz+.1);box(.2,.7,.2,'#2a1e14',x,.2,pz+1.9)}box(.25,.25,.25,'#ffb547',2.3,.6,pz+1,null,true)});
   const [cx,cz]=CRANE;box(.45,12,.45,'#f6b35c',cx,6,cz);box(10,.38,.38,'#f6b35c',cx-4.2,12,cz);box(.06,4.5,.06,'#8a7040',cx-7.5,9.6,cz);box(1.2,.6,1.2,'#3a3f4c',cx-7.5,7.2,cz);box(.3,.3,.3,'#ff3b4e',cx,12.4,cz,null,true);
   const cc=['#d0353f','#2a6f7a','#ffb547','#3a4a8a','#7a2e22'];
@@ -192,7 +192,7 @@ function buildWorld(){
     boats.push({g,ph:x*1.7+z});return g};
   PIERS.forEach((pz,i)=>{boat(5.8,pz-1.2,i%2?4.6:3.6,i%2?'#2a3a5a':'#5a2a2a');boat(5,pz+3.1,3.2,'#1e3a4a')});
   // sur le fleuve, des bateaux passent de temps en temps (ils remontent ou descendent le courant)
-  [[-12,UZ(.35),12,'#22303e',true,1.1],[-26,UZ(.75),14,'#2a2a34',true,-.8],[-6,UZ(.1),3,'#5a2a2a',false,2.2],[-18,UZ(.6),4,'#2a3a5a',false,-1.7]].forEach(([x,z,l,c,big,sp])=>{
+  [[-12,UZ(.35),12,'#22303e',true,1.1],[-26,UZ(.75),14,'#2a2a34',true,-.8],[-9,UZ(.1),3,'#5a2a2a',false,2.2],[-18,UZ(.6),4,'#2a3a5a',false,-1.7]].forEach(([x,z,l,c,big,sp])=>{
     const g=boat(x,z,l,c,big);g.rotation.y=sp>0?-Math.PI/2:Math.PI/2;boats[boats.length-1].mv=sp;
     box(.12,.12,.12,'#fff2c0',l/2-.05,big?1.9:1.5,0,g,true);
     const wk=new THREE.Mesh(new THREE.PlaneGeometry(l*1.1,big?3.4:2),new THREE.MeshBasicMaterial({map:glowTex,color:0xcfe8ff,transparent:true,opacity:.28,depthWrite:false}));wk.rotation.x=-Math.PI/2;wk.position.set(-l*.75,.04,0);g.add(wk)}); // sillage d'écume

@@ -120,7 +120,7 @@ function updateCity(dt){
   clubBeams.forEach(b=>{b.g.visible=clubOpen();b.g.rotation.z=Math.sin(tAcc*1.3+b.k*2)*.6;b.g.rotation.x=Math.cos(tAcc*.9+b.k)*.25});
   hazards.forEach(h=>h.visible=Math.sin(tAcc*4)>0);
   boats.forEach(b=>{b.g.position.y=Math.sin(tAcc*1.1+b.ph)*.06;b.g.rotation.z=Math.sin(tAcc*.8+b.ph)*.025;
-    if(b.mv){b.g.position.z+=b.mv*dt;if(b.g.position.z>H+70)b.g.position.z=-70;if(b.g.position.z<-70)b.g.position.z=H+70}});
+    if(b.mv){b.g.position.z+=b.mv*dt*(b.go==null?1:b.go);if(b.g.position.z>H+70)b.g.position.z=-70;if(b.g.position.z<-70)b.g.position.z=H+70}});
   adScreens.forEach(a=>{a.k+=dt;if(a.k>4.5){a.k=0;a.i++;drawAd(a)}});
   barriers.forEach(b=>{b.rotation.z=Math.max(0,Math.sin(tAcc*.5))*1.3});
   if(homeShell){const lx=player.position.x-HX,lz=player.position.z-HZ;homeShell.visible=!(lx>1.8&&lx<12.2&&lz>1.8&&lz<9.9)}

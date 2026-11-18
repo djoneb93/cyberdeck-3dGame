@@ -21,16 +21,31 @@ function yachtModel(){
   slab(L*.95,B*.9,.06,teak,1.17,0);               // pont en teck
   // bandeau lumineux cyan sous le liston, et feux de navigation
   [-1,1].forEach(s=>{box(L*.62,.05,.04,'#39e6ff',-L*.12,.42,s*(B/2+.02),g,true)});box(.12,.12,.12,'#ff3b4e',.5,1.4,-B/2+.1,g,true);box(.12,.12,.12,'#5dff9a',.5,1.4,B/2-.1,g,true);
-  // superstructure : salon vitré, puis passerelle, puis fly-bridge avec arceau radar
-  const deckG=(len,beam,th,m,y)=>slab(len,beam,th,m,y,0);
-  const s1=deckG(L*.5,B*.78,1.1,white,1.23);s1.position.x=-L*.08;
-  const w1=deckG(L*.51,B*.79,.5,glass,1.5);w1.position.x=-L*.08; // grande baie vitrée qui fait le tour
-  const s2=deckG(L*.32,B*.64,.75,white,2.33);s2.position.x=-L*.12;const w2=deckG(L*.33,B*.65,.36,glass,2.5);w2.position.x=-L*.12;
-  box(L*.3,.05,B*.6,'#e8ecf0',-L*.12,3.1,0,g); // toit du fly-bridge
-  [-1,1].forEach(s=>{const a=box(.1,1.1,.1,'#e8ecf0',-L*.2,3.6,s*B*.26,g);a.rotation.x=s*.25});box(.14,.12,B*.58,'#e8ecf0',-L*.2,4.12,0,g); // arceau radar
-  const rad=box(.9,.06,.16,'#222630',-L*.2,4.3,0,g);box(.06,.6,.06,'#c8d0d8',-L*.2,4.6,0,g);box(.1,.1,.1,'#fff2c0',-L*.2,4.95,0,g,true); // radar qui tourne, mât, feu de tête
-  // lumière chaude à l'intérieur du salon, néons d'accent
-  box(L*.46,.04,B*.7,'#ffd8a0',-L*.08,2.25,0,g,true);[-1,1].forEach(s=>box(L*.5,.03,.03,'#ff4fa3',-L*.08,1.3,s*B*.395,g,true));
+  // superstructure moderne : volumes aux coins arrondis, avant galbé (pas de pointe), baies vitrées fumées tout autour,
+  // toits débordants soulignés de LED, arceau radar en arc ; c'est un yacht de luxe, il brille la nuit
+  const cabin=(len,beam,sw)=>{const s=new THREE.Shape(),h=beam/2,r=Math.min(.5,h*.4);s.moveTo(-len/2+r,-h);s.lineTo(len/2-sw,-h);s.quadraticCurveTo(len/2,-h*.85,len/2,-h*.25);
+    s.lineTo(len/2,h*.25);s.quadraticCurveTo(len/2,h*.85,len/2-sw,h);s.lineTo(-len/2+r,h);s.quadraticCurveTo(-len/2,h,-len/2,h-r);s.lineTo(-len/2,-h+r);s.quadraticCurveTo(-len/2,-h,-len/2+r,-h);return s};
+  const vol=(len,beam,sw,th,m,y,x,bev)=>{const geo=new THREE.ExtrudeGeometry(cabin(len,beam,sw),{depth:th,bevelEnabled:!!bev,bevelThickness:bev||0,bevelSize:bev||0,bevelSegments:3,curveSegments:14});
+    geo.rotateX(-Math.PI/2);const o=new THREE.Mesh(geo,m);o.position.set(x,y,0);g.add(o);return o};
+  const led=(len,beam,sw,y,x,c)=>{const pts=cabin(len,beam,sw).getSpacedPoints(60).map(p=>new THREE.Vector3(p.x+x,y,-p.y));const m=new THREE.Mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts,true),120,.025,5,true),mat(c,true));g.add(m);return m};
+  const X1=-L*.1,X2=-L*.14;
+  vol(L*.5,B*.8,1.6,.34,white,1.23,X1,.06);                 // pied du salon
+  vol(L*.5,B*.8,1.6,.62,glass,1.57,X1,.04);                 // baie vitrée fumée qui fait le tour
+  vol(L*.56,B*.88,1.9,.12,white,2.2,X1-.1,.05);             // toit débordant du salon
+  led(L*.56+.1,B*.88+.1,1.9,2.26,X1-.1,'#eaf6ff');          // liseré de LED blanches sous le toit
+  vol(L*.32,B*.62,1.3,.3,white,2.37,X2,.05);vol(L*.32,B*.62,1.3,.42,glass,2.67,X2,.03); // timonerie et ses vitres
+  vol(L*.4,B*.74,1.6,.1,white,3.1,X2-.3,.05);led(L*.4+.1,B*.74+.1,1.6,3.15,X2-.3,'#39e6ff'); // hard-top et LED cyan
+  // arceau radar en arc, incliné vers l'arrière
+  const arch=[];for(let i=0;i<=12;i++){const a=i/12*Math.PI;arch.push(new THREE.Vector3(-L*.24-Math.sin(a)*.5,3.2+Math.sin(a)*1.2,-Math.cos(a)*B*.34))}
+  g.add(new THREE.Mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(arch),40,.09,8,false),white));
+  const rad=box(.9,.06,.16,'#222630',-L*.24-.5,4.5,0,g);box(.05,.4,.05,'#c8d0d8',-L*.24-.5,4.7,0,g);box(.1,.1,.1,'#fff2c0',-L*.24-.5,4.95,0,g,true); // radar, mât, feu de tête
+  [-1,1].forEach(s=>{box(.14,.1,.1,'#ffffff',-L*.24-.2,4.0,s*.7,g,true);const sp=new THREE.Sprite(new THREE.SpriteMaterial({map:glowTex,color:0xffffff,transparent:true,opacity:.5,blending:THREE.AdditiveBlending,depthWrite:false}));sp.scale.set(1.2,1.2,1);sp.position.set(-L*.24,4,s*.7);g.add(sp)}); // projecteurs de l'arceau
+  // lumières de luxe : salon chaud, hublots dans la coque, spots sous-marins bleus, liseré rose au pont, éclairage du pont
+  box(L*.46,.04,B*.7,'#ffd8a0',X1,2.15,0,g,true);
+  [-1,1].forEach(s=>{for(let i=0;i<7;i++)box(.32,.12,.02,'#ffe2b0',-L*.32+i*1.25,.62,s*(B/2+.03),g,true); // hublots des cabines
+    for(let i=0;i<5;i++){const u=new THREE.Sprite(new THREE.SpriteMaterial({map:glowTex,color:0x3aa8ff,transparent:true,opacity:.6,blending:THREE.AdditiveBlending,depthWrite:false}));u.scale.set(1.8,1.1,1);u.position.set(-L*.4+i*2.6,-.1,s*(B/2+.15));g.add(u)} // spots sous-marins
+    box(L*.8,.03,.03,'#ff4fa3',-L*.05,1.24,s*(B*.47),g,true)});
+  for(let i=0;i<5;i++)box(.08,.02,.08,'#fff0d0',-L*.42+i*.5,1.22,0,g,true); // spots encastrés du pont arrière
   // plage avant : bains de soleil ; plage arrière : banquette, plateforme de bain, échelle
   [-1,1].forEach(s=>{box(1.6,.18,.8,'#e8ecf0',L*.22,1.32,s*.55,g);box(.5,.3,.8,'#e8ecf0',L*.22+.85,1.42,s*.55,g)});
   box(.6,.5,B*.7,'#e8ecf0',-L*.43,1.45,0,g);box(1.2,.12,B*.86,teak.color?'#9a6a3e':'#9a6a3e',-L/2-.5,.35,0,g); // banquette arrière, plateforme de bain
@@ -50,7 +65,7 @@ function buildMarina(){
   const z0=MARINA.pz;
   for(let x=0;x<=9;x++)for(let z=68;z<=69;z++){solid[I(x,z)]=0;tile[I(x,z)]=4} // le ponton est praticable
   const wood=new THREE.MeshLambertMaterial({color:0x6a4a2e});
-  for(let i=0;i<20;i++){const p=new THREE.Mesh(new THREE.BoxGeometry(.48,.08,1.9),wood);p.position.set(.0+i*.5,-.03,z0);scene.add(p)}
+  for(let i=0;i<20;i++){const p=new THREE.Mesh(new THREE.BoxGeometry(.48,.08,1.9),wood);p.position.set(.0+i*.5,.1,z0);scene.add(p)}
   for(let x=0;x<=9;x+=1.5)[-1,1].forEach(s=>{box(.16,1.2,.16,'#3a2a1e',x,-.4,z0+s*.98);box(.06,.06,.06,'#7dffb0',x,.75,z0+s*.98,null,true)}); // pieux et balises
   [-1,1].forEach(s=>box(9.6,.04,.04,'#c8d0d8',4.8,.7,z0+s*.98)); // main courante
   box(1,.08,2.2,'#c8d0d8',-.6,.2,z0).rotation.z=-.35; // passerelle vers le yacht
@@ -64,7 +79,7 @@ function buildMarina(){
   [[11,65],[12,65],[11,66],[12,66]].forEach(([x,z])=>solid[I(x,z)]=1);
   [64.6,66.7,70.6].forEach(z=>{const b=new THREE.Mesh(new THREE.CylinderGeometry(.16,.2,.45,10),mat('#2a2e36'));b.position.set(9.9,.22,z);scene.add(b);FURN.push([9.9,z,.2])}); // bollards
   // passagers qui attendent sur le ponton (ils montent avec toi)
-  yachtPax=[[2.2,-.4],[3,.4],[3.8,-.2],[5.2,.3]].map(([x,dz],i)=>{const m=makeChar(randomSpec(Math.random));m.position.set(x,0,z0+dz);m.userData.ry=-Math.PI/2;return {m,home:{x,z:z0+dz},deck:[[-4.6,-.9],[-4.2,.9],[3.2,-.7],[2.6,.8]][i]}});
+  yachtPax=[[2.2,-.4],[3,.4],[3.8,-.2],[5.2,.3]].map(([x,dz],i)=>{const m=makeChar(randomSpec(Math.random));m.position.set(x,0,z0+dz);m.userData.ry=-Math.PI/2;return {m,home:{x,z:z0+dz},deck:[[-5.6,-1.2],[-5.6,1.2],[3.6,-.6],[4.6,.5]][i]}});
   yacht=yachtModel();yacht.position.set(MARINA.x,0,MARINA.z);yacht.rotation.y=Math.PI/2;scene.add(yacht);
   const cap=makeChar({...randomSpec(Math.random),coat:'#f0f0f0',hs:'cap'});yacht.userData.cap=cap; // le capitaine, au fly-bridge
   OBJECTS.push({id:'o_kiosk',x:11.8,z:67.2,r:1.2,label:'Parler à la guichetière',dyn:lines(['« Le Neo-Mouette fait le tour de la baie. Embarquement au bout du ponton, c’est offert par la Marina ce soir. »','« Le capitaine ? Ancien de la marine marchande. Il dit que la mer est le seul endroit sans caméras. »'])});
@@ -74,7 +89,7 @@ function yachtPath(){const x=MARINA.x,z=MARINA.z,P=[[x,z],[x-1,z-7],[-12,z-15],[
 // à bord : positions sur le pont, dans le repère du yacht (avant = +x)
 function onDeck(lx,lz,m,y){const a=yacht.rotation.y,c=Math.cos(a),s=Math.sin(a);m.position.set(yacht.position.x+lx*c+lz*s,(y||0)+yacht.position.y,yacht.position.z-lx*s+lz*c)}
 function updateMarinaBoat(dt,h){
-  const ud=yacht.userData;ud.radar.rotation.y+=dt*1.8;yacht.position.y=-.28+Math.sin(tAcc*.9)*.05;yacht.rotation.z=Math.sin(tAcc*.7)*(h.out?.02:.008); /* il tangue doucement */onDeck(-1.7,0,ud.cap,3.12);ud.cap.userData.ry=yacht.rotation.y+Math.PI/2;
+  const ud=yacht.userData;ud.radar.rotation.y+=dt*1.8;yacht.position.y=-.28+Math.sin(tAcc*.9)*.05;yacht.rotation.z=Math.sin(tAcc*.7)*(h.out?.02:.008); /* il tangue doucement */onDeck(-4.8,0,ud.cap,2.32);ud.cap.userData.ry=yacht.rotation.y+Math.PI/2;
   ud.wake.material.opacity=h.out?.25:0;
   yachtPax.forEach(p=>{if(h.out){onDeck(p.deck[0],p.deck[1],p.m,1.2);p.m.userData.ry=yacht.rotation.y+Math.PI/2+(p.deck[0]<0?Math.PI:0)*.5}else{p.m.position.set(p.home.x,0,p.home.z);p.m.userData.ry=-Math.PI/2}});
 }
@@ -128,3 +143,12 @@ function updateNightMarket(dt){const open=marketOpen()&&started;
   if(!open)return;NIGHT_MARKET.stalls.forEach(s=>{if(!s.steam)return;const p=s.steam.geometry.attributes.position;for(let i=0;i<p.count;i++){let y=p.getY(i)+dt*.5;if(y>2.4)y=1;p.setY(i,y)}p.needsUpdate=true})}
 
 
+
+// ---- les vagues : une surface d'eau qui ondule sur le bassin et au large, avec des reflets ----
+let waves=null;
+function buildWaves(){const W0=-70,W1=9.55,Z0=-25,Z1=105,geo=new THREE.PlaneGeometry(W1-W0,Z1-Z0,64,96);geo.rotateX(-Math.PI/2);geo.translate((W0+W1)/2,0,(Z0+Z1)/2);
+  const m=new THREE.MeshPhongMaterial({color:0x1a4a68,transparent:true,opacity:.5,shininess:140,specular:0xbfe6ff,flatShading:true,depthWrite:false});
+  waves=new THREE.Mesh(geo,m);waves.renderOrder=1;scene.add(waves);waves.userData.base=Float32Array.from(geo.attributes.position.array)}
+function updateWaves(){if(!waves)return;waves.visible=!zoneOf()||zoneOf()==='quai';if(!waves.visible)return;const p=waves.geometry.attributes.position,b=waves.userData.base,t=tAcc;
+  for(let i=0;i<p.count;i++){const x=b[i*3],z=b[i*3+2],calm=Math.min(1,Math.max(.25,(9.6-x)/14)); // plus calme le long du quai
+    p.array[i*3+1]=.04+calm*(.045*Math.sin(x*.33+t*1.3)+.03*Math.sin(z*.47-t*1.05)+.018*Math.sin((x+z)*.9+t*2.1))}p.needsUpdate=true}

@@ -87,7 +87,7 @@ IN_DEF.metro={w:32,d:12,h:4.4,trim:'#39e6ff',light:[0xcfe8ff,0x39e6ff],fog:0x0a1
       const gg=new THREE.BufferGeometry();gg.setAttribute('position',new THREE.BufferAttribute(pos,3));const dr=new THREE.Points(gg,new THREE.PointsMaterial({color:0xcfe6ff,size:.06,transparent:true,opacity:.7,depthWrite:false}));dr.userData.s=s;fx.add(dr)});
     R.anims.push({k:0,every:true,f:t=>{const on=!!(wx&&wx.rain>.08);fx.visible=on;if(!on)return;wt.offset.y=(t*.9)%1;
       fx.children.forEach(o=>{if(!o.isPoints)return;const p=o.geometry.attributes.position;for(let i=0;i<p.count;i++){const lx=Math.abs(p.getX(i)),floor=lx>12.4?(lx-12.4)/.4*.42:0;let y=p.getY(i)-.12;if(y<floor){y=floor+3+Math.random()*1.2}p.setY(i,y)}p.needsUpdate=true})}});
-    // ---- annonces sonores : un carillon, puis une voix, à l'arrivée et au départ de la rame ----
+    // ---- annonces sonores : un carillon à l’arrivée et au départ de la rame ----
     let lastC=0;R.anims.push({k:0,every:true,f:t=>{const c=t%30;if(zoneOf()==='in_metro'){if(lastC<3&&c>=3)metroAnnounce('Rame de la ligne M en approche, station Zone Zéro. Veuillez vous éloigner de la bordure du quai.');
       if(lastC<12.5&&c>=12.5)metroAnnounce('Attention à la fermeture des portes. Prochain arrêt : nulle part.')}lastC=c}});
     // ---- de la vie sur le quai ----
@@ -112,8 +112,7 @@ IN_DEF.metro={w:32,d:12,h:4.4,trim:'#39e6ff',light:[0xcfe8ff,0x39e6ff],fog:0x0a1
   }};
 // dans les escaliers du métro, le personnage monte avec les marches
 function stairLift(){const R=ROOMS.metro;if(!R||zoneOf()!=='in_metro'||!R.stairY)return 0;return R.stairY(player.position.x-R.cx,player.position.z-R.cz)}
-// annonce dans la station : trois notes de carillon, puis une voix synthétique (si le navigateur en a une), au volume des effets
+// annonce dans la station : trois notes de carillon, au volume des effets (pas de voix de synthèse)
 function metroAnnounce(text){if(!AUD.ctx)return;const c=AUD.ctx,t=c.currentTime;[784,659,523].forEach((f,i)=>{const o=c.createOscillator(),g=c.createGain();o.type='sine';o.frequency.value=f;
     g.gain.setValueAtTime(0,t+i*.32);g.gain.linearRampToValueAtTime(.07,t+i*.32+.02);g.gain.exponentialRampToValueAtTime(.0008,t+i*.32+.9);o.connect(g);g.connect(AUD.N.sfx||c.destination);o.start(t+i*.32);o.stop(t+i*.32+1)});
-  try{if(!window.speechSynthesis)return;const u=new SpeechSynthesisUtterance(text);u.lang='fr-FR';u.rate=.95;u.pitch=.9;u.volume=Math.min(1,(AUD.vol.master||.5)*(AUD.vol.sfx||.45)*2.4);
-    const v=speechSynthesis.getVoices().find(v=>/^fr/i.test(v.lang));if(v)u.voice=v;setTimeout(()=>{speechSynthesis.cancel();speechSynthesis.speak(u)},1100)}catch(_){}}
+}
