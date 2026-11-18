@@ -11,7 +11,7 @@ IN_DEF.metro={w:32,d:12,h:4.4,trim:'#39e6ff',light:[0xcfe8ff,0x39e6ff],fog:0x0a1
     g.fillStyle='#1e5a8a';g.fillRect(0,40,W,6);g.fillStyle='#39e6ff';g.fillRect(0,46,W,1);g.fillStyle='rgba(0,0,0,.12)';for(let i=0;i<10;i++)g.fillRect(Math.random()*W,Math.random()*H,1,6)},8,1.6),
   // entrées depuis la ville : à l'est (commissariat) on arrive au bout est de la station, à l'ouest (tour des Toits) au bout ouest
   entries:[{x:METRO_E.x,z:METRO_E.z+.7,r:.5,spawn:[11,2],ry:-Math.PI/2},{x:METRO_W.x-.7,z:METRO_W.z,r:.5,spawn:[-11,2],ry:Math.PI/2}],
-  exits:[{at:(lx,lz)=>lx>12&&Math.abs(lz-2)<1.3,to:{x:METRO_E.x,z:METRO_E.z+2.4,ry:0}},{at:(lx,lz)=>lx<-12&&Math.abs(lz-2)<1.3,to:{x:METRO_W.x-2.3,z:METRO_W.z,ry:-Math.PI/2}}],
+  exits:[{at:(lx,lz)=>lx>15.1&&Math.abs(lz-2)<1.3,to:{x:METRO_E.x,z:METRO_E.z+2.4,ry:0}},{at:(lx,lz)=>lx<-15.1&&Math.abs(lz-2)<1.3,to:{x:METRO_W.x-2.3,z:METRO_W.z,ry:-Math.PI/2}}],
   outside(){ // les deux trémies dans la ville, avec un mât et l'enseigne du métro
     [[METRO_E,'MÉTRO · LIGNE M'],[METRO_W,'MÉTRO · LIGNE M']].forEach(([M,txt])=>{const g=stairPit(scene,M.x,0,M.z,M.ry,'#39e6ff');g.updateMatrixWorld(true);
       const post=g.localToWorld(new THREE.Vector3(0,0,-1.6));box(.08,2.4,.08,'#2a3140',post.x,1.2,post.z);box(.5,.5,.06,'#1e5a8a',post.x,2.6,post.z,null,true);
@@ -35,6 +35,7 @@ IN_DEF.metro={w:32,d:12,h:4.4,trim:'#39e6ff',light:[0xcfe8ff,0x39e6ff],fog:0x0a1
     const TL=new THREE.Group();R.g.add(TL);[-1].forEach(s=>{ // le tunnel de gauche, puis son reflet exact à droite
       const sh=new THREE.Shape();sh.moveTo(-d/2,0);sh.lineTo(d/2,0);sh.lineTo(d/2,R.h);sh.lineTo(-d/2,R.h);sh.closePath();
       const hx=s<0?-tz:tz,hole=new THREE.Path();hole.moveTo(hx-RA,0);hole.lineTo(hx-RA,YS);hole.absarc(hx,YS,RA,Math.PI,0,true);hole.lineTo(hx+RA,0);hole.closePath();sh.holes.push(hole);
+      const sx=s<0?-2:2,st=new THREE.Path();st.moveTo(sx-1.22,.03);st.lineTo(sx+1.22,.03);st.lineTo(sx+1.22,R.h-.12);st.lineTo(sx-1.22,R.h-.12);st.closePath();sh.holes.push(st); /* le passage de l'escalier */
       const wall=new THREE.Mesh(new THREE.ShapeGeometry(sh,24),ew);wall.position.set(s*w/2,0,0);wall.rotation.y=-s*Math.PI/2;TL.add(wall);
       const L=9,cxT=s*(w/2+L/2); // le tunnel derrière le mur
       const vault=new THREE.Mesh(new THREE.CylinderGeometry(RA,RA,L,24,1,true,0,Math.PI),blk);vault.rotation.z=Math.PI/2;vault.position.set(cxT,YS,tz);TL.add(vault);
@@ -60,11 +61,38 @@ IN_DEF.metro={w:32,d:12,h:4.4,trim:'#39e6ff',light:[0xcfe8ff,0x39e6ff],fog:0x0a1
     R.sign('ZONE ZÉRO · LIGNE M','#39e6ff',0,3.4,-d/2+.08,0,.06);
     R.sign('SORTIE · COMMISSARIAT →','#7dffb0',9,3.3,d/2-.08,Math.PI,.035);R.sign('← SORTIE · TOUR DES TOITS','#7dffb0',-9,3.3,d/2-.08,Math.PI,.035);
     // les escaliers vers la ville, aux deux bouts : de vraies marches qui montent vers une lueur
-    [-1,1].forEach(s=>{for(let i=0;i<8;i++){const x=s*(12.6+i*.4);R.B(.4,(i+1)*.42,2.4,'#7a8088',x,(i+1)*.21,2);R.B(.4,.03,2.4,'#ffd23f',x-s*.18,(i+1)*.42+.01,2,true)}
-      R.block(s*14.2,2,1.6,1.25);R.B(.06,1.6,2.6,'#dfeeff',s*(w/2-.03),3.5,2,true);[-1,1].forEach(k=>R.B(3.4,.05,.05,'#8a929c',s*13.9,1.6+0,2+k*1.25))});
+    // on les gravit vraiment (la hauteur du personnage suit les marches), elles traversent le mur et continuent de monter
+    // dans une cage d'escalier éclairée, jusqu'à la lueur de la ville tout en haut
+    [-1,1].forEach(s=>{for(let i=0;i<24;i++){const x=s*(12.6+i*.4),y=(i+1)*.42;R.B(.4,y,2.4,i<8?'#7a8088':'#6a7078',x,y/2,2);R.B(.4,.03,2.4,'#ffd23f',x-s*.18,y+.01,2,true)}
+      const sl=Math.atan2(.42,.4);[-1,1].forEach(k=>{const r=R.B(9.8,.05,.05,'#8a929c',s*(12.4+4.6),1.05*4.6+.9,2+k*1.2);r.rotation.z=s*sl; /* rampes qui suivent la pente */
+        for(let j=0;j<5;j++){const x=s*(12.8+j*2.2);R.B(.04,1,.04,'#8a929c',x,(Math.abs(x)-12.4)/.4*.42+.5,2+k*1.2)}});
+      // la cage, derrière le mur : parois, plafond en pente, néons, et la sortie lumineuse en haut
+      const X0=s*(w/2),L=6;[.78,3.22].forEach(z=>{R.B(L+2,13,.08,'#3a4048',X0+s*(L/2+.5),6.5,z);});
+      const ce=R.B(L+4,.1,2.5,'#2a3038',X0+s*(L/2),1.05*(16+L/2-12.4)+2.7,2);ce.rotation.z=s*sl;
+      for(let j=0;j<3;j++){const x=X0+s*(1+j*2),y=(Math.abs(x)-12.4)/.4*.42+2.6;const n=R.B(1.2,.04,.1,'#eaf6ff',x,y,2,true);n.rotation.z=s*sl}
+      R.B(.08,3,2.4,'#fff6e0',s*(12.4+24*.4+.1),24*.42+1.4,2,true); // la lueur de la rue, tout en haut des marches
+      const gl=new THREE.Sprite(new THREE.SpriteMaterial({map:glowTex,color:0xfff0d0,transparent:true,opacity:.6,blending:THREE.AdditiveBlending,depthWrite:false}));gl.scale.set(5,5,1);gl.position.set(s*(12.4+24*.4),24*.42+1.2,2);R.g.add(gl);
+      const g2=gl.clone();g2.material=gl.material.clone();g2.material.opacity=.45;g2.scale.set(3.2,2.6,1);g2.position.set(s*(w/2+1.6),3.9,2);R.g.add(g2)}); /* la lumière d’en haut qui descend dans l’ouverture */
+    R.stairY=(lx,lz)=>Math.abs(lz-2)<1.25&&Math.abs(lx)>12.4?Math.min(24,(Math.abs(lx)-12.4)/.4)*.42:0; // hauteur des marches sous les pieds
+    // ---- de la vie sur le quai ----
+    for(let i=-2;i<=2;i++){const x=i*5.2;R.S(.5,R.h,.5,'#5a6068',x,R.h/2,-.6);[.9,2.6].forEach(y=>R.B(.54,.06,.54,i%2?'#ff4fa3':'#39e6ff',x,y,-.6,true))} // piliers à bagues néon
+    [-6,6].forEach((x,k)=>{R.B(2.4,.7,.12,'#101418',x,3.5,.6);R.B(.03,.5,.03,'#2a2e36',x-.9,4.05,.6);R.B(.03,.5,.03,'#2a2e36',x+.9,4.05,.6);
+      R.screen(x,3.5,.67,0,2.2,.56,(g,W,H,t)=>{const c=t%30,left=c<6?6-c:c<14?0:36-c;g.fillStyle='#05080c';g.fillRect(0,0,W,H);g.font='bold 11px monospace';g.fillStyle='#ffb547';
+        g.fillText('LIGNE M  →  '+(k?'TOUR DES TOITS':'COMMISSARIAT'),4,13);g.fillStyle=left?'#7dffb0':'#ff4fa3';g.fillText(left?'PROCHAINE RAME  '+String(Math.ceil(left)).padStart(2,'0')+' s':'RAME À QUAI · NE MONTEZ PAS',4,28)},160)}); // panneaux des départs
+    [-9,9].forEach((x,k)=>R.screen(x,2.6,-d/2+.06,0,2.6,1.4,(g,W,H,t)=>{const ph=Math.floor(t/5+k)%3;const A=[['ONDES COLA','#ff4fa3','#2a0a20'],['NEURA v4','#7dffb0','#06201a'],['KUROGANE · SÉCURITÉ','#ff3b4e','#1a0608']][ph];
+      g.fillStyle=A[2];g.fillRect(0,0,W,H);g.fillStyle=A[1];g.font='bold 16px monospace';g.fillText(A[0],8,H/2+4);g.fillRect(8,H-14,(t*30)%(W-16),3)},128)); // écrans publicitaires au-dessus de la voie
+    [[-15,-5.2],[15,-5.2],[-15,5.2],[15,5.2]].forEach(([x,z],i)=>{R.B(.18,.14,.26,'#20242c',x,R.h-.3,z);const led=R.B(.04,.04,.04,'#ff2a3a',x,R.h-.38,z+(z<0?.14:-.14),true);
+      R.anims.push({k:0,every:true,f:t=>{led.visible=Math.floor(t*1.5+i)%2===0}})}); // caméras de surveillance
+    [[-11,4.6],[1,4.6],[12,-1.6]].forEach(([x,z])=>{R.S(.4,.7,.4,'#2a5a3a',x,.35,z);R.B(.42,.05,.42,'#1a3a26',x,.72,z)}); // poubelles de tri
+    const busk=R.who(-1.5,3.6,Math.PI,{...randomSpec(),top:'#ff8a3d'},'sway');R.B(.5,.12,.3,'#6a3a1a',-1.0,.06,3.9);R.B(.08,.04,.08,'#ffd23f',-1.0,.13,3.9,true); // un musicien et l'étui de sa guitare
+    R.obj(-1.5,3.0,1.2,'Écouter le musicien',lines(['Il gratte une vieille guitare électrique branchée sur un ampli de poche. Une mélodie lente, qui résonne sous la voûte.','« Une pièce pour la musique ? Non ? Alors une chanson pour rien. C’est la plus belle. »']));
+    const rob=new THREE.Group();R.g.add(rob);box(.5,.14,.5,'#d8dce2',0,.1,0,rob);box(.3,.06,.3,'#39e6ff',0,.2,0,rob,true);box(.06,.04,.2,'#7dffb0',.26,.12,0,rob,true); // robot nettoyeur
+    R.anims.push({k:0,every:true,f:t=>{const u=(t*.07)%2,x=-8.5+17*(u<1?u:2-u);rob.position.set(x,0,1.5);rob.rotation.y=u<1?0:Math.PI;rob.children[1].material.color.setHSL(.5,.9,.5+Math.sin(t*4)*.15)}});
     R.who(-6,-1.6,0,null,'sway');R.who(2,-1.4,Math.PI*.1);R.who(6.5,-1.7,-.2,null,'sway');R.who(-8.6,d/2-1.8,Math.PI,{...randomSpec(),coat:'#1e5a8a'});R.who(10,1,Math.PI/2,null,'sway');
     R.obj(4.5,-d/2+4,1.3,'Distributeur de tickets',()=>'« LIGNE M · service de nuit perturbé. Les rames ne s’arrêtent qu’à Zone Zéro jusqu’à nouvel ordre. » Le distributeur avale une pièce et ne rend rien.');
     R.obj(-8.6,d/2-2.1,1.3,'Kiosque à journaux',lines(['« Le Courrier de BXL ? Il n’en reste plus. Les gens lisent tout sur leurs implants, maintenant. »','« Tu prends la M ? Elle passe toutes les trente secondes, mais elle ne va nulle part. Personne ne sait pourquoi. »']));
     R.obj(-4,-d/2+4.2,1.3,'Regarder le quai',()=>'Le quai sent l’huile et l’ozone. Sur le mur d’en face, quelqu’un a peint un papillon de nuit, en cyan.');
     R.obj(0,-d/2+3.2,1.4,'Monter dans le métro',()=>R.metroStopped()?'Les portes restent closes. À côté, un lecteur clignote en rouge : « LIGNE M · carte d’accès requise ». Il va falloir en trouver une.':'Le quai est vide. Au fond du tunnel, une lueur annonce la prochaine rame. De toute façon, sans carte d’accès, les portes ne s’ouvriront pas.');
   }};
+// dans les escaliers du métro, le personnage monte avec les marches
+function stairLift(){const R=ROOMS.metro;if(!R||zoneOf()!=='in_metro'||!R.stairY)return 0;return R.stairY(player.position.x-R.cx,player.position.z-R.cz)}

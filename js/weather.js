@@ -12,7 +12,9 @@ const WEATHERS=[
 const SLOT=3*3600e3;
 let weatherIdx=0,weatherPreview=null,wx=null,rain=null,hemiBase=.8,flash=0,boltT=0,bolt=null,auroras=[],skyMesh=null;
 const wHash=n=>{let h=(n*2654435761)>>>0;h^=h>>>15;h=Math.imul(h,2246822519)>>>0;h^=h>>>13;return h>>>0};
-function weatherNow(){return weatherPreview!=null?weatherPreview:wHash(Math.floor(Date.now()/SLOT))%WEATHERS.length}
+// une météo par demi-journée de jeu : le matin (0 h – 12 h), puis l'après-midi et la soirée (12 h – minuit)
+const wSlot=()=>((S&&S.day)||0)*2+((S&&S.hour)>=12?1:0);
+function weatherNow(){return weatherPreview!=null?weatherPreview:wHash(wSlot()+7)%WEATHERS.length}
 function setupWeather(){
   weatherIdx=weatherNow();const w=WEATHERS[weatherIdx];
   wx={rain:w.rain,fogD:w.fogD,fogC:new THREE.Color(w.fogC),hemi:w.hemi,sky:new THREE.Color(w.sky||0xffffff),rainC:new THREE.Color(w.rainC||0x8fb8e8),aur:w.aurora?1:0};
@@ -60,9 +62,9 @@ function updateWeather(dt){
   meteoT+=dt;if(meteoT>1){meteoT=0;updateMeteoHUD()}
 }
 function updateMeteoHUD(){
-  const el=$('meteo');if(!el)return;const w=WEATHERS[weatherIdx],left=SLOT-(Date.now()%SLOT),h=Math.floor(left/3600e3),m=Math.floor(left%3600e3/60000);
-  el.innerHTML='<span class="mi">'+w.ico+'</span><span><b>'+w.n+'</b><i>'+(weatherPreview!=null?'aperçu · M pour continuer':'change dans '+(h?h+' h ':'')+String(m).padStart(2,'0')+' min')+'</i></span>';
+  const el=$('meteo');if(!el)return;const w=WEATHERS[weatherIdx],hr=(S.hour||0),left=(hr<12?12:24)-hr,h=Math.floor(left),m=Math.floor((left-h)*60);
+  el.innerHTML='<span class="mi">'+w.ico+'</span><span><b>'+w.n+'</b><i>'+(weatherPreview!=null?'aperçu · M pour continuer':(hr<12?'jusqu’à midi':'jusqu’à minuit')+' · encore '+(h?h+' h ':'')+String(m).padStart(2,'0')+' min')+'</i></span>';
 }
 addEventListener('keydown',e=>{if(!DEV_KEYS||e.code!=='KeyM'||dlgOpen||overlayOpen||!started)return;
-  const real=wHash(Math.floor(Date.now()/SLOT))%WEATHERS.length,next=((weatherPreview!=null?weatherPreview:real)+1)%WEATHERS.length;
+  const real=wHash(wSlot()+7)%WEATHERS.length,next=((weatherPreview!=null?weatherPreview:real)+1)%WEATHERS.length;
   weatherPreview=next===real?null:next;updateWeather(0);updateMeteoHUD()});

@@ -60,8 +60,8 @@ function updateDayNight(dt){
   if(!started)return;
   if(!(S.hour>=0&&S.hour<24))S.hour=22; // sécurité : une heure invalide plongerait toute la ville dans le noir
   // passage rapide vers le moment demandé (touche N), sinon l'horloge avance doucement
-  if(dnSkip!=null){const left=((dnSkip-S.hour)%24+24)%24,step=Math.min(left,dt*6);S.hour=(S.hour+step)%24;if(left<.01)dnSkip=null}
-  else S.hour=(S.hour+dt*24/(DAY_MIN*60))%24;
+  if(dnSkip!=null){const left=((dnSkip-S.hour)%24+24)%24,step=Math.min(left,dt*6);if(S.hour+step>=24)S.day=(S.day||0)+1;S.hour=(S.hour+step)%24;if(left<.01)dnSkip=null}
+  else{const nh=S.hour+dt*24/(DAY_MIN*60);if(nh>=24)S.day=(S.day||0)+1;S.hour=nh%24} /* une minute de jeu par seconde ; le jour compte pour la météo */
   const h=S.hour,d=daylight(h),gld=goldenHour(h)*(1-d*.6);dnLevel=d;
   // brouillard et fond : la brume du jour prend la teinte de la météo
   tmpC.copy(C_DAY).multiply(wx.sky).lerp(C_DUSK,gld*.6);

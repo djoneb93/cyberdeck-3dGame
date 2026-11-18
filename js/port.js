@@ -115,12 +115,28 @@ IN_DEF.port={w:22,d:15,h:6.5,trim:'#8fb7ff',light:[0xffd8a0,0x8fb7ff],fog:0x0c12
     R.block(7,4.9,3.1,1.3);
     // la caisse noire marquée K, posée devant le conteneur
     R.S(1.1,1,1.1,'#141418',1.4,.5,4.2);R.B(.9,.5,.02,'#ff2e3e',1.4,.6,4.77,true);R.sign('K','#ff2e3e',1.4,.6,4.79,0,.06);
-    // ---- bureau vitré du contremaître, au sud-ouest ----
-    const ox=-7.6,oz=5.2;R.S(4.6,3,.12,'#2a3140',ox,1.5,oz-1.7);R.S(.12,3,3.4,'#2a3140',ox+2.3,1.5,oz);
-    R.B(3.6,1.2,.05,'#ffd8a0',ox,1.9,oz-1.76,true).material=new THREE.MeshBasicMaterial({color:0xffd8a0,transparent:true,opacity:.35});
-    box(4.7,.15,3.5,'#20262e',ox,3.05,oz,G);R.sign('BUREAU','#8fb7ff',ox,2.85,oz-1.78,Math.PI,.035);
-    R.S(1.6,.8,.8,'#3a3026',ox-.6,.4,oz+.3);R.B(.5,.32,.04,'#7dffb0',ox-.6,.98,oz+.1,true); // bureau et écran
-    R.block(ox,oz,2.4,1.8);
+    // ---- bureau du contremaître, au sud-ouest : ouvert (muret à hauteur d'appui, sans vitre ni toit), quelqu'un y travaille ----
+    const ox=-7.6,oz=5.2;
+    R.S(4.6,1.1,.14,'#2a3140',ox,.55,oz-1.7);R.B(4.7,.06,.4,'#4a3a2a',ox,1.13,oz-1.7); // muret et sa tablette de comptoir
+    [-2.3,2.3].forEach(dx=>R.B(.1,2.8,.1,'#3a4252',ox+dx,1.4,oz-1.7));R.B(4.7,.12,.12,'#3a4252',ox,2.8,oz-1.7); // poteaux et linteau (pas de carreau)
+    R.S(.14,1.1,2.2,'#2a3140',ox+2.3,.55,oz+.6);R.sign('BUREAU · ENTREPÔT 7','#8fb7ff',ox,3.05,oz-1.72,Math.PI,.03);
+    R.S(1.8,.08,.9,'#5a4632',ox-.3,.78,oz+.1);[[-1,-1],[1,-1],[-1,1],[1,1]].forEach(([a,b])=>R.B(.05,.78,.05,'#2a2e36',ox-.3+a*.82,.39,oz+.1+b*.38)); // table de travail
+    R.B(.04,.36,.5,'#14161c',ox-.3,1.06,oz+.48);R.screen(ox-.3,1.07,oz+.455,Math.PI,.48,.32,(g,W,H,t)=>{g.fillStyle='#03110c';g.fillRect(0,0,W,H);g.fillStyle='#7dffb0';g.font='9px monospace';
+      ['ARRIVÉES QUAI 7','BARGE K-12  02:40','BARGE K-15  04:10','CONTENEUR KRGN','> INSPECTION…'].forEach((l,i)=>g.fillText(l,4,11+i*11));if(Math.floor(t*2)%2)g.fillRect(4+((t*20)%60),60,6,2)},96); // écran du planning
+    R.B(.36,.02,.14,'#202228',ox-.25,.83,oz-.05); // clavier
+    const lamp=box(.04,.4,.04,'#222',ox+.45,1.0,oz+.35,G);box(.22,.1,.14,'#2a2e36',ox+.42,1.2,oz+.3,G);box(.18,.03,.1,'#fff0c0',ox+.42,1.15,oz+.3,G,true); // lampe de bureau
+    const lg=new THREE.Sprite(new THREE.SpriteMaterial({map:glowTex,color:0xffd8a0,transparent:true,opacity:.5,blending:THREE.AdditiveBlending,depthWrite:false}));lg.scale.set(1.2,1.2,1);lg.position.set(ox+.42,1.05,oz+.3);G.add(lg);
+    box(.1,.12,.1,'#e8e2d0',ox-.85,.88,oz-.05,G);[0,1,2].forEach(i=>box(.24,.02,.32,'#f0ead8',ox+.15,.83+i*.02,oz-.1,G)); // tasse de café, pile de bons de livraison
+    R.S(.5,.6,.5,'#2a2e36',ox-1.45,.3,oz+.1); // chaise
+    R.S(.6,1.5,.5,'#5a606a',ox-2.0,.75,oz+1.3);for(let i=0;i<3;i++)R.B(.5,.04,.02,'#8a9098',ox-2.0,.4+i*.45,oz+1.04); // armoire à tiroirs
+    R.B(.12,1.6,1.8,'#3a3026',ox-2.25,1.9,oz-.3);for(let l=0;l<3;l++)for(let k=0;k<6;k++)R.B(.1,.34,.06,pick(['#c83030','#2a5ad8','#e8b320','#3a8a4a','#e8e2d0']),ox-2.18,1.32+l*.55,oz-1.0+k*.12+(k>2?.5:0)); // étagère de classeurs
+    R.B(1.2,.8,.03,'#6a4a2a',ox+.4,2.0,oz+1.62);[[-.3,.1,'#f0ead8'],[.05,-.12,'#ffd23f'],[.35,.15,'#f0ead8'],[-.1,-.2,'#9fd8ff']].forEach(([a,b,c])=>R.B(.22,.28,.01,c,ox+.4+a,2.0+b,oz+1.6)); // tableau de liège et ses papiers
+    const clk=R.screen(ox-1.2,2.3,oz+1.62,Math.PI,.36,.36,(g,W,H,t)=>{g.fillStyle='#e8e2d0';g.beginPath();g.arc(W/2,H/2,W/2-1,0,7);g.fill();g.strokeStyle='#15171c';g.lineWidth=2;
+      const hh=(S.hour||0)%12,mm=((S.hour||0)%1)*60;[[hh/12,.25],[mm/60,.38]].forEach(([u,L])=>{const a=u*Math.PI*2-Math.PI/2;g.beginPath();g.moveTo(W/2,H/2);g.lineTo(W/2+Math.cos(a)*W*L,H/2+Math.sin(a)*W*L);g.stroke()})},48); // horloge à l'heure du jeu
+    const radio=box(.3,.16,.12,'#3a3026',ox+1.6,1.22,oz-1.7,G);box(.08,.08,.02,'#ffb547',ox+1.52,1.22,oz-1.77,G,true); // radio posée sur le comptoir
+    const boss=R.who(ox-1.4,oz+.1,Math.PI/2,{...randomSpec(),coat:'#3a3f4c',hs:'cap'});boss.userData.sit=true;boss.position.y=IY+.12; // le contremaître, assis devant son écran
+    R.anims.push({k:0,f:t=>{boss.userData.ry=Math.PI/2+Math.sin(t*.4)*.6}}); // il tourne la tête entre l'écran et l'entrepôt
+    R.block(ox,oz+.4,2.4,1.5);
     // ---- stockage en vrac : fûts, palettes au sol, transpalette ----
     [[-3.6,-5.1],[-2.3,-5.1],[-3.0,-3.9]].forEach(([x,z])=>pallet(x,0,z,G));R.block(-3,-4.6,1.4,1.1);
     [[9.6,-1.2],[10,-.4],[9.4,-.2],[10.2,-1.4]].forEach(([x,z])=>add(new THREE.CylinderGeometry(.3,.3,.9,14),P(rpick([0x2a4a8a,0x8a2a2a,0x2a6a4a]),30),x,.45,z));R.block(9.8,-.8,.7,.8);
